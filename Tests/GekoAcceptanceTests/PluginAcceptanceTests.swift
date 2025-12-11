@@ -7,6 +7,9 @@ import XcodeProj
 
 final class PluginAcceptanceTestAppWithPlugins: GekoAcceptanceTestCase {
     func test_app_with_plugins() async throws {
+        // TODO: Github publish example later
+        throw XCTSkip("fixture appWithPlugins -> Config.swift git url")
+
         try setUpFixture(.appWithPlugins)
         try await run(FetchCommand.self)
 #if os(macOS)

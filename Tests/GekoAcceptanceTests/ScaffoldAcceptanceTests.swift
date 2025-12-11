@@ -103,6 +103,8 @@ final class ScaffoldAcceptanceTests: GekoAcceptanceTestCase {
 //    }
 
     func test_app_with_plugins_local_plugin() async throws {
+        throw XCTSkip("// TODO: Github")
+
         try setUpFixture(.appWithPlugins)
         try await run(FetchCommand.self)
         try await ScaffoldCommand.preprocess(["scaffold", "custom", "--name", "PluginTemplate", "--path", fixturePath.pathString])
@@ -122,6 +124,9 @@ final class ScaffoldAcceptanceTests: GekoAcceptanceTestCase {
     }
 
     func test_app_with_plugins_remote_plugin() async throws {
+        // TODO: Github publish example later
+        throw XCTSkip("fixture appWithPlugins -> Config.swift git url")
+
         try setUpFixture(.appWithPlugins)
         try await run(FetchCommand.self)
         try await ScaffoldCommand.preprocess([

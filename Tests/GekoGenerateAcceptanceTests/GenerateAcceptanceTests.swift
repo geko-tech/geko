@@ -58,6 +58,8 @@ final class GenerateAcceptanceTestInvalidWorkspaceManifestName: GekoAcceptanceTe
 
 final class GenerateAcceptanceTestSpmWithCocoapodsiOSApp: GekoAcceptanceTestCase {
     func test_ios_app_with_cocoapods_and_spm() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         try setUpFixture(.appWithSpmAndCocoapodsDependencies)
         try await run(FetchCommand.self)
         try await run(GenerateCommand.self)
@@ -433,6 +435,8 @@ final class GenerateAcceptanceTestiOSAppWithExtensions: GekoAcceptanceTestCase {
 
 final class GenerateAcceptanceTestCocoapodsMultiplatformiOSApp: GekoAcceptanceTestCase {
     func test_cocoapods_multiplatform_ios() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         try setUpFixture(.iosAppWorkspaceWithMultiplatformCocoapods)
         try await run(GenerateCommand.self)
         try await run(BuildCommand.self, "App")

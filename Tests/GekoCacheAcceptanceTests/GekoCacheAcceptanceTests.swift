@@ -10,6 +10,8 @@ import PathKit
 
 final class CacheAcceptanceTestsAllTargets: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         // Given
         TestingLogHandler.reset()
         let expectedTargetsFeaturePodA = ["FeaturePodA-Unit-Tests"]
@@ -50,6 +52,8 @@ final class CacheAcceptanceTestsAllTargets: GekoAcceptanceTestCase {
 
 final class CacheAcceptanceTestsCacheWithFocus: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         // Given
         TestingLogHandler.reset()
         let expectedTargetsFeaturePodA = ["FeaturePodA", "FeaturePodA-FeaturePodAResources"]
@@ -104,6 +108,8 @@ final class CacheAcceptanceTestsCacheWithFocus: GekoAcceptanceTestCase {
 
 final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesSafeMode: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus_and_focus_direct_dependencies_safe_mode() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         // Given
         TestingLogHandler.reset()
         let expectedFeaturePodATargetDependencies = [
@@ -180,6 +186,8 @@ final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesSafeMode: Gek
 
 final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesUnsafeMode: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus_and_focus_direct_dependencies_unsafe_mode() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         // Given
         TestingLogHandler.reset()
         let expectedFeaturePodATargetDependencies = [
@@ -261,6 +269,8 @@ final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesUnsafeMode: G
 
 final class CacheAcceptanceTestsWithSwiftModuleCache: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus_swiftmodule_cache() async throws {
+        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
+        
         // Given
         environment.swiftModuleCacheEnabled = true
         TestingLogHandler.reset()
