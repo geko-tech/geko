@@ -1,0 +1,5 @@
+framework module HeadersPodMappingDir {
+  umbrella header "HeadersPodMappingDir-Umbrella-TVOS.h"
+  exclude header "HeadersPodMappingDir-Umbrella-IOS.h"
+  export *
+}

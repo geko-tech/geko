@@ -1,0 +1,28 @@
+import ProjectDescription
+
+let project = Project(
+    name: "Framework4",
+    targets: [
+        Target(
+            name: "Framework4",
+            destinations: .iOS,
+            product: .staticFramework,
+            bundleId: "io.geko.Framework4",
+            infoPlist: "Config/Framework4-Info.plist",
+            sources: "Sources/**",
+            dependencies: []
+        ),
+
+        Target(
+            name: "Framework4Tests",
+            destinations: .iOS,
+            product: .unitTests,
+            bundleId: "io.geko.Framework4Tests",
+            infoPlist: "Config/Framework4Tests-Info.plist",
+            sources: "Tests/**",
+            dependencies: [
+                .target(name: "Framework4"),
+            ]
+        ),
+    ]
+)

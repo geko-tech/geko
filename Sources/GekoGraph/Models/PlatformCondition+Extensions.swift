@@ -1,0 +1,57 @@
+import Foundation
+import struct ProjectDescription.AbsolutePath
+import struct ProjectDescription.PlatformCondition
+
+public typealias PlatformCondition = ProjectDescription.PlatformCondition
+
+extension PlatformCondition: @retroactive Comparable {
+    public static func < (lhs: PlatformCondition, rhs: PlatformCondition) -> Bool {
+        lhs.platformFilters < rhs.platformFilters
+    }
+
+    public static func < (lhs: PlatformCondition, rhs: PlatformCondition?) -> Bool {
+        guard let rhsFilters = rhs?.platformFilters else { return false }
+        return lhs.platformFilters < rhsFilters
+    }
+
+    public func intersection(_ other: PlatformCondition?) -> CombinationResult {
+        guard let otherFilters = other?.platformFilters else { return .condition(self) }
+        let filters = platformFilters.intersection(otherFilters)
+
+        if filters.isEmpty {
+            return .incompatible
+        } else {
+            return .condition(PlatformCondition(platformFilters: filters))
+        }
+    }
+
+    public func union(_ other: PlatformCondition?) -> CombinationResult {
+        guard let otherFilters = other?.platformFilters else { return .condition(nil) }
+        let filters = platformFilters.union(otherFilters)
+
+        if filters.isEmpty {
+            return .condition(nil)
+        } else {
+            return .condition(PlatformCondition(platformFilters: filters))
+        }
+    }
+
+    public enum CombinationResult: Equatable {
+        case incompatible
+        case condition(PlatformCondition?)
+
+        public func combineWith(_ other: CombinationResult) -> CombinationResult {
+            switch (self, other) {
+            case (.incompatible, .incompatible):
+                return .incompatible
+            case (_, .incompatible):
+                return self
+            case (.incompatible, _):
+                return other
+            case let (.condition(lhs), .condition(rhs)):
+                guard let lhs, let rhs else { return .condition(nil) }
+                return lhs.union(rhs)
+            }
+        }
+    }
+}

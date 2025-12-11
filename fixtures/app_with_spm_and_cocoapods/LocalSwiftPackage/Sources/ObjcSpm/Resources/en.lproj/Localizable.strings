@@ -1,0 +1,4 @@
+"header" = "This is header";
+"detail_text" = "This is detail text";
+"greetings_text" = "Hi, there! I am auto-generated with geko";
+"hello_world" = "Hello from objc spm";

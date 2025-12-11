@@ -1,0 +1,23 @@
+import Foundation
+import struct ProjectDescription.AbsolutePath
+import GekoGraph
+@testable import GekoCore
+
+public final class MockLibraryMetadataProvider: MockPrecompiledMetadataProvider, LibraryMetadataProviding {
+    public var loadMetadataStub: ((AbsolutePath, AbsolutePath, AbsolutePath?) throws -> LibraryMetadata)?
+    public func loadMetadata(
+        at path: AbsolutePath,
+        publicHeaders: AbsolutePath,
+        swiftModuleMap: AbsolutePath?
+    ) throws -> LibraryMetadata {
+        if let stub = loadMetadataStub {
+            return try stub(path, publicHeaders, swiftModuleMap)
+        } else {
+            return LibraryMetadata.test(
+                path: path,
+                publicHeaders: publicHeaders,
+                swiftModuleMap: swiftModuleMap
+            )
+        }
+    }
+}

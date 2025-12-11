@@ -1,0 +1,91 @@
+{
+  "ABIRoot": {
+    "kind": "Root",
+    "name": "tvOS",
+    "printedName": "tvOS",
+    "children": [
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "tvOS"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "tvOS",
+        "printedName": "tvOS",
+        "children": [
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "tvOS",
+                "printedName": "tvOS.tvOS",
+                "usr": "s:4tvOSAAC"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:4tvOSAACABycfc",
+            "mangledName": "$s4tvOSAACABycfc",
+            "moduleName": "tvOS",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "tvosTestPrint",
+            "printedName": "tvosTestPrint()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:4tvOSAAC13tvosTestPrintyyF",
+            "mangledName": "$s4tvOSAAC13tvosTestPrintyyF",
+            "moduleName": "tvOS",
+            "declAttributes": [
+              "Final",
+              "AccessControl"
+            ],
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Class",
+        "usr": "s:4tvOSAAC",
+        "mangledName": "$s4tvOSAAC",
+        "moduleName": "tvOS",
+        "declAttributes": [
+          "Final",
+          "AccessControl"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          }
+        ]
+      }
+    ],
+    "json_format_version": 8
+  },
+  "ConstValues": []
+}

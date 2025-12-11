@@ -1,0 +1,62 @@
+import ProjectDescription
+
+let project = Project(
+    name: "Project",
+    targets: [
+        Target(
+            name: "MyTestFramework",
+            destinations: .iOS,
+            product: .framework,
+            bundleId: "io.geko.MyTestFramework",
+            infoPlist: .default,
+            sources: "MyTestFramework/**",
+            dependencies: [
+                .xctest,
+            ]
+        ),
+        Target(
+            name: "AppTests",
+            destinations: .iOS,
+            product: .unitTests,
+            bundleId: "io.geko.AppTests",
+            infoPlist: "Support/Tests.plist",
+            sources: "Tests/**",
+            dependencies: [
+                .target(name: "App"),
+                .target(name: "MyTestFramework"),
+            ]
+        ),
+        Target(
+            name: "App",
+            destinations: [.iPhone, .iPad, .mac],
+            product: .app,
+            bundleId: "io.geko.App",
+            infoPlist: "Support/App-Info.plist",
+            sources: "App/**",
+            dependencies: [
+                .sdk(name: "CloudKit", type: .framework, status: .required),
+                .sdk(name: "ARKit", type: .framework, status: .required, condition: .when([.ios])),
+                .external(name: "FirebaseAnalytics"),
+                .external(name: "FirebasePerformance", condition: .when([.ios])),
+                .sdk(name: "MobileCoreServices", type: .framework, status: .required, condition: .when([.ios])),
+            ]
+        ),
+        Target(
+            name: "MultiPlatformFramework",
+            destinations: [.iPad, .iPhone, .mac, .appleTv],
+            product: .framework,
+            bundleId: "io.geko.MacFramework",
+            infoPlist: "Support/Framework-Info.plist",
+            sources: [
+                .glob("Framework/Shared/**"),
+                .glob("Framework/tvOS/**", compilationCondition: .when([.tvos])),
+                .glob("Framework/macOS/**", compilationCondition: .when([.macos])),
+                .glob("Framework/iOS/**", compilationCondition: .when([.ios])),
+            ],
+            dependencies: [
+                .sdk(name: "CloudKit", type: .framework, status: .optional),
+                .sdk(name: "sqlite3", type: .library),
+            ]
+        ),
+    ]
+)

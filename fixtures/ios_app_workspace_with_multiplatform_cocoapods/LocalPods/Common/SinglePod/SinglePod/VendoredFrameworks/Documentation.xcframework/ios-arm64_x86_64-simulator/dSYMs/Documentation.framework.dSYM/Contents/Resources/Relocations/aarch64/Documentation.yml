@@ -1,0 +1,14 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/v.krupenko/Library/Developer/Xcode/DerivedData/Frameworks-fsfdudevahhrzjfkxydpylvlbtpa/Build/Intermediates.noindex/ArchiveIntermediates/Documentation-iOS/InstallationBuildProductsLocation/Library/Frameworks/Documentation.framework/Documentation'
+relocations:
+  - { offset: 0x32AFB, size: 0x8, addend: 0x0, symName: _DocumentationVersionString, symObjAddr: 0x0, symBinAddr: 0x3CC0, symSize: 0x0 }
+  - { offset: 0x32B2F, size: 0x8, addend: 0x0, symName: _DocumentationVersionNumber, symObjAddr: 0x38, symBinAddr: 0x3CF8, symSize: 0x0 }
+  - { offset: 0x32B6B, size: 0x8, addend: 0x0, symName: '_$s13DocumentationAACABycfC', symObjAddr: 0x0, symBinAddr: 0x2DAC, symSize: 0x10 }
+  - { offset: 0x32C14, size: 0x8, addend: 0x0, symName: ___swift_instantiateConcreteTypeFromMangledName, symObjAddr: 0x98, symBinAddr: 0x2E44, symSize: 0x40 }
+  - { offset: 0x32C27, size: 0x8, addend: 0x0, symName: '_$s13DocumentationAACMa', symObjAddr: 0xF0, symBinAddr: 0x2E94, symSize: 0x20 }
+  - { offset: 0x32C41, size: 0x8, addend: 0x0, symName: '_$s13DocumentationAACABycfC', symObjAddr: 0x0, symBinAddr: 0x2DAC, symSize: 0x10 }
+  - { offset: 0x32C54, size: 0x8, addend: 0x0, symName: '_$s13DocumentationAACABycfc', symObjAddr: 0x10, symBinAddr: 0x2DBC, symSize: 0x8 }
+  - { offset: 0x32CAA, size: 0x8, addend: 0x0, symName: '_$s13DocumentationAAC15sharedTestPrintyyF', symObjAddr: 0x18, symBinAddr: 0x2DC4, symSize: 0x80 }
+  - { offset: 0x32D2B, size: 0x8, addend: 0x0, symName: '_$s13DocumentationAACfD', symObjAddr: 0xE0, symBinAddr: 0x2E84, symSize: 0x10 }
+...

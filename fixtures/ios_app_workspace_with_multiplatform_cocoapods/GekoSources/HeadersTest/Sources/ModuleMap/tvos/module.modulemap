@@ -1,0 +1,5 @@
+framework module HeadersTest {
+  umbrella header "HeadersTest-Umbrella-TVOS.h"
+  exclude header "HeadersTest-Umbrella-IOS.h"
+  export *
+}

@@ -1,0 +1,58 @@
+import struct ProjectDescription.AbsolutePath
+import GekoCore
+import GekoGraph
+import GekoSupport
+import XCTest
+
+@testable import ProjectDescription
+@testable import GekoLoader
+@testable import GekoLoaderTesting
+@testable import GekoSupportTesting
+
+final class TemplateGitLoaderTests: GekoUnitTestCase {
+    var subject: TemplateGitLoader!
+    var templateLoader: MockTemplateLoader!
+    var gitHandler: MockGitHandler!
+
+    override func setUp() {
+        super.setUp()
+        templateLoader = MockTemplateLoader()
+        gitHandler = MockGitHandler()
+        subject = TemplateGitLoader(
+            templateLoader: templateLoader,
+            fileHandler: FileHandler.shared,
+            gitHandler: gitHandler,
+            templateLocationParser: TemplateLocationParser()
+        )
+    }
+
+    override func tearDown() {
+        gitHandler = nil
+        subject = nil
+        templateLoader = nil
+        super.tearDown()
+    }
+
+    func test_loadTemplatePath_isSameWithClonedRepository() throws {
+        // Given
+        var clonedRepositoryPath: AbsolutePath?
+        gitHandler.cloneToStub = { _, path in
+            clonedRepositoryPath = path
+        }
+
+        var pathToLoadTemplateFrom: AbsolutePath?
+        templateLoader.loadTemplateStub = { path in
+            pathToLoadTemplateFrom = path
+            return GekoGraph.Template(
+                description: ""
+            )
+        }
+
+        // When
+        try subject.loadTemplate(from: "https://url/to/repo.git", closure: { _ in })
+
+        // Then
+        XCTAssertNotNil(pathToLoadTemplateFrom)
+        XCTAssertEqual(pathToLoadTemplateFrom, clonedRepositoryPath)
+    }
+}

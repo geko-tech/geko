@@ -1,0 +1,57 @@
+import Foundation
+import GekoCacheTesting
+import struct ProjectDescription.AbsolutePath
+import struct ProjectDescription.HeadersList
+import GekoCore
+import GekoCoreTesting
+import GekoGraph
+import GekoSupport
+import XCTest
+@testable import GekoCache
+@testable import GekoSupportTesting
+
+final class HeadersContentHasherTests: GekoUnitTestCase {
+    private var subject: HeadersContentHasher!
+    private var mockContentHasher: MockContentHasher!
+    private let filePath1 = try! AbsolutePath(validating: "/file1")
+    private let filePath2 = try! AbsolutePath(validating: "/file2")
+    private let filePath3 = try! AbsolutePath(validating: "/file3")
+    private let filePath4 = try! AbsolutePath(validating: "/file4")
+    private let filePath5 = try! AbsolutePath(validating: "/file5")
+    private let filePath6 = try! AbsolutePath(validating: "/file6")
+
+    override func setUp() {
+        super.setUp()
+        mockContentHasher = MockContentHasher()
+        subject = HeadersContentHasher(contentHasher: mockContentHasher)
+    }
+
+    override func tearDown() {
+        subject = nil
+        mockContentHasher = nil
+        super.tearDown()
+    }
+
+    func test_hash_callsContentHasherWithTheExpectedParameters() throws {
+        // Given
+        mockContentHasher.stubHashForPath[filePath1] = "1"
+        mockContentHasher.stubHashForPath[filePath2] = "2"
+        mockContentHasher.stubHashForPath[filePath3] = "3"
+        mockContentHasher.stubHashForPath[filePath4] = "4"
+        mockContentHasher.stubHashForPath[filePath5] = "5"
+        mockContentHasher.stubHashForPath[filePath6] = "6"
+
+        // When
+        let headers = Headers.headers(
+            public: [filePath1, filePath2],
+            private: [filePath3, filePath4],
+            project: [filePath5, filePath6],
+            mappingsDir: nil
+        )
+
+        // Then
+        let (hash, _) = try subject.hash(headers: HeadersList(list: [headers]))
+        XCTAssertEqual(hash, "1;2;3;4;5;6")
+        XCTAssertEqual(mockContentHasher.hashPathCallCount, 6)
+    }
+}

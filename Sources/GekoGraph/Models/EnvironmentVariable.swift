@@ -1,0 +1,4 @@
+import Foundation
+import struct ProjectDescription.EnvironmentVariable
+
+public typealias EnvironmentVariable = ProjectDescription.EnvironmentVariable

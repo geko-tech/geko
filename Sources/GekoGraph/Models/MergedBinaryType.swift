@@ -1,0 +1,3 @@
+import enum ProjectDescription.MergedBinaryType
+
+public typealias MergedBinaryType = ProjectDescription.MergedBinaryType

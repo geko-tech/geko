@@ -1,0 +1,11 @@
+framework module tvOS {
+  umbrella header "tvOS.h"
+  export *
+
+  module * { export * }
+}
+
+module tvOS.Swift {
+  header "tvOS-Swift.h"
+  requires objc
+}

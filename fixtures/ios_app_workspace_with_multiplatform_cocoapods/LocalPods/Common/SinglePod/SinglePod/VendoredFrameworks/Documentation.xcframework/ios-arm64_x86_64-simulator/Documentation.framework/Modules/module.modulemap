@@ -1,0 +1,4 @@
+framework module Documentation {
+  header "Documentation-Swift.h"
+  requires objc
+}

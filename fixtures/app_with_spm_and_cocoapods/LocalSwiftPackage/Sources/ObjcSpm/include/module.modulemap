@@ -1,0 +1,4 @@
+module ObjcSpm {
+    header "ObjcSpmLogger.h"
+    export *
+}

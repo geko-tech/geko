@@ -1,0 +1,230 @@
+import Foundation
+import struct ProjectDescription.AbsolutePath
+import struct ProjectDescription.RelativePath
+import GekoCore
+import GekoGenerator
+import GekoGraph
+import GekoLoader
+import GekoScaffold
+import GekoSupport
+
+enum ProjectEditorError: FatalError, Equatable {
+    /// This error is thrown when we try to edit in a project in a directory that has no editable files.
+    case noEditableFiles(AbsolutePath)
+
+    var type: ErrorType {
+        switch self {
+        case .noEditableFiles: return .abort
+        }
+    }
+
+    var description: String {
+        switch self {
+        case let .noEditableFiles(path):
+            return "There are no editable files at \(path.pathString)"
+        }
+    }
+}
+
+protocol ProjectEditing: AnyObject {
+    /// Generates an Xcode project to edit the Project defined in the given directory.
+    /// - Parameters:
+    ///   - editingPath: Directory whose project will be edited.
+    ///   - destinationDirectory: Directory in which the Xcode project will be generated.
+    ///   - onlyCurrentDirectory: True if only the manifest in the current directory should be included.
+    ///   - plugins: The plugins to load as part of the edit project.
+    /// - Returns: The path to the generated Xcode project.
+    func edit(
+        at editingPath: AbsolutePath,
+        in destinationDirectory: AbsolutePath,
+        onlyCurrentDirectory: Bool,
+        plugins: Plugins
+    ) throws -> AbsolutePath
+}
+
+final class ProjectEditor: ProjectEditing {
+    /// Project generator.
+    let generator: DescriptorGenerating
+
+    /// Project editor mapper.
+    let projectEditorMapper: ProjectEditorMapping
+
+    /// Utility to locate Geko's resources.
+    let resourceLocator: ResourceLocating
+
+    /// Utility to locate manifest files.
+    let manifestFilesLocator: ManifestFilesLocating
+
+    /// Utility to locate the helpers directory.
+    let helpersDirectoryLocator: HelpersDirectoryLocating
+
+    /// Utility to locate the custom templates directory
+    let templatesDirectoryLocator: TemplatesDirectoryLocating
+
+    /// Utility to locate the stencil directory
+    let stencilDirectoryLocator: StencilPathLocating
+
+    /// Xcode Project writer
+    private let writer: XcodeProjWriting
+
+    init(
+        generator: DescriptorGenerating = DescriptorGenerator(enforceExplicitDependencies: false),
+        projectEditorMapper: ProjectEditorMapping = ProjectEditorMapper(),
+        resourceLocator: ResourceLocating = ResourceLocator(),
+        manifestFilesLocator: ManifestFilesLocating = ManifestFilesLocator(),
+        helpersDirectoryLocator: HelpersDirectoryLocating = HelpersDirectoryLocator(),
+        writer: XcodeProjWriting = XcodeProjWriter(),
+        templatesDirectoryLocator: TemplatesDirectoryLocating = TemplatesDirectoryLocator(),
+        stencilDirectoryLocator: StencilPathLocating = StencilPathLocator()
+    ) {
+        self.generator = generator
+        self.projectEditorMapper = projectEditorMapper
+        self.resourceLocator = resourceLocator
+        self.manifestFilesLocator = manifestFilesLocator
+        self.helpersDirectoryLocator = helpersDirectoryLocator
+        self.writer = writer
+        self.templatesDirectoryLocator = templatesDirectoryLocator
+        self.stencilDirectoryLocator = stencilDirectoryLocator
+    }
+
+    // swiftlint:disable:next function_body_length
+    func edit(
+        at editingPath: AbsolutePath,
+        in destinationDirectory: AbsolutePath,
+        onlyCurrentDirectory: Bool,
+        plugins: Plugins
+    ) throws -> AbsolutePath {
+        let gekoIgnoreContent = (try? FileHandler.shared.readTextFile(editingPath.appending(component: ".gekoignore"))) ?? ""
+        let gekoIgnoreEntries =
+            try gekoIgnoreContent
+            .split(separator: "\n")
+            .map(String.init)
+            .map { entry -> String in
+                guard !entry.starts(with: "**") else { return entry }
+                let path = editingPath.appending(try RelativePath(validating: entry))
+                if FileHandler.shared.isFolder(path) {
+                    return path.appending(component: "**").pathString
+                } else {
+                    return path.pathString
+                }
+            }
+
+        let pathsToExclude =
+            [
+                "**/\(Constants.gekoDirectoryName)/\(Constants.DependenciesDirectory.name)/**",
+                "**/\(Constants.DependenciesDirectory.packageBuildDirectoryName)/**",
+            ] + gekoIgnoreEntries
+
+        let projectDescriptionPath = try resourceLocator.projectDescription()
+        let projectManifests = manifestFilesLocator.locateProjectManifests(
+            at: editingPath,
+            excluding: pathsToExclude,
+            onlyCurrentDirectory: onlyCurrentDirectory
+        )
+        let configPath = manifestFilesLocator.locateConfig(at: editingPath)
+        let dependenciesPath = manifestFilesLocator.locateDependencies(at: editingPath)
+        let packageManifestPath = manifestFilesLocator.locatePackageManifest(at: editingPath)
+
+        let helpers =
+            helpersDirectoryLocator.locate(at: editingPath).map {
+                [
+                    FileHandler.shared.glob($0, glob: "**/*.swift"),
+                    FileHandler.shared.glob($0, glob: "**/*.docc"),
+                ].flatMap { $0 }
+            } ?? []
+
+        let templateSources =
+            templatesDirectoryLocator.locateUserTemplates(at: editingPath).map {
+                FileHandler.shared.glob($0, glob: "**/*.swift")
+            } ?? []
+
+        let templateResources =
+            templatesDirectoryLocator.locateUserTemplates(at: editingPath).map {
+                FileHandler.shared.glob($0, glob: "**/*.stencil")
+            } ?? []
+
+        let stencils =
+            stencilDirectoryLocator.locate(at: editingPath).map {
+                FileHandler.shared.glob($0, glob: "**/*.stencil")
+            } ?? []
+
+        let editablePluginManifests = locateEditablePluginManifests(
+            at: editingPath,
+            excluding: pathsToExclude,
+            plugins: plugins,
+            onlyCurrentDirectory: onlyCurrentDirectory
+        )
+
+        /// We error if the user tries to edit a project in a directory where there are no editable files.
+        if projectManifests.isEmpty, editablePluginManifests.isEmpty, helpers.isEmpty, templateSources.isEmpty, stencils.isEmpty {
+            throw ProjectEditorError.noEditableFiles(editingPath)
+        }
+
+        // To be sure that we are using the same binary of Geko that invoked `edit`
+        let gekoPath = try AbsolutePath(validatingAbsolutePath: GekoCommand.processArguments().first!)
+        let workspaceName = "Manifests"
+
+        let graph = try projectEditorMapper.map(
+            name: workspaceName,
+            gekoPath: gekoPath,
+            sourceRootPath: editingPath,
+            destinationDirectory: destinationDirectory,
+            configPath: configPath,
+            dependenciesPath: dependenciesPath,
+            packageManifestPath: packageManifestPath,
+            projectManifests: projectManifests.map(\.path),
+            editablePluginManifests: editablePluginManifests,
+            pluginProjectDescriptionHelpersModule: [],
+            helpers: helpers,
+            templateSources: templateSources,
+            templateResources: templateResources,
+            stencils: stencils,
+            projectDescriptionSearchPath: ProjectDescriptionSearchPaths.paths(for: projectDescriptionPath)
+        )
+
+        let graphTraverser = GraphTraverser(graph: graph)
+        let descriptor = try generator.generateWorkspace(graphTraverser: graphTraverser)
+        try writer.write(workspace: descriptor)
+        return descriptor.xcworkspacePath
+    }
+
+    /// - Returns: A list of plugin manifests which should be loaded as part of the project.
+    private func locateEditablePluginManifests(
+        at path: AbsolutePath,
+        excluding: [String],
+        plugins: Plugins,
+        onlyCurrentDirectory: Bool
+    ) -> [EditablePluginManifest] {
+        let loadedEditablePluginManifests = plugins.projectDescriptionHelpers
+            .map { EditablePluginManifest(
+                name: $0.name,
+                path: $0.path.parentDirectory,
+                location: $0.location.editableLocation
+            )}
+
+        let localEditablePluginManifests = manifestFilesLocator.locatePluginManifests(
+            at: path,
+            excluding: excluding,
+            onlyCurrentDirectory: onlyCurrentDirectory
+        )
+            .map { EditablePluginManifest(
+                name: $0.parentDirectory.basename,
+                path: $0.parentDirectory,
+                location: .local
+            )}
+        
+        return Array(Set(loadedEditablePluginManifests + localEditablePluginManifests))
+    }
+}
+
+fileprivate extension ProjectDescriptionHelpersPlugin.Location {
+    
+    var editableLocation: EditablePluginManifest.Location {
+        switch self {
+        case .local:
+            return .local
+        case .remote:
+            return .remote
+        }
+    }
+}

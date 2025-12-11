@@ -1,0 +1,91 @@
+{
+  "ABIRoot": {
+    "kind": "Root",
+    "name": "iOS",
+    "printedName": "iOS",
+    "children": [
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "iOS"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "iOS",
+        "printedName": "iOS",
+        "children": [
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "iOS",
+                "printedName": "iOS.iOS",
+                "usr": "s:3iOSAAC"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:3iOSAACABycfc",
+            "mangledName": "$s3iOSAACABycfc",
+            "moduleName": "iOS",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "iosTestPrint",
+            "printedName": "iosTestPrint()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:3iOSAAC12iosTestPrintyyF",
+            "mangledName": "$s3iOSAAC12iosTestPrintyyF",
+            "moduleName": "iOS",
+            "declAttributes": [
+              "Final",
+              "AccessControl"
+            ],
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Class",
+        "usr": "s:3iOSAAC",
+        "mangledName": "$s3iOSAAC",
+        "moduleName": "iOS",
+        "declAttributes": [
+          "Final",
+          "AccessControl"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          }
+        ]
+      }
+    ],
+    "json_format_version": 8
+  },
+  "ConstValues": []
+}

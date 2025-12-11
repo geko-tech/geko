@@ -1,0 +1,91 @@
+{
+  "ABIRoot": {
+    "kind": "Root",
+    "name": "Documentation",
+    "printedName": "Documentation",
+    "children": [
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "Documentation"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "Documentation",
+        "printedName": "Documentation",
+        "children": [
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Documentation",
+                "printedName": "Documentation.Documentation",
+                "usr": "s:13DocumentationAAC"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:13DocumentationAACABycfc",
+            "mangledName": "$s13DocumentationAACABycfc",
+            "moduleName": "Documentation",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "sharedTestPrint",
+            "printedName": "sharedTestPrint()",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:13DocumentationAAC15sharedTestPrintyyF",
+            "mangledName": "$s13DocumentationAAC15sharedTestPrintyyF",
+            "moduleName": "Documentation",
+            "declAttributes": [
+              "Final",
+              "AccessControl"
+            ],
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Class",
+        "usr": "s:13DocumentationAAC",
+        "mangledName": "$s13DocumentationAAC",
+        "moduleName": "Documentation",
+        "declAttributes": [
+          "Final",
+          "AccessControl"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          }
+        ]
+      }
+    ],
+    "json_format_version": 8
+  },
+  "ConstValues": []
+}

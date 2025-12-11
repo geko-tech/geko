@@ -1,0 +1,104 @@
+import struct ProjectDescription.AbsolutePath
+import GekoGraph
+import GekoSupport
+import XCTest
+@testable import GekoCore
+@testable import GekoCoreTesting
+@testable import GekoSupportTesting
+
+final class FrameworkLoaderErrorTests: GekoUnitTestCase {
+    func test_type_when_frameworkNotFound() {
+        // Given
+        let path = try! AbsolutePath(validating: "/frameworks/geko.framework")
+        let subject = FrameworkLoaderError.frameworkNotFound(path)
+
+        // When
+        let got = subject.type
+
+        // Then
+        XCTAssertEqual(got, .abort)
+    }
+
+    func test_description_when_frameworkNotFound() {
+        // Given
+        let path = try! AbsolutePath(validating: "/frameworks/geko.framework")
+        let subject = FrameworkLoaderError.frameworkNotFound(path)
+
+        // When
+        let got = subject.description
+
+        // Then
+        XCTAssertEqual(got, "Couldn't find framework at \(path.pathString)")
+    }
+}
+
+final class FrameworkLoaderTests: GekoUnitTestCase {
+    var frameworkMetadataProvider: MockFrameworkMetadataProvider!
+    var subject: FrameworkLoader!
+
+    override func setUp() {
+        super.setUp()
+        frameworkMetadataProvider = MockFrameworkMetadataProvider()
+        subject = FrameworkLoader(frameworkMetadataProvider: frameworkMetadataProvider)
+    }
+
+    override func tearDown() {
+        frameworkMetadataProvider = nil
+        subject = nil
+        super.tearDown()
+    }
+
+    func test_load_when_the_framework_doesnt_exist() throws {
+        // Given
+        let path = try temporaryPath()
+        let frameworkPath = path.appending(component: "geko.framework")
+
+        // Then
+        XCTAssertThrowsSpecific(
+            try subject.load(path: frameworkPath, status: .required),
+            FrameworkLoaderError.frameworkNotFound(frameworkPath)
+        )
+    }
+
+    func test_load_when_the_framework_exists() throws {
+        // Given
+        let path = try temporaryPath()
+        let binaryPath = path.appending(component: "geko")
+        let frameworkPath = path.appending(component: "geko.framework")
+        let dsymPath = path.appending(component: "geko.dSYM")
+        let bcsymbolmapPaths = [path.appending(component: "geko.bcsymbolmap")]
+        let architectures = [BinaryArchitecture.armv7s]
+        let linking = BinaryLinking.dynamic
+
+        try FileHandler.shared.touch(frameworkPath)
+
+        frameworkMetadataProvider.loadMetadataStub = {
+            FrameworkMetadata(
+                path: $0,
+                binaryPath: binaryPath,
+                dsymPath: dsymPath,
+                bcsymbolmapPaths: bcsymbolmapPaths,
+                linking: linking,
+                architectures: architectures,
+                status: .required
+            )
+        }
+
+        // When
+        let got = try subject.load(path: frameworkPath, status: .required)
+
+        // Then
+        XCTAssertEqual(
+            got,
+            .framework(
+                path: frameworkPath,
+                binaryPath: binaryPath,
+                dsymPath: dsymPath,
+                bcsymbolmapPaths: bcsymbolmapPaths,
+                linking: linking,
+                architectures: architectures,
+                status: .required
+            )
+        )
+    }
+}

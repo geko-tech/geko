@@ -1,0 +1,124 @@
+import Foundation
+import ProjectDescription
+import struct ProjectDescription.AbsolutePath
+import GekoCore
+import GekoGraph
+import GekoSupport
+import XCTest
+
+@testable import GekoLoader
+@testable import GekoSupportTesting
+
+final class CoreDataModelManifestMapperTests: GekoUnitTestCase {
+    func test_from() throws {
+        // Given
+        let temporaryPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: temporaryPath)
+        try FileHandler.shared.touch(temporaryPath.appending(component: "model.xcdatamodeld"))
+        let manifest = ProjectDescription.CoreDataModel(
+            "model.xcdatamodeld",
+            currentVersion: "1"
+        )
+
+        // When
+        var model = manifest
+        try model.resolvePaths(generatorPaths: generatorPaths)
+        try model.resolveGlobs()
+
+        // Then
+        XCTAssertTrue(try coreDataModel(model, matches: manifest, at: temporaryPath, generatorPaths: generatorPaths))
+    }
+
+    func test_from_getsCurrentVersionFrom_file_xccurrentversion() throws {
+        // Given
+        let temporaryPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: temporaryPath)
+
+        try FileManager.default.createDirectory(
+            at: temporaryPath.appending(component: "model.xcdatamodeld").asURL,
+            withIntermediateDirectories: false
+        )
+        try createVersionFile(xcVersion: xcVersionDataString(), temporaryPath: temporaryPath)
+
+        let manifestWithoutCurrentVersion = ProjectDescription.CoreDataModel("model.xcdatamodeld")
+
+        // When
+        var model = manifestWithoutCurrentVersion
+        try model.resolvePaths(generatorPaths: generatorPaths)
+        try model.resolveGlobs()
+
+        let manifestWithCurrentVersionExplicitly = ProjectDescription.CoreDataModel("model.xcdatamodeld", currentVersion: "83")
+
+        // Then
+        XCTAssertTrue(try coreDataModel(
+            model,
+            matches: manifestWithCurrentVersionExplicitly,
+            at: temporaryPath,
+            generatorPaths: generatorPaths
+        ))
+    }
+
+    func test_from_getsCurrentVersionFrom_file_xccurrentversion_butCannotFindVersion() throws {
+        // Given
+        let temporaryPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: temporaryPath)
+
+        try FileManager.default.createDirectory(
+            at: temporaryPath.appending(component: "model.xcdatamodeld").asURL,
+            withIntermediateDirectories: false
+        )
+        try createVersionFile(
+            xcVersion: "Let's say that apple changes the format without telling anyone, being typical Apple.",
+            temporaryPath: temporaryPath
+        )
+
+        // When
+        var model = ProjectDescription.CoreDataModel("model.xcdatamodeld")
+
+        // Then
+        XCTAssertThrowsError(try {
+            try model.resolvePaths(generatorPaths: generatorPaths)
+            try model.resolveGlobs()
+        }())
+    }
+
+    func test_from_getsCurrentVersionFrom_file_xccurrentversion_butFileDoesNotExist() throws {
+        // Given
+        let temporaryPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: temporaryPath)
+
+        // When
+        var model = ProjectDescription.CoreDataModel("model.xcdatamodeld")
+        try model.resolvePaths(generatorPaths: generatorPaths)
+        try model.resolveGlobs()
+
+        XCTAssertEqual(
+            model,
+            GekoGraph.CoreDataModel(
+                temporaryPath.appending(component: "model.xcdatamodeld"),
+                versions: [],
+                currentVersion: "model"
+            )
+        )
+    }
+
+    private func createVersionFile(xcVersion: String, temporaryPath: AbsolutePath) throws {
+        let urlToCurrentVersion = temporaryPath.appending(try RelativePath(validating: "model.xcdatamodeld"))
+            .appending(component: ".xccurrentversion")
+        let data = try XCTUnwrap(xcVersion.data(using: .utf8))
+        try data.write(to: urlToCurrentVersion.asURL)
+    }
+
+    private func xcVersionDataString() -> String {
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+        <key>_XCCurrentVersionName</key>
+        <string>83.xcdatamodel</string>
+        </dict>
+        </plist>
+        """
+    }
+}

@@ -1,0 +1,11 @@
+import XCTest
+
+import FeaturePodA
+
+class FeaturePodAFileTests: XCTestCase {
+    func testHello() {
+        let sut = FeaturePodA()
+
+        XCTAssertEqual("FeaturePodAFile.hello()", sut.hello())
+    }
+}

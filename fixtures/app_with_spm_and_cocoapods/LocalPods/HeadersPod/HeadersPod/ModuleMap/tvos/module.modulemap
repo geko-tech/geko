@@ -1,0 +1,5 @@
+framework module HeadersPod {
+  umbrella header "HeadersPod-Umbrella-TVOS.h"
+  exclude header "HeadersPod-Umbrella-IOS.h"
+  export *
+}

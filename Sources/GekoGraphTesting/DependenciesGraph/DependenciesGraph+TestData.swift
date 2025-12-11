@@ -1,0 +1,242 @@
+import Foundation
+import struct ProjectDescription.AbsolutePath
+import struct ProjectDescription.RelativePath
+import GekoGraph
+
+extension DependenciesGraph {
+    /// A snapshot of `graph.json` file.
+    public static var testJson: String {
+        """
+        {
+          "tree" : {
+            "SwiftLint" : {
+              "dependencies" : [
+
+              ],
+              "version" : "0.47.1"
+            }
+          },
+          "externalDependencies" : {
+            "SwiftLint" : [
+
+            ]
+          },
+          "externalProjects" : [
+
+          ],
+          "externalFrameworkDependencies" : [
+
+          ]
+        }
+        """
+    }
+
+    /// A snapshot of `Dependencies.swift` file.
+    public static var testDependenciesFile: String {
+        """
+        import ProjectDescription
+
+        let repos: [String] = [
+            "https://cocoapods-cdn.cocoapods.com/private-specs/",
+            "https://cocoapods-cdn.cocoapods.com/public-specs-precompiled/"
+        ]
+
+        let cocoapodsDependencies = CocoapodsDependencies(repos: repos,
+                                                          dependencies: [.cdn(name: "SwiftLint", requirement: .exact("0.47.1"))])
+
+        let dependencies = Dependencies(cocoapods: cocoapodsDependencies)
+        """
+    }
+
+    public static func test(
+        externalDependencies: [String: [TargetDependency]] = [:],
+        externalProjects: [AbsolutePath: Project] = [:]
+    ) -> Self {
+        .init(
+            externalDependencies: externalDependencies,
+            externalProjects: externalProjects,
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func testXCFramework(
+        name: String = "Test",
+        // swiftlint:disable:next force_try
+        path: AbsolutePath = AbsolutePath.root.appending(try! RelativePath(validating: "Test.xcframework")),
+        status: LinkingStatus = .required
+    ) -> DependenciesGraph {
+        let externalDependencies = [name: [TargetDependency.xcframework(path: path, status: status)]]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func test(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "Geko": [
+                TargetDependency.project(
+                    target: "Geko",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func aDependency(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "ALibrary": [
+                TargetDependency.project(
+                    target: "ALibrary",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func anotherDependency(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "AnotherLibrary": [
+                TargetDependency.project(
+                    target: "AnotherLibrary",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func alamofire(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "Alamofire": [
+                TargetDependency.project(
+                    target: "Alamofire",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func googleAppMeasurement(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "GoogleAppMeasurement": [
+                TargetDependency.project(
+                    target: "GoogleAppMeasurementTarget",
+                    path: packageFolder
+                ),
+            ],
+            "GoogleAppMeasurementWithoutAdIdSupport": [
+                TargetDependency.project(
+                    target: "GoogleAppMeasurementWithoutAdIdSupportTarget",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func googleUtilities(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "GULAppDelegateSwizzler": [
+                TargetDependency.project(
+                    target: "GULAppDelegateSwizzler",
+                    path: packageFolder
+                ),
+            ],
+            "GULMethodSwizzler": [
+                TargetDependency.project(
+                    target: "GULMethodSwizzler",
+                    path: packageFolder
+                ),
+            ],
+            "GULNSData": [
+                TargetDependency.project(
+                    target: "GULNSData",
+                    path: packageFolder
+                ),
+            ],
+            "GULNetwork": [
+                TargetDependency.project(
+                    target: "GULNetwork",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+
+    public static func nanopb(
+        packageFolder: AbsolutePath
+    ) -> Self {
+        let externalDependencies = [
+            "nanopb": [
+                TargetDependency.project(
+                    target: "nanopb",
+                    path: packageFolder
+                ),
+            ],
+        ]
+
+        return .init(
+            externalDependencies: externalDependencies,
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [:]
+        )
+    }
+}

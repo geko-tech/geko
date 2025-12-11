@@ -1,0 +1,97 @@
+name: GekoDesktop
+options:
+  defaultConfig: Debug
+packages:
+  SwiftShell:
+    url: https://github.com/kareman/SwiftShell
+    exactVersion: 5.1.0
+    product: SwiftShell
+  Yams:
+    url: https://github.com/jpsim/Yams.git
+    exactVersion: 5.0.6
+    product: Yams
+  swift-tools-support-core:
+    url: https://github.com/swiftlang/swift-tools-support-core.git
+    exactVersion: 0.6.1
+    product: SwiftToolsSupport-auto
+  geko:
+    path: ../../geko
+settings:
+  configs:
+    Debug:
+      # TODO: Github fix code sign
+      PRODUCT_BUNDLE_IDENTIFIER: ""
+      ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+      MACOSX_DEPLOYMENT_TARGET: 14.0
+      ENABLE_USER_SCRIPT_SANDBOXING: YES
+      LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+      SWIFT_VERSION: "5.0"
+      SDKROOT: "macosx"
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
+    Release:
+      CODE_SIGN_STYLE: "Manual"
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_IDENTITY: "Developer ID Application"
+      PROVISIONING_PROFILE_SPECIFIER: ""
+      PRODUCT_BUNDLE_IDENTIFIER: ""
+      ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+      MACOSX_DEPLOYMENT_TARGET: 14.0
+      ENABLE_USER_SCRIPT_SANDBOXING: YES
+      LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      SDKROOT: "macosx"
+      INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
+schemes:
+  GekoDesktop:
+    build:
+      targets:
+        GekoDesktop: all
+        GekoDesktopTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: 
+        - GekoDesktopTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      customArchiveName: GekoDesktop
+      revealArchiveInOrganizer: false
+targets:
+  GekoDesktop:
+    type: application
+    platform: macOS
+    deploymentTarget: 14.0
+    dependencies: 
+      - package: SwiftShell
+      - package: Yams
+      - package: geko
+        product: GekoKit
+      - package: geko
+        product: AnyCodable
+      - package: swift-tools-support-core
+        product: SwiftToolsSupport-auto
+    sources:
+      - GekoDesktop
+  GekoDesktopTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: 14.0
+    dependencies:
+      - target: GekoDesktop
+      - package: geko
+        product: GekoGraphTesting
+      - package: geko
+        product: GekoSupportTesting
+    sources:
+      - GekoDesktopTests
+    settings:
+    # TODO: Github fix me
+      PRODUCT_BUNDLE_IDENTIFIER: 
+      TEST_HOST: $(BUILT_PRODUCTS_DIR)/GekoDesktop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GekoDesktop

@@ -1,0 +1,5 @@
+framework module HeadersTestMappingDir {
+  umbrella header "HeadersTestMappingDir-Umbrella-TVOS.h"
+  exclude header "HeadersTestMappingDir-Umbrella-IOS.h"
+  export *
+}
