@@ -30,7 +30,7 @@ final class PrecomiledAcceptanceTestiOSAppWithTransitiveFramework: GekoAcceptanc
         try await run(BuildCommand.self, "App", "--platform", "iOS")
         try await XCTAssertProductWithDestinationContainsFrameworkWithArchitecture(
             framework: "Framework1",
-            architecture: "arm64"
+            architecture: MachineEnvironment.shared.hardwareName
         )
         try XCTAssertProductWithDestinationDoesNotContainHeaders(
             "App.app",

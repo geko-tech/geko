@@ -59,7 +59,7 @@ final class GenerateAcceptanceTestInvalidWorkspaceManifestName: GekoAcceptanceTe
 final class GenerateAcceptanceTestSpmWithCocoapodsiOSApp: GekoAcceptanceTestCase {
     func test_ios_app_with_cocoapods_and_spm() async throws {
         throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
+
         try setUpFixture(.appWithSpmAndCocoapodsDependencies)
         try await run(FetchCommand.self)
         try await run(GenerateCommand.self)
@@ -198,23 +198,23 @@ final class GenerateAcceptanceTestsiOSAppWithCustomScheme: GekoAcceptanceTestCas
         try await run(BuildCommand.self, "App-Debug")
         try await run(BuildCommand.self, "App-Release")
         try await run(BuildCommand.self, "App-Local")
-        
+
         let xcodeprojPath = fixturePath.appending(components: ["App", "MainApp.xcodeproj"])
-        
+
         let xcodeproj = try XcodeProj(pathString: xcodeprojPath.pathString)
-        
+
         let scheme = try XCTUnwrap(
             xcodeproj.sharedData?.schemes
                 .filter { $0.name == "App-Debug" }
                 .first
         )
-        
+
         let testableTarget = try XCTUnwrap(
             scheme.testAction?.testables
                 .filter { $0.buildableReference.blueprintName == "AppTests" }
                 .first
         )
-        
+
         XCTAssertEqual(testableTarget.parallelization, .all)
     }
 }
@@ -436,7 +436,7 @@ final class GenerateAcceptanceTestiOSAppWithExtensions: GekoAcceptanceTestCase {
 final class GenerateAcceptanceTestCocoapodsMultiplatformiOSApp: GekoAcceptanceTestCase {
     func test_cocoapods_multiplatform_ios() async throws {
         throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
+
         try setUpFixture(.iosAppWorkspaceWithMultiplatformCocoapods)
         try await run(GenerateCommand.self)
         try await run(BuildCommand.self, "App")
@@ -547,7 +547,7 @@ final class GenerateAcceptanceTestiOSAppWithAppClip: GekoAcceptanceTestCase {
             "App.app",
             destination: "Debug-iphonesimulator",
             appClip: "AppClip1",
-            architecture: "arm64"
+            architecture: MachineEnvironment.shared.hardwareName
         )
         try XCTAssertFrameworkEmbedded("Framework", by: "AppClip1")
     }
@@ -789,34 +789,34 @@ final class GenerateAcceptanceTestiOSAppWithImplicitDependencies: GekoAcceptance
 
 final class GenerateAcceptanceTestAppWithGoogleMaps: GekoAcceptanceTestCase {
     private var ciChecker: CIChecking!
-    
+
     override func setUp() {
         super.setUp()
-        
+
         self.ciChecker = CIChecker()
     }
-    
+
     override func tearDown() {
         self.ciChecker = nil
-        
+
         super.tearDown()
     }
-    
+
     func test_app_with_google_maps() async throws {
         // A temporary solution until we move to GitHub.
         guard !ciChecker.isCI() else { return }
-        
+
         try setUpFixture(.appWithGoogleMaps)
         try await run(FetchCommand.self)
         try await run(GenerateCommand.self)
         try await run(BuildCommand.self)
-        
+
         try await XCTAssertProductWithDestinationContainsResource(
             "App.app",
             destination: "Debug-iphonesimulator",
             resource: "GoogleMaps_GoogleMapsTarget.bundle"
         )
-        
+
         try await XCTAssertProductWithDestinationDoesNotContainResource(
             "App.app",
             destination: "Debug-iphonesimulator",
@@ -831,13 +831,13 @@ final class GenerateAcceptanceTestAppWithPreviews: GekoAcceptanceTestCase {
         try await run(FetchCommand.self)
         try await run(GenerateCommand.self)
         try await run(BuildCommand.self)
-        
+
         try await XCTAssertProductWithDestinationContainsResource(
             "App.app",
             destination: "Debug-iphonesimulator",
             resource: "ResourcesFramework_ResourcesFramework.bundle"
         )
-        
+
         try await XCTAssertProductWithDestinationDoesNotContainResource(
             "App.app",
             destination: "Debug-iphonesimulator",
@@ -852,25 +852,25 @@ final class GenerateAcceptanceTestAppWithDynamicFramework: GekoAcceptanceTestCas
         try await run(FetchCommand.self)
         try await run(GenerateCommand.self)
         try await run(BuildCommand.self)
-        
+
         try await XCTAssertProductWithDestinationContainsResource(
             "App.app",
             destination: "Debug-iphonesimulator",
             resource: "Frameworks/DynamicFramework.framework/DynamicFramework.txt"
         )
-        
+
         try await XCTAssertProductWithDestinationContainsResource(
             "App.app",
             destination: "Debug-iphonesimulator",
             resource: "App.txt"
         )
-        
+
         try await XCTAssertProductWithDestinationContainsResource(
             "App.app",
             destination: "Debug-iphonesimulator",
             resource: "Frameworks/DynamicFramework.framework/SinglePodSharedResources.bundle"
         )
-        
+
         try await XCTAssertProductWithDestinationDoesNotContainResourceExact(
             "App.app",
             destination: "Debug-iphonesimulator",
@@ -1041,7 +1041,7 @@ extension GekoAcceptanceTestCase {
             XCTFail("Resource \(resource) found for product \(product) and destination \(destination)", file: file, line: line)
         }
     }
-    
+
     fileprivate func XCTAssertProductWithDestinationDoesNotContainResourceExact(
         _ product: String,
         destination: String,

@@ -13,7 +13,7 @@ rm -rf $TEMP_DIR
 mkdir -p $TEMP_DIR
 
 xcrun xcodebuild build -scheme Framework2-iOS -workspace Framework2.xcworkspace -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 11,OS=latest" -derivedDataPath $TEMP_DIR ONLY_ACTIVE_ARCH=NO
-xcrun xcodebuild build -scheme Framework2-macOS -workspace Framework2.xcworkspace -derivedDataPath $TEMP_DIR
+xcrun xcodebuild build -scheme Framework2-macOS -workspace Framework2.xcworkspace -derivedDataPath $TEMP_DIR ONLY_ACTIVE_ARCH=NO ARCHS="x86_64 arm64"
 
 mkdir -p prebuilt/iOS/Framework2.framework
 lipo -create \
