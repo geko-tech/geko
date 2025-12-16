@@ -25,7 +25,7 @@ mkdir -p $BUILD_DIRECTORY
 
 build_fat_release_project_description() {
     (
-    cd $CLONED_SOURCE_PACKAGES/checkouts/project-description
+    cd $CLONED_SOURCE_PACKAGES/checkouts/ProjectDescription
 
     PROJECT_DESCRIPTION="ProjectDescription"
     PROJ_DESC_BUILD_DIR=$TMP_DIR/$PROJECT_DESCRIPTION
@@ -80,8 +80,8 @@ echo "$(format_section "Bundling")"
 
 (
     cd $BUILD_DIRECTORY || exit 1
-    echo "$(format_subsection "Bundling geko.zip")"
-    zip -q -r --symlinks geko.zip geko libswift_Concurrency.dylib ProjectDescription.framework ProjectDescription.framework.dSYM Templates vendor geko_source.json
+    echo "$(format_subsection "Bundling geko_macos.zip")"
+    zip -q -r --symlinks geko_macos.zip geko libswift_Concurrency.dylib ProjectDescription.framework ProjectDescription.framework.dSYM Templates vendor geko_source.json
     echo "$(format_subsection "Bundling ProjectDescription.framework.zip")"
     zip -q -r --symlinks ProjectDescription.framework.zip ProjectDescription.framework ProjectDescription.framework.dSYM
 

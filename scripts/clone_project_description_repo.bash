@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # TODO: Github fix url after setup
 PROJECT_DESCRIPTION_VERSION=$(grep 'url: "replace_me", branch: "' Package.swift | sed -n 's/.*branch: "\([^"]*\)".*/\1/p')

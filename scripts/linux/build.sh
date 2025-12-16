@@ -1,8 +1,7 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 set -eo pipefail
 
-GEKO_SWIFT_VERSION_FILE="Sources/GekoSupport/Constants.swift"
 UTILITY_NAME=""
 BUMP_TYPE=""
 
@@ -14,21 +13,23 @@ while getopts "n:b:" flag; do
 	esac
 done
 
-set_is_stage() {
-	sed -Ei 's/let isStage = (true|false)/let isStage = '"$1"'/' $GEKO_SWIFT_VERSION_FILE
-}
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ "$BUMP_TYPE" == "none" ]]; then
 	NEW_VERSION=$($SCRIPT_DIR/new_version_number.sh -n $UTILITY_NAME -b $BUMP_TYPE -a $CI_COMMIT_SHORT_SHA)
 else
-	set_is_stage "false"
+	$SCRIPT_DIR/../set_is_stage.sh "false"
 	NEW_VERSION=$($SCRIPT_DIR/new_version_number.sh -n $UTILITY_NAME -b $BUMP_TYPE)
 fi
 
-$SCRIPT_DIR/build_linux.sh
+ROOT_DIR=$($SCRIPT_DIR/../../make/utilities/root_dir.sh)
 
-set_is_stage "true"
+if [[ "$(uname)" == "Darwin" ]]; then
+	$ROOT_DIR/make/tasks/workspace/release/bundle.sh
+else
+	$SCRIPT_DIR/build_linux.sh
+fi
+
+$SCRIPT_DIR/../set_is_stage.sh "true"
 
 echo $NEW_VERSION > version.txt
