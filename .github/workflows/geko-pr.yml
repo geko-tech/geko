@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   build_and_test_macos:
-    runs-on: self-hosted
+    runs-on: [self-hosted, macOS]
     env:
       GH_PAT: ${{ secrets.GH_PAT }}
     steps:
@@ -21,4 +21,30 @@ jobs:
         run: |
           git config --global credential.helper 'cache --timeout=3600'
           git config --global url."https://${GH_PAT}@github.com/".insteadOf "https://github.com/"
-          xcrun swift test | xcbeautify --renderer github-actions --is-ci
+          set -o pipefail && xcrun swift test | xcbeautify --renderer github-actions --is-ci
+
+  build_and_test_linux:
+    runs-on: [self-hosted, Linux]
+    env:
+      GH_PAT: ${{ secrets.GH_PAT }}
+    steps:
+      - uses: actions/checkout@v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: build_and_test
+        run: |
+          git config --global credential.helper 'cache --timeout=3600'
+          git config --global url."https://${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          set -o pipefail && \
+            swift test \
+              --filter GekoAcceptanceTests \
+              --filter GekoSupportTests \
+              --filter GekoCoreIntegrationTests \
+              --filter GekoCocoapodsTests \
+              --filter GekoCoreTests \
+              --filter GekoDependenciesTests \
+              --filter GekoGraphTests \
+              --filter GekoKitTests \
+              --filter ProjectDescriptionTests \
+              --filter PubGrubTests \
