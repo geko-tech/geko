@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 UTILITY_NAME=""
 BUMP_TYPE=""
@@ -16,14 +16,16 @@ Params:
 EOF
 }
 
-# TODO: Github. Replace url after setup
 bump_version_in_sources() {
-	sed -i -E 's/let version = "[0-9.]*"/let version = \"'"$2"'\"/' $1
-	PROJECT_DESCRIPTION_VERSION=$(grep 'url: "REPLACE_ME", branch: "' Package.swift | sed -n 's/.*branch: "\([^"]*\)".*/\1/p')
-	sed -i -E 's!let projectDescriptionVersion = "[a-z, A-Z, 0-9. /]*"!let projectDescriptionVersion = \"'"$PROJECT_DESCRIPTION_VERSION"'\"!' $1
+	PROJECT_DESCRIPTION_VERSION=$(grep 'url: "https://github.com/geko-tech/ProjectDescription.git", branch: "' Package.swift | sed -n 's/.*branch: "\([^"]*\)".*/\1/p')
+
+	[[ "$(uname)" == "Darwin" ]] && sed_cmd=(sed -i '' -E) || sed_cmd=(sed -Ei)
+
+	"${sed_cmd[@]}" 's/let version = "[0-9.]*"/let version = \"'"$2"'\"/' $1
+	"${sed_cmd[@]}" 's!let projectDescriptionVersion = "[a-z, A-Z, 0-9. /]*"!let projectDescriptionVersion = \"'"$PROJECT_DESCRIPTION_VERSION"'\"!' $1
 }
 
-while getopts ":n:b:a:" flag; do
+while getopts "n:b:a:" flag; do
 	case "$flag" in
 	n) UTILITY_NAME="$OPTARG" ;;
 	b) BUMP_TYPE="$OPTARG" ;;
@@ -37,7 +39,9 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-LAST_VERSION=$($SCRIPT_DIR/last_utility_version.sh $UTILITY_NAME)
+LAST_VERSION=$($SCRIPT_DIR/last_utility_version.sh $UTILITY_NAME 2>/dev/null)
+
+LAST_VERSION=${LAST_VERSION:-"0.35.0"}
 
 MAJOR=$(echo $LAST_VERSION | cut -d '.' -f1)
 MINOR=$(echo $LAST_VERSION | cut -d '.' -f2)
