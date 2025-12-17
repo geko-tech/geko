@@ -39,12 +39,10 @@ final class CocoapodsRepoGitSourceUpdater {
         if !fileHandler.exists(repoCacheDir.appending(component: ".git")) {
             logger.info("Cloning '\(source)'")
             try gitHandler.clone(url: source, to: repoCacheDir)
-            logger.info("Cloned '\(source)'")
         } else if repoUpdate {
             logger.info("Updating '\(source)'")
             try gitHandler.checkout(id: "master", in: repoCacheDir)
             try gitHandler.pull(in: repoCacheDir)
-            logger.info("Updated '\(source)'")
         }
     }
 }

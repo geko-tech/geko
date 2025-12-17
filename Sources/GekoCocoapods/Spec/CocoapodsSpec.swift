@@ -184,6 +184,9 @@ public struct CocoapodsSpec {
         public let sha256: String?
         public let git: String?
         public let tag: String?
+        public let branch: String?
+        public let commit: String?
+        public let submodules: Bool?
         public let flatten: Bool?
 
         public init(
@@ -191,12 +194,18 @@ public struct CocoapodsSpec {
             sha256: String?,
             git: String?,
             tag: String?,
+            branch: String?,
+            commit: String?,
+            submodules: Bool?,
             flatten: Bool?
         ) {
             self.http = http
             self.sha256 = sha256
             self.git = git
             self.tag = tag
+            self.branch = branch
+            self.commit = commit
+            self.submodules = submodules
             self.flatten = flatten
         }
 
@@ -205,6 +214,9 @@ public struct CocoapodsSpec {
             sha256: nil,
             git: nil,
             tag: nil,
+            branch: nil,
+            commit: nil,
+            submodules: nil,
             flatten: nil
         )
     }

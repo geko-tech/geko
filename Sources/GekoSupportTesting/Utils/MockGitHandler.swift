@@ -16,6 +16,16 @@ public final class MockGitHandler: GitHandling {
         cloneToStub?(url, path)
     }
 
+    public var cloneToShallowBranchStub: ((String, AbsolutePath, Bool, String?) -> Void)?
+    public func clone(url: String, to path: ProjectDescription.AbsolutePath, shallow: Bool, branch: String?) throws {
+        cloneToShallowBranchStub?(url, path, shallow, branch)
+    }
+
+    public var updateSubmodulesStub: ((AbsolutePath) -> Void)?
+    public func updateSubmodules(path: ProjectDescription.AbsolutePath) throws {
+        updateSubmodulesStub?(path)
+    }
+
     public var checkoutStub: ((String, AbsolutePath?) -> Void)?
     public func checkout(id: String, in path: AbsolutePath?) throws {
         checkoutStub?(id, path)

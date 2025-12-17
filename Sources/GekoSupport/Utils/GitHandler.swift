@@ -18,6 +18,22 @@ public protocol GitHandling {
     ///   - path: The `AbsolutePath` to clone the git repository.
     func clone(url: String, to path: AbsolutePath?) throws
 
+    /// Clones the given `url` **to** the given `path`.
+    /// `path` must point to a directory where a git repo can be cloned.
+    ///
+    /// - Parameters:
+    ///   - url: The `url` to the git repository to clone.
+    ///   - path: The `AbsolutePath` to clone the git repository.
+    ///   - shallow: Whether to clone the repository in shallow mode.
+    ///   - branch: The branch or tag to clone.
+    func clone(url: String, to path: AbsolutePath, shallow: Bool, branch: String?) throws
+
+    /// Updates the submodules in the given `path`.
+    ///
+    /// - Parameters:
+    ///   - path: The path to the git repository in which to perform the update.
+    func updateSubmodules(path: AbsolutePath) throws
+
     /// Checkout to some git `id` in the given `path`.
     ///
     /// The `id` must be something known to the `git checkout` command, which includes:
@@ -65,6 +81,14 @@ public final class GitHandler: GitHandling {
         }
     }
 
+    public func clone(url: String, to path: AbsolutePath, shallow: Bool, branch: String?) throws {
+        try run(command: ["git", "clone", url, path.pathString] + cloneArgs(shallow: shallow, branch: branch))
+    }
+
+    public func updateSubmodules(path: AbsolutePath) throws {
+        try run(command: "git", "-C", path.pathString, "submodule", "update", "--init", "--recursive")
+    }
+
     public func checkout(id: String, in path: AbsolutePath?) throws {
         if let path {
             let gitDirectory = path.appending(component: ".git")
@@ -87,7 +111,27 @@ public final class GitHandler: GitHandling {
         }
     }
 
+    // MARK: - Private
+
+    private func cloneArgs(shallow: Bool, branch: String?) -> [String] {
+        var result: [String] = []
+
+        if shallow {
+            result.append(contentsOf: ["--single-branch", "--depth", "1"])
+        }
+
+        if let branch {
+            result.append(contentsOf: ["--branch", branch])
+        }
+
+        return result
+    }
+
     private func run(command: String...) throws {
+        try run(command: command)
+    }
+
+    private func run(command: [String]) throws {
         if Environment.shared.isVerbose {
             try system.runAndPrint(command, verbose: true, environment: System.shared.env)
         } else {

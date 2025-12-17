@@ -6,6 +6,9 @@ extension CocoapodsSpec.Source {
         sha256: String? = nil,
         git: String? = nil,
         tag: String? = nil,
+        branch: String?,
+        commit: String?,
+        submodules: Bool?,
         flatten: Bool? = nil
     ) -> CocoapodsSpec.Source {
         return CocoapodsSpec.Source(
@@ -13,6 +16,9 @@ extension CocoapodsSpec.Source {
             sha256: sha256,
             git: git,
             tag: tag,
+            branch: branch,
+            commit: commit,
+            submodules: submodules,
             flatten: flatten
         )
     }
