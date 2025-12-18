@@ -119,4 +119,4 @@ jobs:
           git push -u origin "$branch"
           export GH_TOKEN=$GH_AUTOMATION_PAT
           gh pr create --fill
-          gh pr merge --auto --merge --delete-branch || echo "Automerge is disabled in private repos, manual merge needed"
+          # gh pr merge --auto --merge --delete-branch || echo "Automerge is disabled in private repos, manual merge needed"
