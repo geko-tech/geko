@@ -65,6 +65,8 @@ jobs:
     name: Make GitHub Release
     needs: build_for_all_platforms
     runs-on: self-hosted
+    permissions:
+      contents: write
     env:
       GH_RELEASE_PAT: ${{ secrets.GH_RELEASE_PAT }}
       GH_AUTOMATION_PAT: ${{ secrets.GH_AUTOMATION_PAT }}
@@ -99,7 +101,7 @@ jobs:
       - name: Create draft release
         run: |
           export GH_TOKEN=$GH_RELEASE_PAT
-          gh release create $TAG --generate-notes --target $COMMIT_SHA build_artifacts/*
+          gh release create $TAG -d --generate-notes --target $COMMIT_SHA build_artifacts/*
 
       - name: Bump version
         run: |
