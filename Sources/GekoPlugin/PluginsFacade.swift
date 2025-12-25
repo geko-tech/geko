@@ -3,7 +3,7 @@ import struct ProjectDescription.AbsolutePath
 import struct ProjectDescription.RelativePath
 import struct ProjectDescription.Plugin
 import struct ProjectDescription.PluginLocation
-import struct ProjectDescription.PluginExecutable
+import struct ProjectDescription.ExecutablePlugin
 import struct ProjectDescription.PluginConfigManifest
 import GekoCore
 import GekoGraph
@@ -13,7 +13,7 @@ import GekoSupport
 
 public protocol PluginsFacading: AnyObject {
     func loadPlugins(using config: Config) async throws -> Plugins
-    func executablePlugins(using config: Config) throws -> [ExecutablePlugin]
+    func executablePlugins(using config: Config) throws -> [ExecutablePluginGeko]
     func workspaceMapperPlugins(using config: Config) throws -> [WorkspaceMapperPluginPath]
 }
 
@@ -59,7 +59,7 @@ public final class PluginsFacade: PluginsFacading {
         )
     }
 
-    public func executablePlugins(using config: Config) throws -> [ExecutablePlugin] {
+    public func executablePlugins(using config: Config) throws -> [ExecutablePluginGeko] {
         try executablePluginPathsResolver.executablePlugins(using: config)
     }
 

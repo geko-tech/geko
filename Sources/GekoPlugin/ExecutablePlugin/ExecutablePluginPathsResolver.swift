@@ -16,7 +16,7 @@ final class ExecutablePluginPathsResolver {
 
     // MARK: - Public
 
-    func executablePlugins(using config: Config) throws -> [ExecutablePlugin] {
+    func executablePlugins(using config: Config) throws -> [ExecutablePluginGeko] {
         try config.plugins.compactMap { pluginLocation in
             guard let (plugin, pluginPath) = try pluginPathResolver.pluginAndPath(pluginLocation: pluginLocation) else { return nil }
 
@@ -27,7 +27,7 @@ final class ExecutablePluginPathsResolver {
                 )
             }
 
-            return ExecutablePlugin(
+            return ExecutablePluginGeko(
                 name: plugin.name,
                 executablePaths: executablePaths
             )
@@ -53,7 +53,7 @@ final class ExecutablePluginPathsResolver {
 
     private func executablePath(
         pluginCacheDirectory: AbsolutePath,
-        executable: PluginExecutable
+        executable: ExecutablePlugin
     ) -> AbsolutePath {
         if let path = executable.path {
             return pluginCacheDirectory

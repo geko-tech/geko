@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-public struct ExecutablePlugin: Equatable, Hashable {
+public struct ExecutablePluginGeko: Equatable, Hashable {
     public let name: String
     public let executablePaths: [ExecutablePath]
 

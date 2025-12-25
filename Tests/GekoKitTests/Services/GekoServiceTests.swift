@@ -59,11 +59,11 @@ final class GekoServiceTests: GekoUnitTestCase {
         }
         pluginsFacade.executablePluginsStub = { _ in
             [
-                ExecutablePlugin(name: "plugin",
-                                 executablePaths: [
-                                    ExecutablePath(name: "executable-a", path: pluginReleasePath),
-                                    ExecutablePath(name: "executable-b", path: pluginReleasePath)
-                                 ])
+                ExecutablePluginGeko(name: "plugin",
+                                     executablePaths: [
+                                        ExecutablePath(name: "executable-a", path: pluginReleasePath),
+                                        ExecutablePath(name: "executable-b", path: pluginReleasePath)
+                                     ])
             ]
         }
         system.succeedCommand(["plugin executable-b"])

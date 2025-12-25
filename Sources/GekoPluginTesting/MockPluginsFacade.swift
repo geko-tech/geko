@@ -16,8 +16,8 @@ public final class MockPluginsFacade: PluginsFacading {
         try fetchRemotePluginsStub?(config)
     }
     
-    public var executablePluginsStub: ((Config) throws -> [ExecutablePlugin])?
-    public func executablePlugins(using config: Config) throws -> [ExecutablePlugin] {
+    public var executablePluginsStub: ((Config) throws -> [ExecutablePluginGeko])?
+    public func executablePlugins(using config: Config) throws -> [ExecutablePluginGeko] {
         try executablePluginsStub?(config) ?? []
     }
     

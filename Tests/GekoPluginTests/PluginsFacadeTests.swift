@@ -70,7 +70,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
                 url: .pluginUrl,
                 manifest: .plugin(
                     name: .pluginName,
-                    executables: [PluginExecutable(name: "not_existing_executable")]
+                    executables: [ExecutablePlugin(name: "not_existing_executable")]
                 )
             )
         ])
@@ -96,7 +96,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
                 url: .pluginUrl,
                 manifest: .plugin(
                     name: .pluginName,
-                    executables: [PluginExecutable(name: .executableName)]
+                    executables: [ExecutablePlugin(name: .executableName)]
                 )
             )
         ])
@@ -137,7 +137,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
                 manifest: .plugin(
                     name: .pluginName,
                     executables: [
-                        PluginExecutable(name: .executableName, path: customPath)
+                        ExecutablePlugin(name: .executableName, path: customPath)
                     ]
                 )
             )
@@ -171,7 +171,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
                 manifest: .plugin(
                     name: .pluginName,
                     executables: [
-                        PluginExecutable(name: .executableName)
+                        ExecutablePlugin(name: .executableName)
                     ]
                 )
             )
@@ -204,7 +204,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
                 manifest: .plugin(
                     name: .pluginName,
                     executables: [
-                        PluginExecutable(name: .executableName, path: customPath)
+                        ExecutablePlugin(name: .executableName, path: customPath)
                     ]
                 )
             )
@@ -236,7 +236,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
             .remote(baseUrl: .baseUrl, name: .pluginName, version: "1.0.0")
         ])
         manifestLoader.loadPluginStub = { _ in
-            Plugin(name: .pluginName, executables: [PluginExecutable(name: .executableName)])
+            Plugin(name: .pluginName, executables: [ExecutablePlugin(name: .executableName)])
         }
 
         let executableOnePath = pluginCacheDirectory
@@ -273,7 +273,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
             .remote(baseUrl: .baseUrl, name: .pluginName, version: "1.0.0")
         ])
         manifestLoader.loadPluginStub = { _ in
-            Plugin(name: .pluginName, executables: [PluginExecutable(name: .executableName)])
+            Plugin(name: .pluginName, executables: [ExecutablePlugin(name: .executableName)])
         }
 
         let executableOnePath = pluginCacheDirectory
@@ -340,7 +340,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
             .remote(baseUrl: .baseUrl, name: .pluginName, version: "1.0.0")
         ])
         manifestLoader.loadPluginStub = { _ in
-            Plugin(name: .pluginName, executables: [PluginExecutable(name: .executableName)])
+            Plugin(name: .pluginName, executables: [ExecutablePlugin(name: .executableName)])
         }
 
         let executableOnePath = pluginCacheDirectory
