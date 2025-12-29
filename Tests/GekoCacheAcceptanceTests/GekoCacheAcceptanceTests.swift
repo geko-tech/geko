@@ -10,8 +10,6 @@ import PathKit
 
 final class CacheAcceptanceTestsAllTargets: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache() async throws {
-        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
         // Given
         TestingLogHandler.reset()
         let expectedTargetsFeaturePodA = ["FeaturePodA-Unit-Tests"]
@@ -52,8 +50,6 @@ final class CacheAcceptanceTestsAllTargets: GekoAcceptanceTestCase {
 
 final class CacheAcceptanceTestsCacheWithFocus: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus() async throws {
-        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
         // Given
         TestingLogHandler.reset()
         let expectedTargetsFeaturePodA = ["FeaturePodA", "FeaturePodA-FeaturePodAResources"]
@@ -108,8 +104,6 @@ final class CacheAcceptanceTestsCacheWithFocus: GekoAcceptanceTestCase {
 
 final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesSafeMode: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus_and_focus_direct_dependencies_safe_mode() async throws {
-        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
         // Given
         TestingLogHandler.reset()
         let expectedFeaturePodATargetDependencies = [
@@ -186,8 +180,6 @@ final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesSafeMode: Gek
 
 final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesUnsafeMode: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus_and_focus_direct_dependencies_unsafe_mode() async throws {
-        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
         // Given
         TestingLogHandler.reset()
         let expectedFeaturePodATargetDependencies = [
@@ -269,8 +261,6 @@ final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesUnsafeMode: G
 
 final class CacheAcceptanceTestsWithSwiftModuleCache: GekoAcceptanceTestCase {
     func test_ios_app_generate_cache_with_focus_swiftmodule_cache() async throws {
-        throw XCTSkip("// TODO: Github find some other public cdn precompiled library or replace with orig source")
-        
         // Given
         environment.swiftModuleCacheEnabled = true
         TestingLogHandler.reset()
@@ -296,7 +286,7 @@ final class CacheAcceptanceTestsWithSwiftModuleCache: GekoAcceptanceTestCase {
         XCTAssertStandardOutput(pattern: "Total time taken for swiftmodule cache fetch")
 
         // Check the SwiftJSON folder for the presence of the swiftmodule file and the absence of swiftinterface files
-        let swiftmoduleFolderPath = fixturePath.appending(components: ["Geko", "Dependencies", "Cocoapods", "SwiftyJSON", "SwiftyJSON.xcframework", "ios-arm64_x86_64-simulator", "SwiftyJSON.framework","Modules","SwiftyJSON.swiftmodule"])
+        let swiftmoduleFolderPath = fixturePath.appending(components: ["Geko", "Dependencies", "Cocoapods", "SwiftyJSON", "Frameworks", "SwiftyJSON.xcframework", "ios-arm64_x86_64-simulator", "SwiftyJSON.framework","Modules","SwiftyJSON.swiftmodule"])
         let contents = try FileHandler.shared.contentsOfDirectory(swiftmoduleFolderPath)
         XCTAssertTrue(contents.map { $0.pathString.contains(".swiftmodule")}.allSatisfy({$0}))
         XCTAssertTrue(contents.map { !$0.pathString.contains(".swiftinterface")}.allSatisfy({$0}))
