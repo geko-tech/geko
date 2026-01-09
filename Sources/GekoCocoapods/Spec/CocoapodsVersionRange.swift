@@ -1,10 +1,11 @@
 import Foundation
 
-// interval is half open, meaning that range is suitable
-// for any version such as min >= version < max
-public struct CocoapodsVersionRange: Equatable {
-    public let min: CocoapodsVersion
-    public let max: CocoapodsVersion?
+public enum CocoapodsVersionRange: Equatable {
+    case any
+    case exact(CocoapodsVersion)
+    case higherThan(CocoapodsVersion)
+    case strictlyLessThan(CocoapodsVersion)
+    case between(CocoapodsVersion, CocoapodsVersion)
 
     private static let quantifierCharset: CharacterSet = {
         var charset = CharacterSet()
@@ -28,7 +29,7 @@ public enum CocoapodsVersionRangeError: Error, CustomStringConvertible {
     public var description: String {
         switch self {
         case let .invalidVersionRangeString(str):
-            return "invlaid version string '\(str)'"
+            return "invalid version string '\(str)'"
         case let .unsupportedVersionRangeString(str):
             return "unsupported version range string '\(str)'"
         }
@@ -36,10 +37,6 @@ public enum CocoapodsVersionRangeError: Error, CustomStringConvertible {
 }
 
 extension CocoapodsVersionRange {
-    public static func any() -> CocoapodsVersionRange {
-        .init(min: .lowest, max: nil)
-    }
-
     public static func components(from versionRange: String) -> [Substring] {
         var result: [Substring] = []
 
@@ -72,7 +69,7 @@ extension CocoapodsVersionRange {
 
     public static func from(_ components: [String]) throws -> CocoapodsVersionRange {
         if components.count < 1 {
-            return .any()
+            return .any
         }
 
         if components.count > 2 {
@@ -89,13 +86,17 @@ extension CocoapodsVersionRange {
             guard components.count == 1, let lower else {
                 throw CocoapodsVersionRangeError.invalidVersionRangeString(components.joined(separator: ","))
             }
-            return .init(min: lower, max: lower.bump())
+            return .exact(lower)
 
         case .optimistic:
             guard let lower else {
                 throw CocoapodsVersionRangeError.invalidVersionRangeString(components.joined(separator: ","))
             }
-            return .init(min: lower, max: upper)
+            if let upper {
+                return .between(lower, upper)
+            } else {
+                return .higherThan(lower)
+            }
 
         case .lessThan:
             guard let upper else {
@@ -103,16 +104,16 @@ extension CocoapodsVersionRange {
             }
 
             if components.count == 1 {
-                return .init(min: .lowest, max: upper)
+                return .strictlyLessThan(upper)
             }
 
             let (secondQuantifier, secondLower, _) = try component(from: components[1])
 
-            guard secondQuantifier == .greaterThan, let secondLower else {
+            guard secondQuantifier == .greaterThan, let secondLower, secondLower < upper else {
                 throw CocoapodsVersionRangeError.invalidVersionRangeString(components.joined(separator: ","))
             }
 
-            return .init(min: secondLower, max: upper)
+            return .between(secondLower, upper)
 
         case .greaterThan:
             guard let lower else {
@@ -120,16 +121,16 @@ extension CocoapodsVersionRange {
             }
 
             if components.count == 1 {
-                return .init(min: lower, max: nil)
+                return .higherThan(lower)
             }
 
             let (secondQuantifier, _, secondUpper) = try component(from: components[1])
 
-            guard secondQuantifier == .lessThan, let secondUpper else {
+            guard secondQuantifier == .lessThan, let secondUpper, lower < secondUpper else {
                 throw CocoapodsVersionRangeError.invalidVersionRangeString(components.joined(separator: ","))
             }
 
-            return .init(min: lower, max: secondUpper)
+            return .between(lower, secondUpper)
         }
     }
 

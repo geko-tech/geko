@@ -377,13 +377,11 @@ extension GekoCore.DependenciesGraph {
         _ second: ProjectDescription.Project,
         path: FilePath
     ) -> ProjectDescription.Project {
-        ProjectDescription.Project.init(
-            name: path.basename,
-            settings: first.settings,
-            targets: first.targets + second.targets,
-            schemes: first.schemes + second.schemes,
-            fileHeaderTemplate: first.fileHeaderTemplate,
-            additionalFiles: first.additionalFiles + second.additionalFiles
-        )
+        var result = first
+        result.name = path.basename
+        result.targets.append(contentsOf: second.targets)
+        result.schemes.append(contentsOf: second.schemes)
+        result.additionalFiles.append(contentsOf: second.additionalFiles)
+        return result
     }
 }

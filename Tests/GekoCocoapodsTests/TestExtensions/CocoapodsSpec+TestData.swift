@@ -26,7 +26,7 @@ extension CocoapodsSpec {
             moduleMap: nil,
             podTargetXCConfig: [:],
             infoPlist: [:],
-            compilerFlags: nil,
+            compilerFlags: [],
             requiresArc: nil,
             frameworks: [],
             weakFrameworks: [],

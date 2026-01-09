@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/geko-tech/ProjectDescription.git",
       "state" : {
-        "branch" : "release/0.15.0",
-        "revision" : "1c819dd60df2e8942f47aa9414a43e07f53b8538"
+        "branch" : "release/0.16.0",
+        "revision" : "9121667624d31cc4aaf72cb7305d0f750718917a"
       }
     },
     {

@@ -62,7 +62,7 @@ public class PubGrubSolver<DP: PubGrubDependencyProvider> {
                         throw PubGrubError.selfDependency(package: p, version: v)
                     }
                     if let (dependent, _) = x.constraints
-                        .first(where: { $0.value == VersionRange<V>.none() })
+                        .first(where: { $0.value == VersionSet<V>.none() })
                     {
                         throw PubGrubError.dependencyOnTheEmptySet(
                             package: p,
@@ -109,7 +109,7 @@ public class PubGrubSolver<DP: PubGrubDependencyProvider> {
 /// first version contained in the constraints.
 public func choosePackageWithFewestVersions<P: Package, V: Version>(
     listAvailableVersions: (P) async throws -> [V],
-    potentialPackages: [(P, VersionRange<V>)]
+    potentialPackages: [(P, VersionSet<V>)]
 ) async throws -> (P, V?) {
     var filteredPackageVersions: [P: Int] = [:]
     for (pkg, range) in potentialPackages {

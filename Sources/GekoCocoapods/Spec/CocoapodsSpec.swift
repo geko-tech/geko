@@ -75,7 +75,7 @@ public struct CocoapodsSpec {
     public let moduleMap: ModuleMap?
     public let podTargetXCConfig: [String: SettingValue]
     public let infoPlist: [String: PlistValue]
-    public let compilerFlags: String?
+    public let compilerFlags: [String]
     public let requiresArc: RequiresArc?
 
     public let frameworks: [String]
@@ -121,7 +121,7 @@ public struct CocoapodsSpec {
         moduleMap: ModuleMap?,
         podTargetXCConfig: [String: SettingValue],
         infoPlist: [String: PlistValue],
-        compilerFlags: String?,
+        compilerFlags: [String],
         requiresArc: RequiresArc?,
         frameworks: [String],
         weakFrameworks: [String],
@@ -508,7 +508,7 @@ extension CocoapodsSpec: Decodable {
         moduleMap = try c.decodeIfPresent(ModuleMap.self, forKey: .moduleMap)
         podTargetXCConfig = try c.decodeIfPresent([String: SettingValue].self, forKey: .podTargetXCConfig) ?? [:]
         infoPlist = try c.decodeIfPresent([String: PlistValue].self, forKey: .infoPlist) ?? [:]
-        compilerFlags = try c.decodeIfPresent(String.self, forKey: .compilerFlags)
+        compilerFlags = decodeStringOrArray(container: c, for: .compilerFlags)
         requiresArc = try c.decodeIfPresent(RequiresArc.self, forKey: .requiresArc)
 
         frameworks = decodeStringOrArray(container: c, for: .frameworks)

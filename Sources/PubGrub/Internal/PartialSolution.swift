@@ -83,7 +83,7 @@ enum AssignmentsIntersection<V: Version> {
     /// selected version (no "decision")
     /// and if it contains at least one positive derivation term
     /// in the partial solution.
-    func potentialPackageFilter<P: Package>(package: P) -> (P, VersionRange<V>)? {
+    func potentialPackageFilter<P: Package>(package: P) -> (P, VersionSet<V>)? {
         switch self {
         case .decision:
             return nil
@@ -178,7 +178,7 @@ struct PartialSolution<P: Package, V: Version> {
         }
     }
 
-    func potentialPackages() -> [(P, VersionRange<V>)]? {
+    func potentialPackages() -> [(P, VersionSet<V>)]? {
         let result = packageAssignments.compactMap { p, pa in
             pa.assignmentsIntersection.potentialPackageFilter(package: p)
         }

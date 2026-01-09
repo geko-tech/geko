@@ -114,10 +114,6 @@ public class FileClient: FileClienting {
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw FileClientError.invalidResponse(urlRequest, nil)
             }
-            let statusCode = httpResponse.statusCode
-            if statusCode == 403 || statusCode == 401 {
-                throw FileClientError.forbiddenError(urlRequest)
-            }
             return httpResponse.statusCode == 200
         } catch {
             if error is FileClientError {

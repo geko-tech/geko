@@ -19,7 +19,7 @@ enum CocoapodsDependenciesResolverError: FatalError, CustomStringConvertible {
     var description: String {
         switch self {
         case let .noSolution(message):
-            return "Cocoapods package resolution failed:\n\n" + message
+            return "Package resolution failed:\n\n" + message
         }
     }
 }
@@ -73,7 +73,9 @@ class CocoapodsDependenciesResolver {
         do {
             resolvedPackages = try await resolver.resolve(package: rootName, version: CocoapodsVersion(1, 0, 0))
         } catch let PubGrubError<Package, Version>.noSolution(derivationTree) {
-            throw CocoapodsDependenciesResolverError.noSolution(DefaultStringReporter.report(derivationTree: derivationTree))
+            throw CocoapodsDependenciesResolverError.noSolution(
+                DefaultStringReporter.report(derivationTree: derivationTree, colored: Environment.shared.shouldOutputBeColoured)
+            )
         }
 
         let timeElapsed = clock.now - startTime
@@ -274,12 +276,25 @@ class CocoapodsDependenciesResolver {
 }
 
 extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
+    private struct AvailableVersionsSet {
+        var release: [Version] = []
+        var preRelease: [Version] = []
+
+        var last: Version? {
+            return release.last ?? preRelease.last
+        }
+
+        func contains(_ version: Version) -> Bool {
+            return release.contains(version) || preRelease.contains(version)
+        }
+    }
+
     func choosePackageVersion(
-        potentialPackages: [(Package, VersionRange<Version>)]
+        potentialPackages: [(Package, VersionSet<Version>)]
     ) async throws -> (Package, Version?) {
         assert(potentialPackages.count > 0)
 
-        var packageVersions: [Package: [Version]] = [:]
+        var packageVersions: [Package: AvailableVersionsSet] = [:]
 
         var minimalVersionsPackage = ""
         var minimalVersionsCount = Int.max
@@ -287,7 +302,17 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
         for (pkg, range) in potentialPackages {
             let versions = try await availableVersions(for: pkg)
                 .filter { v in range.contains(v) }
-            packageVersions[pkg] = versions
+            var set = AvailableVersionsSet()
+            for v in versions {
+                if v.isPreRelease {
+                    set.preRelease.append(v)
+                } else {
+                    set.release.append(v)
+                }
+                set.preRelease.sort()
+                set.release.sort()
+            }
+            packageVersions[pkg] = set
 
             if minimalVersionsCount > versions.count {
                 minimalVersionsCount = versions.count
@@ -309,25 +334,43 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
         version: Version
     ) async throws -> PubGrub.Dependencies<Package, Version> {
         if package == "root" {
-            var constraints: OrderedDictionary<Package, VersionRange<Version>> = [:]
+            var constraints: OrderedDictionary<Package, VersionSet<Version>> = [:]
             for dep in rootDependencies.values {
                 switch dep {
-                case let .cdn(name, requirement, _):
+                case let .cdn(name, requirement, _), let .gitRepo(name, requirement, _):
                     switch requirement {
                     case let .exact(version):
                         let version = CocoapodsVersion(from: version)
                         constraints[name] = .exact(version: version)
                     case let .atLeast(version):
                         let minVersion = CocoapodsVersion(from: version)
-                        constraints[name] = .higherThan(version: minVersion)
+                        if minVersion.isPreRelease {
+                            constraints[name] = .init(
+                                release: .higherThan(version: minVersion.asReleaseVersion()),
+                                preRelease: .exact(version: minVersion)
+                            )
+                        } else {
+                            constraints[name] = .init(
+                                release: .higherThan(version: minVersion),
+                                preRelease: .none()
+                            )
+                        }
                     case let .upToNextMinor(version):
-                        let minVersion = CocoapodsVersion(from: version)
+                        let version = CocoapodsVersion(from: version)
+                        let minVersion = version.asReleaseVersion()
                         let maxVersion = minVersion.bumpMinor()
-                        constraints[name] = .between(minVersion, maxVersion)
+                        constraints[name] = .init(
+                            release: .between(minVersion, maxVersion),
+                            preRelease: version.isPreRelease ? .exact(version: version) : .none()
+                        )
                     case let .upToNextMajor(version):
-                        let minVersion = CocoapodsVersion(from: version)
+                        let version = CocoapodsVersion(from: version)
+                        let minVersion = version.asReleaseVersion()
                         let maxVersion = minVersion.bumpMajor()
-                        constraints[name] = .between(minVersion, maxVersion)
+                        constraints[name] = .init(
+                            release: .between(minVersion, maxVersion),
+                            preRelease: version.isPreRelease ? .exact(version: version) : .none()
+                        )
                     }
                 case let .git(name, _, _):
                     let version = gitInteractor.version(of: name)
@@ -335,23 +378,6 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
                 case let .path(name, _):
                     let version = pathInteractor.version(of: name)
                     constraints[name] = .exact(version: version)
-                case let .gitRepo(name, requirement, _):
-                    switch requirement {
-                    case let .exact(version):
-                        let version = CocoapodsVersion(from: version)
-                        constraints[name] = .exact(version: version)
-                    case let .atLeast(version):
-                        let minVersion = CocoapodsVersion(from: version)
-                        constraints[name] = .higherThan(version: minVersion)
-                    case let .upToNextMinor(version):
-                        let minVersion = CocoapodsVersion(from: version)
-                        let maxVersion = minVersion.bumpMinor()
-                        constraints[name] = .between(minVersion, maxVersion)
-                    case let .upToNextMajor(version):
-                        let minVersion = CocoapodsVersion(from: version)
-                        let maxVersion = minVersion.bumpMajor()
-                        constraints[name] = .between(minVersion, maxVersion)
-                    }
                 }
             }
             return .known(.init(constraints: constraints))
@@ -363,28 +389,28 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
             case let .cdn(_, _, source):
                 let constraints = try await repoInteractorCdn.dependencies(
                     for: package, version: version, source: source
-                ).mapValues { $0.toVersionRange() }
+                ).mapValues { $0.toVersionSet() }
 
                 return .known(.init(constraints: constraints))
             case .git:
-                let deps = try gitInteractor.dependencies(of: package).mapValues { $0.toVersionRange() }
+                let deps = try gitInteractor.dependencies(of: package).mapValues { $0.toVersionSet() }
                 return .known(.init(constraints: deps))
             case .path:
-                let deps = try pathInteractor.dependencies(of: package).mapValues { $0.toVersionRange() }
+                let deps = try pathInteractor.dependencies(of: package).mapValues { $0.toVersionSet() }
                 return .known(.init(constraints: deps))
             case let .gitRepo(_, _, source):
                 let constraints = try await repoInteractorGit.dependencies(
                     for: package, version: version, source: source
-                ).mapValues { $0.toVersionRange() }
+                ).mapValues { $0.toVersionSet() }
 
                 return .known(.init(constraints: constraints))
             }
         } else {
             if gitInteractor.contains(specName) {
-                let deps = try gitInteractor.dependencies(of: package).mapValues { $0.toVersionRange() }
+                let deps = try gitInteractor.dependencies(of: package).mapValues { $0.toVersionSet() }
                 return .known(.init(constraints: deps))
             } else if pathInteractor.contains(specName) {
-                let deps = try pathInteractor.dependencies(of: package).mapValues { $0.toVersionRange() }
+                let deps = try pathInteractor.dependencies(of: package).mapValues { $0.toVersionSet() }
                 return .known(.init(constraints: deps))
             } else {
                 let dependencies: OrderedDictionary<String, CocoapodsVersionRange>
@@ -397,7 +423,7 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
 
                 return .known(
                     .init(
-                        constraints: dependencies.mapValues { $0.toVersionRange() }
+                        constraints: dependencies.mapValues { $0.toVersionSet() }
                     )
                 )
             }
@@ -408,10 +434,65 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
 }
 
 extension CocoapodsVersionRange {
-    fileprivate func toVersionRange() -> VersionRange<CocoapodsVersion> {
-        if let max = self.max {
-            return .between(min, max)
+    fileprivate func toVersionSet() -> VersionSet<CocoapodsVersion> {
+        switch self {
+        case .any:
+            return .any()
+        case let .exact(version):
+            if version.isPreRelease {
+                return .init(
+                    release: .exact(version: version.asReleaseVersion()),
+                    preRelease: .exact(version: version)
+                )
+            }
+
+            return .init(
+                release: .exact(version: version),
+                // any pre-release version is suitable as long it has the same non-pre-release components
+                preRelease: .between(version.withEmptyPreRelease(), version)
+            )
+
+        case let .higherThan(version):
+            if version.isPreRelease {
+                let rv = version.asReleaseVersion()
+                return .init(
+                    release: .higherThan(version: rv),
+                    preRelease: .between(version, rv)
+                )
+            }
+
+            return .init(
+                release: .higherThan(version: version),
+                preRelease: .higherThan(version: version.withEmptyPreRelease())
+            )
+
+        case let .strictlyLessThan(version):
+            return .init(
+                release: .strictlyLowerThan(version: version.asReleaseVersion()),
+                preRelease: .strictlyLowerThan(version: version)
+            )
+
+        case let .between(min, max):
+            // pre-release ranges are not supported
+            let max = max.asReleaseVersion()
+
+            if min.isPreRelease {
+                return .init(
+                    release: .between(min.asReleaseVersion(), max),
+                    preRelease: .between(min, max)
+                )
+            }
+
+            return .init(
+                release: .between(min, max),
+                preRelease: .between(min.withEmptyPreRelease(), max)
+            )
         }
-        return .higherThan(version: min)
+    }
+}
+
+extension String: Comparable {
+    static func < (lhs: String, rhs: String) -> Bool {
+        return lhs.compare(rhs) == .orderedAscending
     }
 }

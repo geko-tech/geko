@@ -12,7 +12,7 @@ struct Incompatibility<P: Package, V: Version>: CustomStringConvertible {
     // Creates initial not root incompatibility
     static func notRoot(package: P, version: V) -> Incompatibility<P, V> {
         .init(
-            packageTerms: [package: .negative(VersionRange<V>.exact(version: version))],
+            packageTerms: [package: .negative(VersionSet<V>.exact(version: version))],
             kind: .notRoot(package, version)
         )
     }
@@ -33,15 +33,15 @@ struct Incompatibility<P: Package, V: Version>: CustomStringConvertible {
     }
 
     static func unavailableDependencies(package: P, version: V) -> Incompatibility<P, V> {
-        let range = VersionRange<V>.exact(version: version)
+        let range = VersionSet<V>.exact(version: version)
         return .init(
             packageTerms: [package: .positive(range)],
             kind: .unavailableDependencies(package, range)
         )
     }
 
-    static func fromDependency(package: P, version: V, dep: (P, VersionRange<V>)) -> Incompatibility<P, V> {
-        let range1 = VersionRange<V>.exact(version: version)
+    static func fromDependency(package: P, version: V, dep: (P, VersionSet<V>)) -> Incompatibility<P, V> {
+        let range1 = VersionSet<V>.exact(version: version)
         let (p2, range2) = dep
 
         return .init(
@@ -153,11 +153,11 @@ enum IncompatibilityKind<P: Package, V: Version> {
     /// Initial incompatibility aiming at picking the root package for the first decision.
     case notRoot(P, V)
     /// There are no versions in the given range for this package.
-    case noVersions(P, VersionRange<V>)
+    case noVersions(P, VersionSet<V>)
     /// Dependencies of the package are unavailable for versions in that range.
-    case unavailableDependencies(P, VersionRange<V>)
+    case unavailableDependencies(P, VersionSet<V>)
     /// Incompatibility coming from the dependencies of a given package.
-    case fromDependencyOf(P, VersionRange<V>, P, VersionRange<V>)
+    case fromDependencyOf(P, VersionSet<V>, P, VersionSet<V>)
     /// Derived from two causes. Stores cause ids.
     case derivedFrom(Int, Int)
 }

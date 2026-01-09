@@ -125,7 +125,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         )
 
         var graphSideTable = GraphSideTable()
-        
+
         // Load and register Plugin Mappers
         let gekoPlugins = try workspaceMapperPluginLoader.loadPlugins(
             using: config,
@@ -144,7 +144,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         saveGlobs(manifestProjects: manifestProjects, graphSideTable: &graphSideTable, rootPath: allManifests.path)
 
         let dependenciesGraph = try await dependenciesGraphTask.value
-        
+
         graphSideTable.workspace.dependenciesGraph = dependenciesGraph
 
         // Convert to models

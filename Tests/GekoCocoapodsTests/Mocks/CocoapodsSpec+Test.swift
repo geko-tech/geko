@@ -93,7 +93,7 @@ extension CocoapodsSpec {
         moduleMap: ModuleMap? = nil,
         podTargetXCConfig: [String: SettingValue] = [:],
         infoPlist: [String: PlistValue] = [:],
-        compilerFlags: String? = nil,
+        compilerFlags: [String] = [],
         requiresArc: RequiresArc? = nil,
         frameworks: [String] = [],
         weakFrameworks: [String] = [],

@@ -12,7 +12,46 @@ extension String: @retroactive Package {
     }
 }
 
-extension CocoapodsVersion: @retroactive Version {}
+extension CocoapodsVersion: @retroactive Version {
+    public var isPreRelease: Bool {
+        return preRelease != nil || !preReleaseSegments.isEmpty
+    }
+
+    public func asReleaseVersion() -> CocoapodsVersion {
+        assert(CocoapodsVersion.maxSegmentCount == 5)
+
+        return CocoapodsVersion(
+            max(0, self.major),
+            max(0, self.minor),
+            max(0, self.patch),
+            max(0, self.segment4),
+            max(0, self.segment5)
+        )
+    }
+}
+
+private extension VersionSet {
+    static func between(_ lower: CocoapodsVersion, _ upper: CocoapodsVersion) -> VersionSet<CocoapodsVersion> {
+        return .init (
+            release: .between(lower, upper),
+            preRelease: .none()
+        )
+    }
+
+    static func higherThan(version: CocoapodsVersion) -> VersionSet<CocoapodsVersion> {
+        return .init (
+            release: .higherThan(version: version),
+            preRelease: .none()
+        )
+    }
+
+    static func strictlyLowerThan(version: CocoapodsVersion) -> VersionSet<CocoapodsVersion> {
+        return .init (
+            release: .strictlyLowerThan(version: version),
+            preRelease: .none()
+        )
+    }
+}
 
 final class PubGrubTests: GekoUnitTestCase {
     func test_noConflict() async throws {
@@ -187,24 +226,24 @@ final class PubGrubTests: GekoUnitTestCase {
             XCTAssertEqual(
                 DefaultStringReporter.report(derivationTree: derivationTree),
                 """
-                Because there are no available version for bar and foo 1.0 depends on bar [0.0.0.0.1 - any), foo 1.0 is forbidden (1)
-                And because there is no version of foo in [[0.0.0.0.1 - 1.0), [1.0.0.0.1 - 2.0), [2.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)], foo [[0.0.0.0.1 - 2.0), [2.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (2) (3)
+                Because there are no available versions for bar and foo 1.0 depends on bar, foo 1.0 is forbidden (1)
+                And because there is no version of foo in { release: <1.0, >1.0 <2.0, >2.0 <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any }, foo { release: <2.0, >2.0 <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (2) (3)
 
-                Because there are no available version for bar and foo 2.0 depends on bar [0.0.0.0.1 - any), foo 2.0 is forbidden (4)
-                And because foo [[0.0.0.0.1 - 2.0), [2.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (3), foo [[0.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (5) (6)
+                Because there are no available versions for bar and foo 2.0 depends on bar, foo 2.0 is forbidden (4)
+                And because foo { release: <2.0, >2.0 <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (3), foo { release: <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (5) (6)
 
-                Because there are no available version for bar and foo 3.0 depends on bar [0.0.0.0.1 - any), foo 3.0 is forbidden (7)
-                And because foo [[0.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (6), foo [[0.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (8) (9)
+                Because there are no available versions for bar and foo 3.0 depends on bar, foo 3.0 is forbidden (7)
+                And because foo { release: <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (6), foo { release: <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (8) (9)
 
-                Because there are no available version for bar and foo 4.0 depends on bar [0.0.0.0.1 - any), foo 4.0 is forbidden (10)
-                And because foo [[0.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (9), foo [[0.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (11) (12)
+                Because there are no available versions for bar and foo 4.0 depends on bar, foo 4.0 is forbidden (10)
+                And because foo { release: <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (9), foo { release: <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (11) (12)
 
-                Because there are no available version for bar and foo 5.0 depends on bar [0.0.0.0.1 - any), foo 5.0 is forbidden (13)
-                And because foo [[0.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (12), foo [[0.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (14) (15)
+                Because there are no available versions for bar and foo 5.0 depends on bar, foo 5.0 is forbidden (13)
+                And because foo { release: <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (12), foo { release: <6.0, >6.0, pre-release: any } is forbidden (14) (15)
 
-                Because there are no available version for bar and foo 6.0 depends on bar [0.0.0.0.1 - any), foo 6.0 is forbidden (16)
-                And because foo [[0.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (15), foo [0.0.0.0.1 - any) is forbidden (17)
-                And because root 1.0 depends on foo [0.0.0.0.1 - any), root 1.0 is forbidden (18)
+                Because there are no available versions for bar and foo 6.0 depends on bar, foo 6.0 is forbidden (16)
+                And because foo { release: <6.0, >6.0, pre-release: any } is forbidden (15), foo is forbidden (17)
+                And because project depends on foo, package resolution failed (18)
                 """
             )
 
@@ -213,10 +252,10 @@ final class PubGrubTests: GekoUnitTestCase {
             XCTAssertEqual(
                 DefaultStringReporter.report(derivationTree: derivationTree),
                 """
-                Because foo [[0.0.0.0.1 - 2.0), [2.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] depends on bar [0.0.0.0.1 - any) and foo 2.0 depends on bar [0.0.0.0.1 - any), foo [[0.0.0.0.1 - 3.0), [3.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (1)
-                And because foo 3.0 depends on bar [0.0.0.0.1 - any), foo [[0.0.0.0.1 - 4.0), [4.0.0.0.1 - 5.0), [5.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (2)
-                And because foo 4.0 depends on bar [0.0.0.0.1 - any) and foo 5.0 depends on bar [0.0.0.0.1 - any), foo [[0.0.0.0.1 - 6.0), [6.0.0.0.1 - any)] is forbidden (3)
-                And because foo 6.0 depends on bar [0.0.0.0.1 - any) and root 1.0 depends on foo [0.0.0.0.1 - any), root 1.0 is forbidden (4)
+                Because foo { release: <2.0, >2.0 <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } depends on bar and foo 2.0 depends on bar, foo { release: <3.0, >3.0 <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (1)
+                And because foo 3.0 depends on bar, foo { release: <4.0, >4.0 <5.0, >5.0 <6.0, >6.0, pre-release: any } is forbidden (2)
+                And because foo 4.0 depends on bar and foo 5.0 depends on bar, foo { release: <6.0, >6.0, pre-release: any } is forbidden (3)
+                And because foo 6.0 depends on bar and project depends on foo, package resolution failed (4)
                 """
             )
         }
@@ -346,7 +385,7 @@ final class PubGrubTests: GekoUnitTestCase {
 
             XCTAssertEqual(
                 DefaultStringReporter.report(derivationTree: derivationTree),
-                "Because there is no version of foo in [1.0 - 2.0) and root 1.0 depends on foo [1.0 - 2.0), root 1.0 is forbidden (1)"
+                "Because there is no version of foo in >=1.0 <2.0 and project depends on foo >=1.0 <2.0, package resolution failed (1)"
             )
         }
     }
@@ -381,9 +420,9 @@ final class PubGrubTests: GekoUnitTestCase {
             XCTAssertEqual(
                 DefaultStringReporter.report(derivationTree: derivationTree),
                 """
-                Because foo 1.0 depends on shared [2.0 - 3.0) and there is no version of shared in [2.9 - 3.0), foo 1.0 depends on shared [2.0 - 2.9) (1)
-                And because bar 1.0 depends on shared [2.9 - 4.0), foo 1.0 is incompatible with bar 1.0 (2)
-                And because root 1.0 depends on foo 1.0 and root 1.0 depends on bar 1.0, root 1.0 is forbidden (3)
+                Because foo 1.0 depends on shared >=2.0 <3.0 and there is no version of shared in >=2.9 <3.0, foo 1.0 depends on shared >=2.0 <2.9 (1)
+                And because bar 1.0 depends on shared >=2.9 <4.0, foo 1.0 is incompatible with bar 1.0 (2)
+                And because project depends on foo 1.0 and project depends on bar 1.0, package resolution failed (3)
                 """
             )
         }

@@ -281,11 +281,14 @@ public final class CocoapodsTargetGenerator {
             if case .disabled = spec.requiresArc(platform: platform) {
                 platformCompilerFlags = requiresArcFlags(platformCompilerFlags)
             }
+            let compilerFlagsString = platformCompilerFlags?.isEmpty == false
+                ? platformCompilerFlags!.joined(separator: " ")
+                : nil
             result.append(
                 SourceFiles(
                     paths: globs,
                     excluding: excludeFiles[platform] ?? [],
-                    compilerFlags: platformCompilerFlags,
+                    compilerFlags: compilerFlagsString,
                     compilationCondition: platform.condition
                 )
             )
@@ -302,7 +305,7 @@ public final class CocoapodsTargetGenerator {
                 SourceFiles(
                     paths: globs,
                     excluding: excludeFiles[platform] ?? [],
-                    compilerFlags: requiresArcFlags(),
+                    compilerFlags: requiresArcFlags().joined(separator: " "),
                     compilationCondition: platform.condition
                 )
             )
@@ -740,12 +743,10 @@ public final class CocoapodsTargetGenerator {
             ))
     }
 
-    private func requiresArcFlags(_ existedFlags: String? = nil) -> String {
-        if let existedFlags {
-            return existedFlags.isEmpty ? "-fno-objc-arc" : "\(existedFlags) -fno-objc-arc"
-        } else {
-            return "-fno-objc-arc"
-        }
+    private func requiresArcFlags(_ existedFlags: [String]? = nil) -> [String] {
+        var flags = existedFlags ?? []
+        flags.append("-fno-objc-arc")
+        return flags
     }
 }
 

@@ -7,9 +7,9 @@ public enum Dependencies<P: Package, V: Version> {
 }
 
 public struct DependencyConstraints<P: Package, V: Version> {
-    public let constraints: OrderedDictionary<P, VersionRange<V>>
+    public let constraints: OrderedDictionary<P, VersionSet<V>>
 
-    public init(constraints: OrderedDictionary<P, VersionRange<V>>) {
+    public init(constraints: OrderedDictionary<P, VersionSet<V>>) {
         self.constraints = constraints
     }
 }

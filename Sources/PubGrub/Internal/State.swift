@@ -105,7 +105,9 @@ struct State<P: Package, V: Version> {
                     conflictId = incompatId
                     break incompat
                 case let .almostSatisfied(packageAlmost):
-                    unitPropagationBuffer.append(packageAlmost)
+                    if !unitPropagationBuffer.contains(packageAlmost) {
+                        unitPropagationBuffer.append(packageAlmost)
+                    }
                     // Add (not term) to the partial solution with incompat as cause.
                     partialSolution.addDerivation(
                         package: packageAlmost,

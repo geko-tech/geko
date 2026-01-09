@@ -302,21 +302,21 @@ public final class CocoapodsSpecInfoProvider {
                 }
         )
     }
-    
-    public func compilerFlags() -> [CocoapodsPlatform: String] {
+
+    public func compilerFlags() -> [CocoapodsPlatform: [String]] {
         Dictionary(
             uniqueKeysWithValues:
                 supportedPlatforms().compactMap { platform in
-                    if platform == .default, let compilerFlags = spec.compilerFlags {
-                        return (platform, compilerFlags)
+                    if platform == .default {
+                        return (platform, spec.compilerFlags)
                     } else if let compilerFlags = spec.platformValues[platform.rawValue]?.compilerFlags {
-                        return (platform, [spec.compilerFlags, compilerFlags].compactMap { $0 }.joined(separator: " "))
+                        return (platform, spec.compilerFlags + compilerFlags)
                     }
                     return nil
                 }
         )
     }
-    
+
     public func requiresArc(platform: CocoapodsPlatform) -> CocoapodsSpec.RequiresArc? {
         var arc: CocoapodsSpec.RequiresArc?
         if platform == .default {

@@ -1,9 +1,7 @@
 import Foundation
 
-public protocol Version: Equatable, Hashable, Comparable {
-    var value: String { get }
+public protocol Version: Equatable, Hashable, Comparable, CustomStringConvertible {
+    var isPreRelease: Bool { get }
 
-    static var lowest: Self { get }
-
-    func bump() -> Self
+    func asReleaseVersion() -> Self
 }

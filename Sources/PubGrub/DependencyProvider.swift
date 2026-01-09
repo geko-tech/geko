@@ -4,7 +4,7 @@ public protocol PubGrubDependencyProvider {
     associatedtype Pkg: Package
     associatedtype Ver: Version
 
-    func choosePackageVersion(potentialPackages: [(Pkg, VersionRange<Ver>)]) async throws -> (Pkg, Ver?)
+    func choosePackageVersion(potentialPackages: [(Pkg, VersionSet<Ver>)]) async throws -> (Pkg, Ver?)
     func getDependencies(package: Pkg, version: Ver) async throws -> Dependencies<Pkg, Ver>
     func shouldCancel() throws
 }

@@ -1,8 +1,8 @@
 import Foundation
 
-public enum Term<V: Version>: Equatable, CustomStringConvertible {
-    case positive(VersionRange<V>)
-    case negative(VersionRange<V>)
+public enum Term<V: Version>: Equatable {
+    case positive(VersionSet<V>)
+    case negative(VersionSet<V>)
 
     var isPositive: Bool {
         if case .positive = self {
@@ -11,27 +11,18 @@ public enum Term<V: Version>: Equatable, CustomStringConvertible {
         return false
     }
 
-    public var description: String {
-        switch self {
-        case let .positive(range):
-            return range.description
-        case let .negative(range):
-            return "Not ( \(range) )"
-        }
-    }
-
     // MARK: - Initialization methods
 
     static func any() -> Term<V> {
-        .negative(VersionRange<V>.none())
+        .negative(VersionSet<V>.none())
     }
 
     static func empty() -> Term<V> {
-        .positive(VersionRange<V>.none())
+        .positive(VersionSet<V>.none())
     }
 
     static func exact(version: V) -> Term<V> {
-        .positive(VersionRange<V>.exact(version: version))
+        .positive(VersionSet<V>.exact(version: version))
     }
 
     // MARK: - Manipulation methods
@@ -65,7 +56,7 @@ public enum Term<V: Version>: Equatable, CustomStringConvertible {
         }
     }
 
-    public func unwrapPositive() -> VersionRange<V> {
+    public func unwrapPositive() -> VersionSet<V> {
         if case let .positive(versions) = self {
             return versions
         }

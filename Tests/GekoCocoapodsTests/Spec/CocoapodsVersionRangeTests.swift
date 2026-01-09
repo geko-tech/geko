@@ -37,50 +37,42 @@ final class CocoapodsVersionRangeTests: GekoUnitTestCase {
     func testVersionRangeExact() throws {
         let range1 = try CocoapodsVersionRange.from(["= 2.0.1"])
         let range2 = try CocoapodsVersionRange.from(["2.0.1"])
-        XCTAssertEqual(range1.min, .init(2, 0, 1))
-        XCTAssertEqual(range1.max, .init(2, 0, 1, 0, 1))
+        XCTAssertEqual(range1, .exact(CocoapodsVersion(2, 0, 1)))
         XCTAssertEqual(range1, range2)
     }
 
     func testVersionRangeAtLeast() throws {
-        let version = try CocoapodsVersionRange.from([">= 2.0.1"])
-        XCTAssertEqual(version.min, .init(2, 0, 1))
-        XCTAssertNil(version.max)
+        let range = try CocoapodsVersionRange.from([">= 2.0.1"])
+        XCTAssertEqual(range, .higherThan(CocoapodsVersion(2, 0, 1)))
     }
 
     func testVersionRangeUpToNextMajor() throws {
-        let version = try CocoapodsVersionRange.from(["~> 2.0"])
-        XCTAssertEqual(version.min, .init(2, 0, 0))
-        XCTAssertEqual(version.max, .init(3, 0, 0))
+        let range = try CocoapodsVersionRange.from(["~> 2.0"])
+        XCTAssertEqual(range, .between(CocoapodsVersion(2), CocoapodsVersion(3)))
     }
 
     func testVersionRangeUpToNextMajorConvertsToOpenInterval() throws {
-        let version = try CocoapodsVersionRange.from(["~> 2"])
-        XCTAssertEqual(version.min, .init(2, 0, 0))
-        XCTAssertEqual(version.max, nil)
+        let range = try CocoapodsVersionRange.from(["~> 2"])
+        XCTAssertEqual(range, .higherThan(CocoapodsVersion(2)))
     }
 
     func testVersionRangeUpToNextMinor() throws {
-        let version = try CocoapodsVersionRange.from(["~> 2.0.0"])
-        XCTAssertEqual(version.min, .init(2, 0, 0))
-        XCTAssertEqual(version.max, .init(2, 1, 0))
+        let range = try CocoapodsVersionRange.from(["~> 2.0.0"])
+        XCTAssertEqual(range, .between(CocoapodsVersion(2), CocoapodsVersion(2, 1)))
     }
 
     func testVersionRangeUpToVersion() throws {
-        let version = try CocoapodsVersionRange.from(["< 2.0.0"])
-        XCTAssertEqual(version.min, .lowest)
-        XCTAssertEqual(version.max, .init(2, 0, 0))
+        let range = try CocoapodsVersionRange.from(["< 2.0.0"])
+        XCTAssertEqual(range, .strictlyLessThan(CocoapodsVersion(2)))
     }
 
     func testVersionRangeGreaterThanVersionLessThanVersion() throws {
-        let version = try CocoapodsVersionRange.from([">= 1.0", "< 2.0.0"])
-        XCTAssertEqual(version.min, .init(1, 0))
-        XCTAssertEqual(version.max, .init(2, 0, 0))
+        let range = try CocoapodsVersionRange.from([">= 1.0", "< 2.0.0"])
+        XCTAssertEqual(range, .between(CocoapodsVersion(1), CocoapodsVersion(2)))
     }
 
     func testVersionRangeLessThanVersionGreaterThanVersion() throws {
-        let version = try CocoapodsVersionRange.from(["< 2.0.0", ">= 1.0"])
-        XCTAssertEqual(version.min, .init(1, 0))
-        XCTAssertEqual(version.max, .init(2, 0, 0))
+        let range = try CocoapodsVersionRange.from(["< 2.0.0", ">= 1.0"])
+        XCTAssertEqual(range, .between(CocoapodsVersion(1), CocoapodsVersion(2)))
     }
 }

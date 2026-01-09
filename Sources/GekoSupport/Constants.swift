@@ -5,8 +5,8 @@ public enum Constants {
     public static let binName = "geko"
     public static let gitRepositoryURL = "https://github.com/geko-tech/geko.git"
     public static let githubAPIURL = "https://api.github.com"
-    public static let version = "0.35.0"
-    public static let projectDescriptionVersion = "release/0.14.0"
+    public static let version = "0.35.3"
+    public static let projectDescriptionVersion = "release/0.15.0"
     public static let isStage = true
     public static let execSupportMinVersion = "0.6.0"
     public static let bundleName: String = "geko.zip"

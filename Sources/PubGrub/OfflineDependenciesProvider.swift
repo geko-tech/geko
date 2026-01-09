@@ -19,7 +19,7 @@ public struct OfflineDependencyProvider<P: Package, V: Version>: PubGrubDependen
     public mutating func add(
         _ package: P,
         _ version: V,
-        _ dependencies: OrderedDictionary<P, VersionRange<V>>
+        _ dependencies: OrderedDictionary<P, VersionSet<V>>
     ) {
         let v = version
         self.dependencies[package, default: [:]][v] = .init(constraints: dependencies)
@@ -43,11 +43,10 @@ public struct OfflineDependencyProvider<P: Package, V: Version>: PubGrubDependen
     }
 
     public func choosePackageVersion(
-        potentialPackages: [(P, VersionRange<V>)]
+        potentialPackages: [(P, VersionSet<V>)]
     ) async throws -> (P, V?) {
         try await choosePackageWithFewestVersions(
             listAvailableVersions: { p -> [V] in
-                // let constrs: [V: DependencyConstraints<P, V>] = dependencies[p] ?? [:]
                 let constrs = dependencies[p]?.keys ?? []
                 return Array(constrs)
             },
