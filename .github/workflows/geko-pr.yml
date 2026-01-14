@@ -10,9 +10,6 @@ concurrency:
 jobs:
   swiftlint:
     runs-on: macos-15
-    env:
-      GH_PAT: ${{ secrets.GH_PAT }}
-      GH_USER: ${{ secrets.GH_USER }}
     steps:
       - uses: actions/checkout@v6.0.1
         with:
@@ -24,7 +21,6 @@ jobs:
         env:
           DIFF_BASE: ${{ github.base_ref }}
         run: |
-          git config --global credential.helper '!f() { echo "username=${GH_USER}"; echo "password=${GH_PAT}"; }; f'
           git fetch origin $DIFF_BASE
           changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD -- '*.swift')
 
@@ -43,8 +39,6 @@ jobs:
   build_and_test_macos:
     runs-on: macos-15
     env:
-      GH_PAT: ${{ secrets.GH_PAT }}
-      GH_USER: ${{ secrets.GH_USER }}
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@v6.0.1
@@ -53,7 +47,6 @@ jobs:
 
       - name: build_and_test
         run: |
-          git config --global credential.helper '!f() { echo "username=${GH_USER}"; echo "password=${GH_PAT}"; }; f'
           set -o pipefail && xcrun swift test | xcbeautify --renderer github-actions --is-ci
 
   build_and_test_linux:
