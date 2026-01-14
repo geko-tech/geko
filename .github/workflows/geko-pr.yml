@@ -50,7 +50,7 @@ jobs:
           set -o pipefail && xcrun swift test | xcbeautify --renderer github-actions --is-ci
 
   build_and_test_linux:
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     env:
       GH_PAT: ${{ secrets.GH_PAT }}
       GH_USER: ${{ secrets.GH_USER }}
