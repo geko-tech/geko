@@ -118,10 +118,10 @@ struct PartialSolution<P: Package, V: Version> {
 
     mutating func addDecision(package: P, version: V) {
         // Check that add_decision is never used in the wrong context.
-        #if DEBUG
         guard var pa = packageAssignments[package] else {
             fatalError("Derivations must already exist")
         }
+        #if DEBUG
         switch pa.assignmentsIntersection {
         case .decision:
             fatalError("Already existing decision")
