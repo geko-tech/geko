@@ -38,8 +38,8 @@ jobs:
 
   build_and_test_macos:
     runs-on: macos-15
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
+    # env:
+      # DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@v6.0.1
         with:
