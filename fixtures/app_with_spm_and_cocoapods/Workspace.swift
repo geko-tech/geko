@@ -11,7 +11,8 @@ let workspace = Workspace(
             [
                 "LocalPods/**/*.podspec"
             ]
-        ),        
+        ),
+        commonSettings: [["IPHONEOS_DEPLOYMENT_TARGET": "15.0"]],
         configurations: [
             "Debug": .debug,
             "Release": .release

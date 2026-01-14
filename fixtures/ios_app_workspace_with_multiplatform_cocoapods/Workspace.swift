@@ -19,6 +19,7 @@ let workspace = Workspace(
             targets: [
                 .generate(name: "LocalPodsUnitTests", testsPattern: ".*-Unit-Tests")
             ]
-        )
+        ),
+        commonSettings: [["IPHONEOS_DEPLOYMENT_TARGET": "15.0"]]
     )
 )
