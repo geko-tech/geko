@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   swiftlint:
-    runs-on: self-hosted
+    runs-on: macos-15
     env:
       GH_PAT: ${{ secrets.GH_PAT }}
       GH_USER: ${{ secrets.GH_USER }}
@@ -32,10 +32,11 @@ jobs:
             sed -E 's/^(.*):([0-9]+):([0-9]+): (warning|error|[^:]+): (.*)/::\4 file=\1,line=\2,col=\3::\5/'
 
   build_and_test_macos:
-    runs-on: [self-hosted, macOS]
+    runs-on: [macos-15, macOS]
     env:
       GH_PAT: ${{ secrets.GH_PAT }}
       GH_USER: ${{ secrets.GH_USER }}
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@v6.0.1
         with:
