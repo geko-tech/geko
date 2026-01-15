@@ -4,6 +4,9 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Geko",
   description: "Geko is a CLI utility that provides development infrastructure for Xcode based projects.",
+  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
+  base: '/geko/',
+  cleanUrls: true,
   themeConfig: {
     logo: '/logo-nav.png',
 
