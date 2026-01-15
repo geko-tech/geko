@@ -5,16 +5,16 @@ import GekoGraph
 import GekoLoader
 import GekoCore
 
-final class InspectRedundantImportsService {
+final class InspectImportsService {
     // MARK: - Attributes
-    
+
     private let graphImportsLinter: GraphImportsLinting
     private let generatorFactory: GeneratorFactorying
     private let configLoader: ConfigLoading
     private let fileHandler: FileHandling
-    
+
     // MARK: - Initialization
-    
+
     init(
         graphImportsLinter: GraphImportsLinting = GraphImportsLinter(),
         generatorFactory: GeneratorFactorying = GeneratorFactory(),
@@ -26,44 +26,36 @@ final class InspectRedundantImportsService {
         self.configLoader = configLoader
         self.fileHandler = fileHandler
     }
-    
+
     func run(
-        path: String?,
+        path: AbsolutePath,
+        configPath: AbsolutePath? = nil,
         severity: LintingIssue.Severity,
+        inspectType: InspectType,
         inspectMode: InspectMode,
-        output: Bool
-    ) async throws {
-        let path = try self.path(path)
+        output: AbsolutePath?
+    ) async throws -> [LintingIssue] {
+        let lintConfig: GraphImportsLinterConfig 
+
+        if let configPath, fileHandler.exists(configPath) {
+            let data = try fileHandler.readFile(configPath)
+            lintConfig = try parseJson(data, context: .file(path: configPath))
+        } else {
+            lintConfig = .default
+        }
+
         let config = try configLoader.loadConfig(path: path)
         let generator = try generatorFactory.default(config: config)
         let (graph, _, sideEffects) = try await generator.loadWithSideEffects(path: path)
-        let issues = try await graphImportsLinter.lint(
+
+        return try await graphImportsLinter.lint(
             graphTraverser: GraphTraverser(graph: graph),
+            config: lintConfig,
             sideEffects: sideEffects,
-            inspectType: .redundant,
+            inspectType: inspectType,
             severity: severity,
             inspectMode: inspectMode,
             output: output
         )
-
-        if issues.isEmpty {
-            logger.info("We did not find any redundant dependencies in your project.")
-        } else {
-            logger.warning("The following redundant dependencies were found:")
-            switch severity {
-            case .warning:
-                issues.printWarningsIfNeeded()
-            case .error:
-                try issues.printAndThrowErrorsIfNeeded()
-            }
-        }
-    }
-    
-    private func path(_ path: String?) throws -> AbsolutePath {
-        if let path {
-            return try AbsolutePath(validating: path, relativeTo: FileHandler.shared.currentPath)
-        } else {
-            return FileHandler.shared.currentPath
-        }
     }
 }

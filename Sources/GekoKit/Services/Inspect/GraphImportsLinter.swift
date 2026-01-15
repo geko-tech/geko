@@ -8,49 +8,40 @@ import struct ProjectDescription.RelativePath
 enum InspectType {
     case redundant
     case implicit
-    
-    var outputFileName: String {
-        switch self {
-        case .implicit:
-            return "implicity_imports.json"
-        case .redundant:
-            return "redundant_imports.json"
-        }
-    }
-    
-    var excludeFileName: String {
-        switch self {
-        case .implicit:
-            return "exclude_implicity_imports.json"
-        case .redundant:
-            return "exclude_redundant_imports.json"
-        }
-    }
 }
 
 protocol GraphImportsLinting {
     func lint(
         graphTraverser: GraphTraverser,
+        config: GraphImportsLinterConfig,
         sideEffects: [SideEffectDescriptor],
         inspectType: InspectType,
         severity: LintingIssue.Severity,
         inspectMode: InspectMode,
-        output: Bool
+        output: AbsolutePath?
     ) async throws -> [LintingIssue]
+}
+
+struct GraphImportsLinterConfig: Codable {
+    var exclude: [String: Set<String>]
+
+    static let `default` = GraphImportsLinterConfig(
+        exclude: [:]
+    )
 }
 
 final class GraphImportsLinter: GraphImportsLinting {
     // MARK: - Attributes
-    
+
     private let targetScanner: TargetImportsScanning
     private let logDirectoryProvider: LogDirectoriesProviding
     private let fileHandler: FileHandling
     private let environment: Environmenting
     private let system: Systeming
     private let ciChecker: CIChecking
-    
+
     // MARK: - Initialization
-    
+
     init(
         targetScanner: TargetImportsScanning = TargetImportsScanner(),
         logDirectoryProvider: LogDirectoriesProviding = LogDirectoriesProvider(),
@@ -66,30 +57,32 @@ final class GraphImportsLinter: GraphImportsLinting {
         self.system = system
         self.ciChecker = ciChecker
     }
-    
+
     // MARK: - GraphImportsLinting
-    
+
     func lint(
         graphTraverser: GekoCore.GraphTraverser,
+        config: GraphImportsLinterConfig,
         sideEffects: [SideEffectDescriptor],
         inspectType: InspectType,
         severity: LintingIssue.Severity,
         inspectMode: InspectMode,
-        output: Bool
+        output: AbsolutePath?
     ) async throws -> [LintingIssue] {
         let lintedTargets = try await targetImportsMap(
             graphTraverser: graphTraverser,
+            config: config,
             sideEffects: sideEffects,
             inspectType: inspectType,
             inspectMode: inspectMode
         )
-        if output {
+        if let output {
             try saveOutput(
                 lintedTargets: lintedTargets,
-                inspectType: inspectType
+                outputPath: output
             )
         }
-        
+
         return lintedTargets.compactMap { target, implicitDependencies in
             return LintingIssue(
                 reason: " - \(target.productName) \(inspectType == .implicit ? "implicitly" : "redundantly") depends on: \(implicitDependencies.joined(separator: ", "))",
@@ -97,15 +90,16 @@ final class GraphImportsLinter: GraphImportsLinting {
             )
         }
     }
-    
+
     private func targetImportsMap(
         graphTraverser: GraphTraverser,
+        config: GraphImportsLinterConfig,
         sideEffects: [SideEffectDescriptor],
         inspectType: InspectType,
         inspectMode: InspectMode
     ) async throws -> [Target: Set<String>] {
         var observedTargetImports: [Target: Set<String>] = [:]
-        let excludedImports = try excludeImports(inspectType: inspectType)
+        let excludedImports = config.exclude
         let allDependencies = try findAllTransitiveDependencies(graphTraverser: graphTraverser)
         let allDependenciesNames = Set(allDependencies.keys.map { $0.nameWithoutExtension })
         let allInternalGraphDependencies = allDependencies.reduce(into: [GraphTarget: Set<GraphDependency>]()) { acc, dependency in
@@ -137,7 +131,7 @@ final class GraphImportsLinter: GraphImportsLinting {
 
         for (target, dependencies) in targetsToInspect {
             let sourceDependencies = Set(try await targetScanner.imports(for: target.target, sideEffects: sideEffects))
-            
+
             var observedImports: Set<String>
             switch inspectType {
             case .redundant:
@@ -160,20 +154,20 @@ final class GraphImportsLinter: GraphImportsLinting {
                     .intersection(allDependenciesNames)
             }
             observedImports.subtract(excludedImports[target.target.productName] ?? [])
-        
+
             if !observedImports.isEmpty {
                 observedTargetImports[target.target] = observedImports
             }
         }
         return observedTargetImports
     }
-    
+
     private func findAllTransitiveDependencies(
         graphTraverser: GraphTraverser
     ) throws -> [GraphDependency: Set<GraphDependency>] {
         let dependencies = graphTraverser.dependencies
         var visitedDependencies = [GraphDependency: Set<GraphDependency>]()
-        
+
         for dependency in dependencies.keys {
             try transitiveDependencies(
                 for: dependency,
@@ -181,19 +175,19 @@ final class GraphImportsLinter: GraphImportsLinting {
                 graphTraverser: graphTraverser
             )
         }
-        
+
         return visitedDependencies
     }
-    
+
     private func transitiveDependencies(
         for dependency: GraphDependency,
         visitedDependencies: inout [GraphDependency: Set<GraphDependency>],
         graphTraverser: GraphTraverser
     ) throws {
         if let _ = visitedDependencies[dependency] { return }
-        
+
         let directDeps = graphTraverser.dependencies[dependency] ?? []
-        
+
         var transitiveDeps: Set<GraphDependency> = []
         for child in directDeps {
             // We need to filter out dependencies that might be AppHost and not collect their transitive dependencies
@@ -209,29 +203,17 @@ final class GraphImportsLinter: GraphImportsLinting {
             )
             transitiveDeps.formUnion(visitedDependencies[child] ?? [])
         }
-        
+
         transitiveDeps.formUnion(directDeps)
         visitedDependencies[dependency] = transitiveDeps
     }
-    
-    private func excludeImports(inspectType: InspectType) throws -> [String: Set<String>] {
-        let excludeFilePath = try logDirectoryProvider
-            .logDirectory(for: .inspect)
-            .appending(component: inspectType.excludeFileName)
-        guard fileHandler.exists(excludeFilePath) else { return [:] }
-        let data = try fileHandler.readFile(excludeFilePath)
-        return try parseJson(data, context: .file(path: excludeFilePath))
-    }
-    
+
     private func saveOutput(
         lintedTargets: [Target: Set<String>],
-        inspectType: InspectType
+        outputPath: AbsolutePath
     ) throws {
-        let linterStorePath = try logDirectoryProvider.logDirectory(for: .inspect)
-        let linterFilePath = linterStorePath.appending(component: inspectType.outputFileName)
-
-        if fileHandler.exists(linterFilePath) {
-            try fileHandler.delete(linterFilePath)
+        if fileHandler.exists(outputPath) {
+            try fileHandler.delete(outputPath)
         }
 
         let output = lintedTargets.reduce(into: [String: Set<String>]()) { acc, linted in
@@ -239,12 +221,13 @@ final class GraphImportsLinter: GraphImportsLinting {
         }
         let jsonData = try JSONEncoder().encode(output)
         guard let content = String(data: jsonData, encoding: .utf8) else {
-            throw FileHandlerError.invalidTextEncoding(linterFilePath)
+            throw FileHandlerError.invalidTextEncoding(outputPath)
         }
 
+        try fileHandler.createFolder(outputPath.parentDirectory)
         try fileHandler.write(
             content,
-            path: linterFilePath,
+            path: outputPath,
             atomically: true
         )
     }
@@ -253,7 +236,6 @@ final class GraphImportsLinter: GraphImportsLinting {
 // MARK: - Source & Diff calculation
 
 private extension GraphImportsLinter {
-    
     private var sourceRef: String {
         environment.inspectSourceRef ?? "HEAD"
     }
@@ -264,7 +246,7 @@ private extension GraphImportsLinter {
         }
         return ref
     }
-    
+
     private func changedFiles() throws -> Set<String> {
         let diff: String
         if ciChecker.isCI() {
@@ -275,7 +257,7 @@ private extension GraphImportsLinter {
 
         return Set(diff.components(separatedBy: "\n"))
     }
-    
+
     private func changedLocalTargets(
         graphTraverser: GraphTraverser,
         changedFiles: borrowing Set<String>
