@@ -9,10 +9,7 @@ concurrency:
 
 jobs:
   swiftlint:
-    runs-on: self-hosted
-    env:
-      GH_PAT: ${{ secrets.GH_PAT }}
-      GH_USER: ${{ secrets.GH_USER }}
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v6.0.1
         with:
@@ -24,30 +21,40 @@ jobs:
         env:
           DIFF_BASE: ${{ github.base_ref }}
         run: |
-          git config --global credential.helper '!f() { echo "username=${GH_USER}"; echo "password=${GH_PAT}"; }; f'
           git fetch origin $DIFF_BASE
           changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD -- '*.swift')
-          [ -n "$changedFiles" ] && swift package plugin --allow-writing-to-package-directory swiftlint --config .swiftlint.yml $changedFiles | \
-            sed -E "s/$(pwd|sed 's/\//\\\//g')\///" | \
-            sed -E 's/^(.*):([0-9]+):([0-9]+): (warning|error|[^:]+): (.*)/::\4 file=\1,line=\2,col=\3::\5/'
+
+          if [ -n "$changedFiles" ]; then
+            swift package plugin \
+              --allow-writing-to-package-directory \
+              swiftlint \
+              --config .swiftlint.yml \
+              $changedFiles | \
+              sed -E "s|$(pwd)|.|" | \
+              sed -E 's/^(.*):([0-9]+):([0-9]+): (warning|error|[^:]+): (.*)/::\4 file=\1,line=\2,col=\3::\5/'
+          else
+            echo "No Swift files changed — skipping SwiftLint"
+          fi
 
   build_and_test_macos:
-    runs-on: [self-hosted, macOS]
-    env:
-      GH_PAT: ${{ secrets.GH_PAT }}
-      GH_USER: ${{ secrets.GH_USER }}
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v6.0.1
         with:
           persist-credentials: false
+      - uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
 
       - name: build_and_test
         run: |
-          git config --global credential.helper '!f() { echo "username=${GH_USER}"; echo "password=${GH_PAT}"; }; f'
           set -o pipefail && xcrun swift test | xcbeautify --renderer github-actions --is-ci
 
   build_and_test_linux:
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     env:
       GH_PAT: ${{ secrets.GH_PAT }}
       GH_USER: ${{ secrets.GH_USER }}
