@@ -130,3 +130,7 @@ fastlane/test_output
 # Geko
 .geko
 fixtures/**/graph.json
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
