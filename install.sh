@@ -20,16 +20,14 @@ fi
 
 echo "ℹ️ Installing geko version $TAG"
 
-TEMP_DIR=`mktemp -d -p "$DIR"`
 USER_DIR="$HOME"
 ZSHRC_FILE="$USER_DIR/.zshrc"
 GEKO_DESTINATION_DIR="$USER_DIR/.geko/bin"
-
-# check if tmp dir was created
-if [[ ! "$TEMP_DIR" || ! -d "$TEMP_DIR" ]]; then
-  echo "❌ Could not create temp dir"
-  exit 1
-fi
+# create and check if tmp dir was created
+TEMP_DIR=$(mktemp -d -p "$DIR") || {
+    echo "❌ Could not create temp dir"
+    exit
+}
 
 # deletes the temp directory
 function cleanup {      
