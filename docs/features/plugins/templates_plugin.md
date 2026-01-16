@@ -49,6 +49,8 @@ let template = Template(
 // Generated file with platform: {{ platform }} and name: {{ name }}
 ```
 
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/TemplatesPluginExample).
+
 ## Usage
 
 ```bash

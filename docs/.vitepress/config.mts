@@ -37,6 +37,7 @@ export default defineConfig({
               { text: 'Buildable folders', link: '/features/project-generation/buildable_folders' },
               { text: 'Linking', link: '/features/project-generation/linking' },
               { text: 'Cocoapods Multiplatform', link: '/features/project-generation/cocoapods_multiplatform' },
+              { text: 'ProjectDescriptionHelpers', link: '/features/project-generation/project_description_helpers' }
             ]
           },
           {
@@ -59,6 +60,9 @@ export default defineConfig({
               { text: 'WorkspaceMapper', link: '/features/plugins/workspacemapper_plugin' },
               { text: 'Executable', link: '/features/plugins/executable_plugin' },
               { text: 'Plugin usage', link: '/features/plugins/plugins_connection' },
+              { text: 'OfficialPlugins', items: [
+                { text: 'ImpactAnalysis', link: '/features/plugins/OfficialPlugins/ImpactAnalysis' }
+              ]}
             ]
           },
           {

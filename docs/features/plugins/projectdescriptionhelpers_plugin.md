@@ -52,6 +52,8 @@ Plugin directory structure:
 └── ...
 ```
 
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/ProjectDescriptionHelpersPluginExample).
+
 **ProjectDescriptionHelpers/SharedCode.swift**
 
 ```swift
