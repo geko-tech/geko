@@ -8,7 +8,7 @@ BUILD_DIR="$ROOT_DIR/build"
 
 chmod +x scripts/clone_project_description_repo.bash
 scripts/clone_project_description_repo.bash
-cd project-description
+cd ProjectDescription
 swift build --package-path . --product ProjectDescription -c release
 
 rm -rf $BUILD_DIR
