@@ -9,7 +9,7 @@ This plugin does not work with tests that use `swift-testing`, only `XCTest` is 
 The plugin consists of several parts:
 
 1. SharedTarget generation: a SharedTarget includes all tests matching the regular expression specified when configuring the plugin. This technique allows to run all tests within a single process instead of multiple processes corresponding to each module. It can also help with DerivedData size when static linking is used throughout project. Since each static module is "baked in" into final executable, duplication occurs across multiple test bundles.
-2. ImpactAnalysis: as a result of this step, only the tests for the affected modules remain in the SharedTarget created in the previous step.
+2. ImpactAnalysis: Files from each target in workspace are compaired against git diff to determine if target was affected by changes. After that, simple tree search is used to find every test bundle that is linked to affected targets (including transitive dependencies). Every test bundle that is not affected by changes is removed from SharedTarget.
 
 [Source Code](https://github.com/geko-tech/GekoPlugins/tree/main/ImpactAnalysis)
 
@@ -19,7 +19,7 @@ The plugin consists of several parts:
 
 Follow these steps to enable and configure the `ImpactAnalysis` plugin in your `Workspace.swift`:
 1. Import the plugin module: `import ImpactAnalysis`
-2. **(Optional)** If the project is large enough, then shared target generation can be disabled for local development. You can enable the plugin only on CI, so guard its registration with `Env.isCI` ([how to type environment variables](../../project-generation/project_description_helpers#typing-of-environment-variables)).
+2. **(Optional)** Shared target generation can be disabled during local development if project is large enough. To do this, apply condition `Env.isCI` using during plugin registration. ([How to use environment variables](../../project-generation/project_description_helpers#typing-of-environment-variables)).
 3. Set the plugin name - `name: "ImpactAnalysis"`
 4. Provide plugin parameters via `WorkspaceMapper.params`:
    - Pass the plugin configuration under the key `ImpactAnalysis.Constants.generateSharedTestTargetKey`.
@@ -73,17 +73,17 @@ let workspace = Workspace(
 
 When running in CI, it's sufficient to set only the required environment variables listed below and enable impact analysis via an environment variable `GEKO_PLUGIN_IMPACT_ANALYSIS_ENABLED`, the remaining environment variables can be left unset:
 
-- `GEKO_IMPACT_TARGET_REF` (**required**) - the Git reference that identifies the baseline (typically the branch or commit you are merging into, e.g. predefined GitLab CI/CD variable `CI_MERGE_REQUEST_DIFF_BASE_SHA`). Used to get changes between commits.
+- `GEKO_IMPACT_TARGET_REF` (**required**) - the Git reference that identifies the baseline (typically the branch or commit you are merging into, e.g. github.event.pull_request.base.sha for GitHub actions or predefined GitLab CI/CD variable `CI_MERGE_REQUEST_DIFF_BASE_SHA`). Used to get changes between commits.
 - `GEKO_IMPACT_SOURCE_REF` (**optional**, default: `"HEAD"`) - The Git reference that identifies the new version of the code you want to compare (typically the PR `HEAD`). Used to get changes between commits.
-- `GEKO_PLUGIN_IMPACT_ANALYSIS_ENABLED` (**optional**, default: `"false"`) - Flag to enable or disable impact analysis. If `"true"`, then impact analysis will be enabled and only tests for the affected targets will be added to the generated shared test targets. If `"false"`, then the plugin will generate shared test targets that include all tests matching the configured regular expressions.
-- `GEKO_IMPACT_ANALYSIS_DEBUG` (**optional**, default: `"false"`) - Used to run the plugin locally (for development and testing). If `"true"`, then the changes you made relative to the index are used and environment variables `GEKO_IMPACT_SOURCE_REF` and `GEKO_IMPACT_TARGET_REF` are not used.
-- `GEKO_IMPACT_ANALYSIS_CHANGED_TARGET_NAMES` (**optional**, default: `""`) - Allows specifying a comma-separated list of targets that should always be considered changed (e.g. `"TargetName1,TargetName2"`).
-- `GEKO_IMPACT_ANALYSIS_CHANGED_PRODUCT_NAMES` (**optional**, default: `""`) - Allows specifying a comma-separated list of products that should always be considered changed (e.g., `"ProductName1,ProductName2"`).
+- `GEKO_PLUGIN_IMPACT_ANALYSIS_ENABLED` (**optional**, default: `"false"`) - Whether to enable impact analysis. Use `"true"` to add only affected test bundles to shared target. Use `"false"` to include all matching test bundles into generated shared test target.
+- `GEKO_IMPACT_ANALYSIS_DEBUG` (**optional**, default: `"false"`) - Used to run the plugin locally (for development and testing). When `"true"` impact analysis will use only unstaged changes, changes between `GEKO_IMPACT_SOURCE_REF` and `GEKO_IMPACT_TARGET_REF` are ignored.
+- `GEKO_IMPACT_ANALYSIS_CHANGED_TARGET_NAMES` (**optional**, default: `""`) - Allows to specify a comma-separated list of target names that should be considered affected. Generally used to trigger tests that should run due to external changes. (e.g. if snapshot reference is changed)
+- `GEKO_IMPACT_ANALYSIS_CHANGED_PRODUCT_NAMES` (**optional**, default: `""`) - Allows to specify a comma-separated list of product names that should always be considered changed. (e.g., `"ProductName1,ProductName2"`)
 - `GEKO_IMPACT_ANALYSIS_SYMLINKS_SUPPORT_ENABLED` (**optional**, default: `"false"`) - If `"true"`, then the plugin will resolve symbolic links for changed and deleted files. Enable this flag if your project uses symbolic links. May adversely affect the plugin's performance.
 
 ## The `@objc` attribute in tests
 
-To ensure XCResult reports correctly display which module a test belongs to, add the `@objc` attribute in your tests before the class declaration, following these rules:
+To ensure XCResult reports correctly which module a test belongs to, add the `@objc` attribute in your tests before the class declaration, following these rules:
 - Add `@objc(ModuleName__TestClassName)` before the class declaration.
 - `ModuleName` is the name of the module the tests are written for.
 - `TestClassName` is the test class name.
