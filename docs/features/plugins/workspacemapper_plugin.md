@@ -25,14 +25,14 @@ Next, in `Package.swift`, complete the following steps:
 **Package.swift**
 
 ```swift
-// swift-tools-version:5.3
+// swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "WorkspaceMapperExample",
-    platforms: [.macOS(.v11)],
+    platforms: [.macOS(.v14)],
     products: [
         .library(
             name: "WorkspaceMapperExample",
@@ -41,7 +41,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/geko-tech/project-description", branch: "release/0.0.1")
+        .package(url: "https://github.com/geko-tech/project-description", branch: "release/1.0.0")
     ],
     targets: [
         .target(
@@ -76,6 +76,8 @@ public func loadGekoPlugin() -> UnsafeMutableRawPointer {
     return plugin.toPointer()
 }
 ```
+
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/WorkspaceMapperPluginExample).
 
 ## Usage
 
@@ -128,7 +130,7 @@ The plugin folder structure will look like this:
 └── Sources/WorkspaceMapperExample
 ```
 
-Next, in `ProjectDescriptionHelpers/SomeModel.swift`, we need to create the models we want to type. For the top-level model, we need to specify the `WorkspaceMapperParameter` protocol, which already implements the `toJSONString` and `fromJSONString` helper methods:
+Next, in `ProjectDescriptionHelpers/SomeStruct.swift`, we need to create the models we want to type. For the top-level model, we need to specify the `WorkspaceMapperParameter` protocol, which already implements the `toJSONString` and `fromJSONString` helper methods:
 
 ```swift
 import ProjectDescription
@@ -186,6 +188,7 @@ let plugin = GekoPlugin(
 Users of the plugin can pass the model to `Workspace.swift` in the following way, using the `toJSONString` method:
 
 ```swift
+import ProjectDescription
 import WorkspaceMapperExample
 
 let workspace = Workspace(
