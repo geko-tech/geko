@@ -15,6 +15,21 @@ The plugin consists of several parts:
 
 [Demo](https://github.com/geko-tech/ImpactAnalysisDemo)
 
+## Setup Plugin
+
+Connect the plugin in your `Config.swift` manifest:
+
+```swift
+import ProjectDescription
+
+let config = Config(
+    plugins: [
+        // https://github.com/geko-tech/GekoPlugins/releases/download/ImpactAnalysis/1.0.0/ImpactAnalysis.macos.geko-plugin.zip
+        .remote(baseUrl: "https://github.com/geko-tech/GekoPlugins/releases/download", name: "ImpactAnalysis", version: "1.0.0")
+    ]
+)
+```
+
 ## Setup Geko Project
 
 Follow these steps to enable and configure the `ImpactAnalysis` plugin in your `Workspace.swift`:
