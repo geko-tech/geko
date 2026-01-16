@@ -8,7 +8,7 @@ This plugin does not work with tests that use `swift-testing`, only `XCTest` is 
 
 The plugin consists of several parts:
 
-1. SharedTarget generation: a SharedTarget is generated and includes all tests matching the regular expression specified when configuring the plugin. During project compilation, tests take up the most space in DerivedData because, due to static linking, each module with tests contains all of its dependencies. Combining the execution of all test modules into a single SharedTarget reduces the size of DerivedData by several times.
+1. SharedTarget generation: a SharedTarget includes all tests matching the regular expression specified when configuring the plugin. This technique allows to run all tests within a single process instead of multiple processes corresponding to each module. It can also help with DerivedData size when static linking is used throughout project. Since each static module is "baked in" into final executable, duplication occurs across multiple test bundles.
 2. ImpactAnalysis: as a result of this step, only the tests for the affected modules remain in the SharedTarget created in the previous step.
 
 [Source Code](https://github.com/geko-tech/GekoPlugins/tree/main/ImpactAnalysis)
