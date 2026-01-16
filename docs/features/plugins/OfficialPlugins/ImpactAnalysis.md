@@ -1,6 +1,6 @@
 # Impact Analysis Plugin
 
-As a project grows, the number of tests increases and running the full test suite can become time-consuming. This plugin speeds up CI pipelines for pull requests by selecting and running only the tests for targets that were directly changed or transitively affected by the PR changes.
+As a project grows, the number of tests increases and running full test suite can become time-consuming. This plugin speeds up CI pipelines for pull requests by selecting and running only the tests for targets that were directly changed or transitively affected by the PR changes.
 
 ::: warning
 This plugin does not work with tests that use `swift-testing`, only `XCTest` is supported.
