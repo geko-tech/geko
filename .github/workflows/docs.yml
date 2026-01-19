@@ -47,7 +47,7 @@ jobs:
           SOURCEDOCS=$(find $TMP_DIR -type f -name "sourcedocs")
 
           # Generate markdown public api
-          "$SOURCEDOCS" generate --spm-module ProjectDescription -o ../docs/projectdescription --table-of-contents --clean
+          "$SOURCEDOCS" generate --spm-module ProjectDescription -o docs/projectdescription --table-of-contents --clean
 
           # Cleanup
           rm -rf "$TEMP_DIR"
