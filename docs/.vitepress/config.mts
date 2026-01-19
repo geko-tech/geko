@@ -134,15 +134,8 @@ export default defineConfig(async () => {
           {
             text: 'Get Started',
             items: [
-              { text: 'Overview', link: '/features/project-generation/' },
-              { text: 'Directory structure', link: '/features/project-generation/dir_structure' },
-              { text: 'Editing', link: '/features/project-generation/editing' },
-              { text: 'Buildable folders', link: '/features/project-generation/buildable_folders' },
-              { text: 'Linking', link: '/features/project-generation/linking' },
-              { text: 'Cocoapods Multiplatform', link: '/features/project-generation/cocoapods_multiplatform' },
-              { text: 'ProjectDescriptionHelpers', link: '/features/project-generation/project_description_helpers' }
-              { text: 'Install Geko', link: '/general/setup' },
-              { text: 'How to use Geko', link: '/general/usage' }
+              { text: 'Install Geko', link: '/guides/general/setup' },
+              { text: 'How to use Geko', link: '/guides/general/usage' }
             ],
           },
           {
@@ -152,38 +145,38 @@ export default defineConfig(async () => {
                 text: 'Project Generation',
                 collapsed: true,
                 items: [
-                  { text: 'Overview', link: '/features/project-generation/' },
-                  { text: 'Directory structure', link: '/features/project-generation/dir_structure' },
-                  { text: 'Editing', link: '/features/project-generation/editing' },
-                  { text: 'Buildable folders', link: '/features/project-generation/buildable_folders' },
-                  { text: 'Linking', link: '/features/project-generation/linking' },
-                  { text: 'Cocoapods Multiplatform', link: '/features/project-generation/cocoapods_multiplatform' },
-                  { text: 'ProjectDescriptionHelpers', link: '/features/project-generation/project_description_helpers' }
+                  { text: 'Overview', link: '/guides/features/project-generation/' },
+                  { text: 'Directory structure', link: '/guides/features/project-generation/dir_structure' },
+                  { text: 'Editing', link: '/guides/features/project-generation/editing' },
+                  { text: 'Buildable folders', link: '/guides/features/project-generation/buildable_folders' },
+                  { text: 'Linking', link: '/guides/features/project-generation/linking' },
+                  { text: 'Cocoapods Multiplatform', link: '/guides/features/project-generation/cocoapods_multiplatform' },
+                  { text: 'ProjectDescriptionHelpers', link: '/guides/features/project-generation/project_description_helpers' }
                 ]
               },
               {
                 text: 'Build Cache',
                 collapsed: true,
                 items: [
-                  { text: 'Overview', link: '/features/cache/' },
-                  { text: 'Setup', link: '/features/cache/cache_setup' },
-                  { text: 'Usage', link: '/features/cache/cache_usage' },
-                  { text: 'Debug', link: '/features/cache/cache_debug' },
+                  { text: 'Overview', link: '/guides/features/cache/' },
+                  { text: 'Setup', link: '/guides/features/cache/cache_setup' },
+                  { text: 'Usage', link: '/guides/features/cache/cache_usage' },
+                  { text: 'Debug', link: '/guides/features/cache/cache_debug' },
                 ]
               },
               {
                 text: 'Plugins',
                 collapsed: true,
                 items: [
-                  { text: 'Overview', link: '/features/plugins/' },
-                  { text: 'ProjectDescriptionHelper', link: '/features/plugins/projectdescriptionhelpers_plugin' },
-                  { text: 'Templates', link: '/features/plugins/templates_plugin' },
-                  { text: 'WorkspaceMapper', link: '/features/plugins/workspacemapper_plugin' },
-                  { text: 'Executable', link: '/features/plugins/executable_plugin' },
-                  { text: 'Plugin usage', link: '/features/plugins/plugins_connection' },
+                  { text: 'Overview', link: '/guides/features/plugins/' },
+                  { text: 'ProjectDescriptionHelper', link: '/guides/features/plugins/projectdescriptionhelpers_plugin' },
+                  { text: 'Templates', link: '/guides/features/plugins/templates_plugin' },
+                  { text: 'WorkspaceMapper', link: '/guides/features/plugins/workspacemapper_plugin' },
+                  { text: 'Executable', link: '/guides/features/plugins/executable_plugin' },
+                  { text: 'Plugin usage', link: '/guides/features/plugins/plugins_connection' },
                   {
                     text: 'OfficialPlugins', items: [
-                      { text: 'ImpactAnalysis', link: '/features/plugins/OfficialPlugins/ImpactAnalysis' }
+                      { text: 'ImpactAnalysis', link: '/guides/features/plugins/OfficialPlugins/ImpactAnalysis' }
                     ]
                   }
                 ]
@@ -192,19 +185,19 @@ export default defineConfig(async () => {
                 text: 'Linux',
                 collapsed: true,
                 items: [
-                  { text: 'Overview', link: '/features/linux/' },
+                  { text: 'Overview', link: '/guides/features/linux/' },
                 ]
               },
               {
                 text: 'Desktop App',
                 collapsed: true,
                 items: [
-                  { text: 'Overview', link: '/features/desktop/' },
-                  { text: 'Install', link: '/features/desktop/desktop_install' },
-                  { text: 'Setup', link: '/features/desktop/desktop_setup' },
-                  { text: 'Configuration', link: '/features/desktop/desktop_settings' },
-                  { text: 'Shortcuts', link: '/features/desktop/desktop_shortcuts' },
-                  { text: 'Features & Issues', link: '/features/desktop/desktop_other' },
+                  { text: 'Overview', link: '/guides/features/desktop/' },
+                  { text: 'Install', link: '/guides/features/desktop/desktop_install' },
+                  { text: 'Setup', link: '/guides/features/desktop/desktop_setup' },
+                  { text: 'Configuration', link: '/guides/features/desktop/desktop_settings' },
+                  { text: 'Shortcuts', link: '/guides/features/desktop/desktop_shortcuts' },
+                  { text: 'Features & Issues', link: '/guides/features/desktop/desktop_other' },
                 ]
               }
             ]
@@ -212,8 +205,8 @@ export default defineConfig(async () => {
           {
             text: 'Commands',
             items: [
-              { text: 'Clean', link: '/commands/clean' },
-              { text: 'Inspect', link: '/commands/inspect' },
+              { text: 'Clean', link: '/guides/commands/clean' },
+              { text: 'Inspect', link: '/guides/commands/inspect' },
             ]
           }
         ],
