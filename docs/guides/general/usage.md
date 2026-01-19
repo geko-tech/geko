@@ -1,3 +1,8 @@
+---
+title: How to use Geko
+order: 2
+---
+
 # Ho to use geko
 
 To generate a project, use the following commands:

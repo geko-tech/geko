@@ -1,3 +1,8 @@
+---
+title: Overview
+order: 1
+---
+
 # Plugins
 
 Plugins allow you to extend Geko's functionality and adapt it to the specific needs of your project. Geko offers a wide range of options for modifying, generating, and connecting custom plugins.

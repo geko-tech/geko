@@ -1,3 +1,8 @@
+---
+title: Setup
+order: 3
+---
+
 # Project setup
 
 ## Select Project

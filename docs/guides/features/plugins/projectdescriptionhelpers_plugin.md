@@ -1,3 +1,8 @@
+---
+title: ProjectDescriptionHelpers
+order: 2
+---
+
 # ProjectDescriptionHelpers Plugin
 
 There are two types of plugins of this kind:

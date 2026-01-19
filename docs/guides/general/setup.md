@@ -1,3 +1,8 @@
+---
+title: Install Geko
+order: 1
+---
+
 # Install Geko
 
 ## Manual

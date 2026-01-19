@@ -1,3 +1,8 @@
+---
+title: WorkspaceMapper
+order: 4
+---
+
 # Workspace Mapper Plugin
 
 This plugin allows you to access workspaces and projects during the project generation process and make changes to them.

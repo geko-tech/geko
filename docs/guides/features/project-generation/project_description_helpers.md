@@ -1,3 +1,8 @@
+---
+title: ProjectDescriptionHelpers
+order: 7
+---
+
 # ProjectDescriptionHelpers
 
 This feature allows you to reuse code between manifests.

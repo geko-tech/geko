@@ -1,3 +1,8 @@
+---
+title: Cocoapods Multiplatform
+order: 6
+---
+
 # Cocoapods podspec supported keys and multiplatform
 
 Geko supports the use of multi-platform podspec files. However, the implementation approaches differ, which may impose some limitations.

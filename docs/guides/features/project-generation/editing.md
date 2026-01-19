@@ -1,3 +1,8 @@
+---
+title: Editing
+order: 3
+---
+
 # Editing
 
 Geko uses manifest files to describe project configurations. These files allow you to describe your project configurations using Swift and predefined, strongly typed models. This approach is very similar to how Swift Packages work.

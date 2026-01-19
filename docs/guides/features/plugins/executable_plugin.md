@@ -1,3 +1,8 @@
+---
+title: Executable
+order: 5
+---
+
 # Executable Plugin
 
 Allows you to reuse executable files among multiple projects.

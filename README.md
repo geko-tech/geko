@@ -1,6 +1,6 @@
 # Geko
 
-Geko is a CLI utility that provides development infrastructure for XCode based projects.
+Geko is a Command-line tool for managing development infrastructure for Xcode-based projects.
 
 Key features
 
@@ -41,4 +41,4 @@ export PATH=/Users/my.user/.local/bin:$PATH
 
 ## Documentation
 
-In progress....
+Documentation is available at [geko-tech.github.io/geko/](https://geko-tech.github.io/geko/)

@@ -1,3 +1,8 @@
+---
+title: Buildable folders
+order: 4
+---
+
 # Buildable folders
 
 Starting with Xcode 16, support for buildable folders was introduced—a new project organization structure that allows you to specify directories containing source files in the pbxproj file instead of specifying each source file separately. This allows Xcode to automatically add new files to the project that appear in the file system.

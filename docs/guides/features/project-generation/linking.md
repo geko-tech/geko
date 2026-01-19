@@ -1,3 +1,8 @@
+---
+title: Linking
+order: 5
+---
+
 # Linking in Geko
 
 When searching for dependencies that will link to a target, geko uses the link type to build a list.

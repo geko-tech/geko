@@ -1,3 +1,8 @@
+---
+title: Configuration
+order: 4
+---
+
 # Project Configuration
 
 ## Project Settings

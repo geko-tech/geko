@@ -1,3 +1,8 @@
+---
+title: Plugin usage
+order: 6
+---
+
 # Plugin usage 
 
 ## Add plugins to a project

@@ -1,3 +1,9 @@
+---
+title: Contribution
+order: 7
+---
+
+
 # Contribution
 
 ## Installation and configuration

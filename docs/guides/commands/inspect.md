@@ -1,3 +1,8 @@
+---
+title: Inspect
+order: 2
+---
+
 # geko inspect
 
 The `geko inspect` command allows you to validate your source code for explicit and unnecessary imports.

@@ -1,3 +1,8 @@
+---
+title: Debug
+order: 4
+---
+
 # Cache debbuging 
 
 To make the process of configuration and debugging more comfortable, we provide several useful ENV variables.

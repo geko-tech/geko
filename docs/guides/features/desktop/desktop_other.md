@@ -1,3 +1,8 @@
+---
+title: Features & Issues
+order: 6
+---
+
 # Application Features & Known Issues
 
 ## Refresh project after edit focus modules

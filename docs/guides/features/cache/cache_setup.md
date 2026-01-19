@@ -1,3 +1,8 @@
+---
+title: Setup
+order: 2
+---
+
 # Setup 
 
 ## Local Cache 

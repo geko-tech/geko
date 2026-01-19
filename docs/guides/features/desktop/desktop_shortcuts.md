@@ -1,3 +1,8 @@
+---
+title: Shortcuts
+order: 5
+---
+
 # Git Shortcuts
 
 ## What are shortcuts?

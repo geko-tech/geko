@@ -1,3 +1,8 @@
+---
+title: Directory structure
+order: 2
+---
+
 # Directory structure
 
 To begin navigating a project using Geko, it's recommended to familiarize yourself with its possible file structure. Geko supports various project setups, using multiple package managers, such as Cocoapods or SPM, simultaneously or separately

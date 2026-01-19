@@ -1,3 +1,8 @@
+---
+title: Install
+order: 2
+---
+
 # How to install
 
 

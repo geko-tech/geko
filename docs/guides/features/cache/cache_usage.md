@@ -1,3 +1,8 @@
+---
+title: Usage
+order: 3
+---
+
 # Cache usage 
 
 To help you understand the various approaches implemented in Geko Cache, we'll walk through all the available commands using examples.

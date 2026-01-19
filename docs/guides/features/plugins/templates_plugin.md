@@ -1,3 +1,8 @@
+---
+title: Templates
+order: 3
+---
+
 # Templates Plugin
 
 Allows you to reuse templates between multiple projects.
