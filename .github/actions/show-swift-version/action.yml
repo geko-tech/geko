@@ -1,0 +1,7 @@
+name: 'Show Swift version'
+runs:
+  using: 'composite'
+  steps:
+    - name: Show Swift version
+      shell: bash
+      run: swift --version
