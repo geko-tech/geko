@@ -5,10 +5,6 @@ order: 2
 
 # ProjectDescriptionHelpers Plugin
 
-@Metadata {
-    @PageKind(article)
-}
-
 ## Overview 
 
 This plugin type is designed for reusing [ProjectDescriptionHelpers](project_description_helpers) across multiple Geko-based projects. The plugin can be connected both [locally](plugins_connection#Adding-a-local-plugin) and [remotely](plugins_connection#Adding-a-plugin-using-a-zip-archive), simplifying the reuse of project description code.
