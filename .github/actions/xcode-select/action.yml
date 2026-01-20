@@ -4,4 +4,6 @@ runs:
   steps:
     - name: Select Xcode version
       shell: bash
-      run: sudo xcode-select --switch /Applications/Xcode_$(cat .xcode-version).app
+      run: |
+        sudo xcode-select --switch /Applications/Xcode_$(cat .xcode-version).app
+        xcode-select --print-path
