@@ -9,7 +9,7 @@ Allows you to reuse executable files among multiple projects.
 
 ## Creating a plugin
 
-In the ``Plugin`` manifest, you must define the names of the executable files; based on these, the executable files specified in `Package.swift` will be compiled.
+In the ``Plugin`` manifest, you must define the names of the executable files ``ExecutablePlugin``; based on these, the executable files specified in `Package.swift` will be compiled.
 
 **Plugin.swift**
 
@@ -19,7 +19,7 @@ import ProjectDescription
 let plugin = Plugin(
     name: "GekoPlugin",
     executables: [
-        .init(name: "ExampleGekoExecutable")
+        ExecutablePlugin(name: "ExampleGekoExecutable")
     ]
 )
 ```
@@ -27,14 +27,14 @@ let plugin = Plugin(
 **Package.swift**
 
 ```swift
-// swift-tools-version:6.1
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "RemotePlugin",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v11)],
     products: [
         .executable(
             name: "ExampleGekoExecutable",
@@ -43,15 +43,13 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
-        .executableTarget(
+        .target(
             name: "ExampleTarget",
             dependencies: []
         ),
     ]
 )
 ```
-
-[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/ExecutablePluginExample).
 
 ## Usage
 
