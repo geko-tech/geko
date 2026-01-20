@@ -74,7 +74,7 @@ public final class FocusedTargetsExpanderGraphMapper: GraphMapping {
             if focusDirectDependencies {
                 // If skip direct dependencies passed then we should find all direct dependencies and focus them
                 let nonRunnableSourceTargets = allInternalTargets
-                    .filter { focusedTargets.contains($0.target.name) }
+                    .filter { sideTable.workspace.userFocusedTargets.contains($0.target.name) }
                     .filter { !$0.target.product.runnable }
                     .filter { $0.target.name != CacheConstants.cacheProjectName }
                 for target in nonRunnableSourceTargets {

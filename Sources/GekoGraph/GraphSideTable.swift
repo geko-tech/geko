@@ -58,11 +58,13 @@ public struct ProjectSideTable {
 
 public struct WorkspaceSideTable {
     public var projects: [AbsolutePath: ProjectSideTable]
+    public var userFocusedTargets: Set<String>
     public var focusedTargets: Set<String>
     public var dependenciesGraph: DependenciesGraph
 
     public init() {
         projects = [:]
+        userFocusedTargets = []
         focusedTargets = []
         dependenciesGraph = .none
     }

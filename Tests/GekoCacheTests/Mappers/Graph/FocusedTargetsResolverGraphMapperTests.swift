@@ -16,7 +16,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
 
     override func setUp() {
         super.setUp()
-        subject = FocusedTargetsResolverGraphMapper(sources: [], focusTests: false, schemeName: nil)
+        subject = FocusedTargetsResolverGraphMapper(focusTests: false, schemeName: nil)
     }
 
     override func tearDown() {
@@ -26,7 +26,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_when_sources_is_empty() async throws {
         // Given
-        subject = FocusedTargetsResolverGraphMapper(sources: [], focusTests: false, schemeName: nil)
+        subject = FocusedTargetsResolverGraphMapper(focusTests: false, schemeName: nil)
         
         let aTarget = Target.test(name: "App", product: .app)
         let aProjectPath = try temporaryPath().appending(component: "App")
@@ -85,8 +85,8 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_when_sources_without_regex() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: ["App", "B"], focusTests: false, schemeName: nil)
+        let focusedTargets: Set<String> = ["App", "B"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: false, schemeName: nil)
         
         let aTarget = Target.test(name: "App", product: .app)
         let aProjectPath = try temporaryPath().appending(component: "App")
@@ -136,6 +136,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // When
         var got = graph
         var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
         
         // Then
@@ -147,8 +148,8 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_when_sources_with_regex() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: ["App", "B.*"], focusTests: false, schemeName: nil)
+        let focusedTargets: Set<String> = ["App", "B.*"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: false, schemeName: nil)
         let expectedResult = [
             "App",
             "B",
@@ -207,6 +208,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // When
         var got = graph
         var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
         
         // Then
@@ -218,8 +220,9 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_when_sources_with_complex_regex() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: ["App", ".*-Unit-.+"], focusTests: false, schemeName: nil)
+
+        let focusedTargets: Set<String> = ["App", ".*-Unit-.+"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: false, schemeName: nil)
         let expectedResult = [
             "App",
             "B-Unit-Tests",
@@ -276,6 +279,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // When
         var got = graph
         var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
         
         // Then
@@ -287,8 +291,9 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_when_sources_with_focus_tests() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: ["App", "B"], focusTests: true, schemeName: nil)
+
+        let focusedTargets: Set<String> = ["App", "B"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: true, schemeName: nil)
         let expectedResult = [
             "App",
             "B",
@@ -380,6 +385,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // When
         var got = graph
         var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
         
         // Then
@@ -391,8 +397,8 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_when_sources_with_focus_tests_and_regex() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: ["App", "B.*"], focusTests: true, schemeName: nil)
+        let focusedTargets: Set<String> = ["App", "B.*"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: true, schemeName: nil)
         let expectedResult = [
             "App",
             "B",
@@ -486,6 +492,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // When
         var got = graph
         var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
         
         // Then
@@ -497,8 +504,8 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_with_scheme() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: [], focusTests: false, schemeName: "Test")
+
+        subject = FocusedTargetsResolverGraphMapper(focusTests: false, schemeName: "Test")
         let expectedResult = [
             "App",
             "BB",
@@ -605,8 +612,8 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
     
     func test_map_with_scheme_sources_and_focus_tests() async throws {
         // Given
-        
-        subject = FocusedTargetsResolverGraphMapper(sources: ["App", "B.*"], focusTests: true, schemeName: "Test")
+        let focusedTargets: Set<String> = ["App", "B.*"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: true, schemeName: "Test")
         let expectedResult = [
             "App",
             "B",
@@ -708,6 +715,7 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // When
         var got = graph
         var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
         
         // Then
@@ -715,5 +723,15 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
             sideTable.workspace.focusedTargets.sorted(),
             expectedResult.sorted()
         )
+    }
+
+    // MARK: - Private
+
+    private func prepareSideTable(
+        focusedTargets: Set<String>,
+        graph: inout Graph,
+        sideTable: inout GraphSideTable
+    ) async throws {
+        _ = try await UserFocusedTargetsMapper(focusedTargets: focusedTargets).map(graph: &graph, sideTable: &sideTable)
     }
 }

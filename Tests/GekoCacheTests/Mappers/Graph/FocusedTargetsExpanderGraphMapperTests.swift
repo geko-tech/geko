@@ -304,6 +304,7 @@ final class FocusedTargetsExpanderGraphMapperTests: GekoUnitTestCase {
         var got = graph
         var sideTable = GraphSideTable()
         sideTable.workspace.focusedTargets = ["App", "C"]
+        sideTable.workspace.userFocusedTargets = ["App", "C"]
         _ = try await subject.map(graph: &got, sideTable: &sideTable)
 
         // Then
