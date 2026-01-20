@@ -47,11 +47,11 @@ jobs:
           SOURCEDOCS=$(find $TMP_DIR -type f -name "sourcedocs")
 
           # Generate markdown public api
-          "$SOURCEDOCS" generate --spm-module ProjectDescription -o docs/projectdescription --table-of-contents --clean
+          "$SOURCEDOCS" generate --spm-module ProjectDescription -o "$GITHUB_WORKSPACE"/docs/projectdescription --table-of-contents --clean
 
           # Cleanup
           rm -rf "$TEMP_DIR"
-          rm docs/projectdescription/README.md
+          rm "$GITHUB_WORKSPACE"/docs/projectdescription/README.md
       - name: Install dependencies
         run: npm ci
       - name: Build with VitePress
