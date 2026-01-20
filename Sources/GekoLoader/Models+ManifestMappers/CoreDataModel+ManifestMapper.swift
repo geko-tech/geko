@@ -4,7 +4,7 @@ import GekoCore
 import GekoGraph
 import GekoSupport
 
-extension GekoGraph.CoreDataModel {
+extension CoreDataModel {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         self.path = try generatorPaths.resolve(path: path)
         for i in 0 ..< versions.count {
@@ -29,11 +29,11 @@ extension GekoGraph.CoreDataModel {
     }
 }
 
-extension GekoGraph.CoreDataModel {
+extension CoreDataModel {
     /// Maps a `.xcdatamodeld` package into a GekoGraph.CoreDataModel instance.
     /// - Parameters:
     ///   - path: The path for a `.xcdatamodeld` package.
-    static func from(path modelPath: AbsolutePath) throws -> GekoGraph.CoreDataModel {
+    static func from(path modelPath: AbsolutePath) throws -> CoreDataModel {
         let versions = FileHandler.shared.glob(modelPath, glob: "*.xcdatamodel")
         let currentVersion: String = try {
             if CoreDataVersionExtractor.isVersioned(at: modelPath) {

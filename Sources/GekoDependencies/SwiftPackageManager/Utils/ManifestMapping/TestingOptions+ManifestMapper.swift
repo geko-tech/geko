@@ -1,12 +1,12 @@
-import ProjectDescription
 import GekoGraph
+import ProjectDescription
 
 extension ProjectDescription.TestingOptions {
     /// Maps a GekoGraph.TestingOptions instance into a ProjectDescription.TestingOptions instance.
     /// - Parameters:
     /// - manifest: Manifest representation of testing options.
     static func from(
-        manifest: GekoGraph.TestingOptions
+        manifest: TestingOptions
     ) -> Self {
         var options: Self = []
 

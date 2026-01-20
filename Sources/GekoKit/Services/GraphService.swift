@@ -1,12 +1,12 @@
 import Foundation
-import ProjectAutomation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGenerator
 import GekoGraph
 import GekoLoader
 import GekoPlugin
 import GekoSupport
+import ProjectAutomation
+import ProjectDescription
 
 final class GraphService {
     private let manifestGraphLoader: ManifestGraphLoading
@@ -134,7 +134,7 @@ extension ProjectAutomation.Graph {
 }
 
 extension ProjectAutomation.Project {
-    fileprivate static func from(_ project: GekoGraph.Project) -> ProjectAutomation.Project {
+    fileprivate static func from(_ project: ProjectDescription.Project) -> ProjectAutomation.Project {
         let schemes = project.schemes.reduce(into: [ProjectAutomation.Scheme]()) { $0.append(ProjectAutomation.Scheme.from($1)) }
         let targets = project.targets.reduce(into: [ProjectAutomation.Target]()) { $0.append(ProjectAutomation.Target.from($1)) }
 
@@ -149,7 +149,7 @@ extension ProjectAutomation.Project {
 }
 
 extension ProjectAutomation.Target {
-    fileprivate static func from(_ target: GekoGraph.Target) -> ProjectAutomation.Target {
+    fileprivate static func from(_ target: ProjectDescription.Target) -> ProjectAutomation.Target {
         let dependencies = target.dependencies.map { Self.from($0) }
         return ProjectAutomation.Target(
             name: target.name,
@@ -160,7 +160,7 @@ extension ProjectAutomation.Target {
         )
     }
 
-    private static func from(_ dependency: GekoGraph.TargetDependency) -> ProjectAutomation.TargetDependency {
+    private static func from(_ dependency: ProjectDescription.TargetDependency) -> ProjectAutomation.TargetDependency {
         switch dependency {
         case let .target(name, status, _):
             let linkingStatus: ProjectAutomation.LinkingStatus = status == .optional ? .optional : .required
@@ -221,7 +221,7 @@ extension ProjectAutomation.Target {
 }
 
 extension ProjectAutomation.Scheme {
-    fileprivate static func from(_ scheme: GekoGraph.Scheme) -> ProjectAutomation.Scheme {
+    fileprivate static func from(_ scheme: ProjectDescription.Scheme) -> ProjectAutomation.Scheme {
         var testTargets = [String]()
         if let testAction = scheme.testAction {
             for testTarget in testAction.targets {

@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.Headers.ModuleMap {
+extension Headers.ModuleMap {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         guard case let .file(path) = self else {
             return
@@ -14,7 +14,7 @@ extension GekoGraph.Headers.ModuleMap {
     }
 }
 
-extension GekoGraph.Headers {
+extension Headers {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         if let umbrella = self.umbrellaHeader {
             self.umbrellaHeader = try generatorPaths.resolve(path: umbrella)

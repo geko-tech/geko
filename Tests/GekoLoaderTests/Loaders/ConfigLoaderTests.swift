@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoCoreTesting
 @testable import GekoLoader
@@ -71,7 +70,7 @@ final class ConfigLoaderTests: GekoUnitTestCase {
         let result = try subject.loadConfig(path: path)
 
         // Then
-        XCTAssertEqual(result, GekoGraph.Config(
+        XCTAssertEqual(result, Config(
             compatibleXcodeVersions: .all,
             cloud: nil,
             cache: nil,
@@ -115,7 +114,7 @@ final class ConfigLoaderTests: GekoUnitTestCase {
         let result = try subject.loadConfig(path: "/project/Module/A/")
 
         // Then
-        XCTAssertEqual(result, GekoGraph.Config(
+        XCTAssertEqual(result, Config(
             compatibleXcodeVersions: .all,
             cloud: nil,
             cache: nil,

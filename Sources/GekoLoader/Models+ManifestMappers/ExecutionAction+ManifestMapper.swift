@@ -1,15 +1,14 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.ExecutionAction {
+extension ExecutionAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         try self.target?.resolvePaths(generatorPaths: generatorPaths)
     }
 }
 
-extension GekoGraph.TargetReference {
+extension TargetReference {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         self.projectPath = try generatorPaths.resolveSchemeActionProjectPath(projectPath)
     }

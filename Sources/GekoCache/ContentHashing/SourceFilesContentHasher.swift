@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public protocol SourceFilesContentHashing {
     func hash(sources: [SourceFiles]) throws -> (String, [String: String])

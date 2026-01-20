@@ -1,16 +1,15 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
 import GekoSupportTesting
+import ProjectDescription
 import XCTest
 @testable import GekoLoader
 
 extension GekoTestCase {
     func XCTAssertSettingsMatchesManifest(
-        settings: GekoGraph.Settings,
+        settings: Settings,
         matches manifest: ProjectDescription.Settings,
         at path: AbsolutePath,
         generatorPaths: GeneratorPaths,
@@ -34,7 +33,7 @@ extension GekoTestCase {
     }
 
     func XCTAssertTargetMatchesManifest(
-        target: GekoGraph.Target,
+        target: Target,
         matches manifest: ProjectDescription.Target,
         at path: AbsolutePath,
         generatorPaths: GeneratorPaths,
@@ -108,8 +107,8 @@ extension GekoTestCase {
     }
 
     func assert(
-        coreDataModels: [GekoGraph.CoreDataModel],
-        matches manifests: [ProjectDescription.CoreDataModel],
+        coreDataModels: [CoreDataModel],
+        matches manifests: [CoreDataModel],
         at path: AbsolutePath,
         generatorPaths: GeneratorPaths,
         file: StaticString = #file,
@@ -127,8 +126,8 @@ extension GekoTestCase {
     }
 
     func coreDataModel(
-        _ coreDataModel: GekoGraph.CoreDataModel,
-        matches manifest: ProjectDescription.CoreDataModel,
+        _ coreDataModel: CoreDataModel,
+        matches manifest: CoreDataModel,
         at _: AbsolutePath,
         generatorPaths: GeneratorPaths
     ) throws -> Bool {
@@ -137,8 +136,8 @@ extension GekoTestCase {
     }
 
     func assert(
-        scheme: GekoGraph.Scheme,
-        matches manifest: ProjectDescription.Scheme,
+        scheme: Scheme,
+        matches manifest: Scheme,
         path: AbsolutePath,
         generatorPaths: GeneratorPaths,
         file: StaticString = #file,
@@ -160,14 +159,14 @@ extension GekoTestCase {
     }
 
     func assert(
-        buildAction: GekoGraph.BuildAction,
-        matches manifest: ProjectDescription.BuildAction,
+        buildAction: BuildAction,
+        matches manifest: BuildAction,
         path _: AbsolutePath,
         generatorPaths: GeneratorPaths,
         file: StaticString = #file,
         line: UInt = #line
     ) throws {
-        let convertedTargets: [GekoGraph.TargetReference] = try manifest.targets.map {
+        let convertedTargets: [TargetReference] = try manifest.targets.map {
             let resolvedPath = try generatorPaths.resolveSchemeActionProjectPath($0.projectPath)
             return .init(projectPath: resolvedPath, name: $0.targetName)
         }
@@ -175,7 +174,7 @@ extension GekoTestCase {
     }
 
     func assert(
-        testAction: GekoGraph.TestAction,
+        testAction: TestAction,
         matches manifest: ProjectDescription.TestAction,
         path _: AbsolutePath,
         generatorPaths: GeneratorPaths,
@@ -195,8 +194,8 @@ extension GekoTestCase {
     }
 
     func assert(
-        runAction: GekoGraph.RunAction,
-        matches manifest: ProjectDescription.RunAction,
+        runAction: RunAction,
+        matches manifest: RunAction,
         path _: AbsolutePath,
         generatorPaths: GeneratorPaths,
         file: StaticString = #file,
@@ -216,8 +215,8 @@ extension GekoTestCase {
     }
 
     func assert(
-        arguments: GekoGraph.Arguments,
-        matches manifest: ProjectDescription.Arguments,
+        arguments: Arguments,
+        matches manifest: Arguments,
         file: StaticString = #file,
         line: UInt = #line
     ) {
@@ -253,10 +252,10 @@ extension GekoTestCase {
 }
 
 private func == (
-    _ lhs: GekoGraph.Platform,
-    _ rhs: ProjectDescription.Platform
+    _ lhs: Platform,
+    _ rhs: Platform
 ) -> Bool {
-    let map: [GekoGraph.Platform: ProjectDescription.Platform] = [
+    let map: [Platform: Platform] = [
         .iOS: .iOS,
         .macOS: .macOS,
         .tvOS: .tvOS,
@@ -265,17 +264,17 @@ private func == (
 }
 
 private func == (
-    _ lhs: GekoGraph.Destinations,
-    _ rhs: ProjectDescription.Destinations
+    _ lhs: Destinations,
+    _ rhs: Destinations
 ) -> Bool {
     lhs.map(\.rawValue).sorted() == rhs.map(\.rawValue).sorted()
 }
 
 private func == (
-    _ lhs: GekoGraph.Product,
-    _ rhs: ProjectDescription.Product
+    _ lhs: Product,
+    _ rhs: Product
 ) -> Bool {
-    let map: [GekoGraph.Product: ProjectDescription.Product] = [
+    let map: [Product: Product] = [
         .app: .app,
         .framework: .framework,
         .staticFramework: .staticFramework,
@@ -290,7 +289,7 @@ private func == (
 
 private func == (
     _ lhs: BuildConfiguration,
-    _ rhs: ProjectDescription.Configuration
+    _ rhs: Configuration
 ) -> Bool {
     return lhs.variant == rhs.buildConfiguration.variant && lhs.name == rhs.buildConfiguration.name
 }

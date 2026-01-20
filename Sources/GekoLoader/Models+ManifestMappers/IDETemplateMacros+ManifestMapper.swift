@@ -1,8 +1,8 @@
 import Foundation
-import ProjectDescription
 import GekoGraph
+import ProjectDescription
 
-extension IDETemplateMacros {
+extension FileHeaderTemplate {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         switch self {
         case let .file(path):

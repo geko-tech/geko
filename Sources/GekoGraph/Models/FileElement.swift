@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias FileElement = ProjectDescription.FileElement
-
 extension FileElement {
     public var path: AbsolutePath {
         switch self {

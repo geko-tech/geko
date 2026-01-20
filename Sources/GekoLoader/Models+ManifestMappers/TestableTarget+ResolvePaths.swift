@@ -1,10 +1,9 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.TestableTarget {
+extension TestableTarget {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         try self.target.resolvePaths(generatorPaths: generatorPaths)
     }

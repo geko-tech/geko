@@ -1,12 +1,9 @@
 import Foundation
 import GekoCocoapods
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
+import GekoGraph
 import GekoSupport
-import struct GekoGraph.CocoapodsDependencies
-
-import struct GekoGraph.Headers
+import ProjectDescription
 
 final class CocoapodsTargetGenerator {
     private let cocoapodsTargetGenerator = GekoCocoapods.CocoapodsTargetGenerator()
@@ -27,8 +24,8 @@ final class CocoapodsTargetGenerator {
         from spec: CocoapodsSpec,
         for path: AbsolutePath,
         subspecs: Set<String>,
-        defaultForceLinking: GekoGraph.CocoapodsDependencies.Linking?,
-        forceLinking: [String: GekoGraph.CocoapodsDependencies.Linking] = [:]
+        defaultForceLinking: CocoapodsDependencies.Linking?,
+        forceLinking: [String: CocoapodsDependencies.Linking] = [:]
     ) throws -> DependenciesGraph {
         let specInfoProvider = CocoapodsSpecInfoProvider(spec: spec, subspecs: subspecs)
 
@@ -73,7 +70,7 @@ extension CocoapodsTargetGenerator {
         path: AbsolutePath,
         targetSupportDir: AbsolutePath,
         podsRoot: AbsolutePath,
-        defaultForceLinking: GekoGraph.CocoapodsDependencies.Linking?,
+        defaultForceLinking: CocoapodsDependencies.Linking?,
         forceLinking: [String : CocoapodsDependencies.Linking]
     ) throws -> DependenciesGraph {
         let (nativeTargets, sideEffects) = try cocoapodsTargetGenerator.nativeTargets(

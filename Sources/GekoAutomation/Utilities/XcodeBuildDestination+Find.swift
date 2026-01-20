@@ -15,7 +15,7 @@ extension XcodeBuildDestination {
     /// - Returns: The `XcodeBuildDestination` that is compatible with the given arguments.
     public static func find(
         for target: Target,
-        on platform: GekoGraph.Platform,
+        on platform: ProjectDescription.Platform,
         scheme: Scheme,
         version: Version?,
         deviceName: String?,

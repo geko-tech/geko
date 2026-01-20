@@ -1,7 +1,7 @@
 import ProjectDescription
 import GekoGraph
 
-extension GekoGraph.DependenciesGraph {
+extension DependenciesGraph {
     /// Resolve paths in GekoGraph.DependenciesGraph
     /// - Parameters:
     ///   - generatorPaths: Generator paths.

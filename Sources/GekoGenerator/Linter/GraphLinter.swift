@@ -1,8 +1,8 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol GraphLinting: AnyObject {
     func lint(graphTraverser: GraphTraversing, config: Config) -> [LintingIssue]
@@ -323,7 +323,7 @@ public class GraphLinter: GraphLinting {
     }
 
     struct LintableTarget: Equatable, Hashable {
-        let platform: GekoGraph.Platform
+        let platform: Platform
         let product: Product
     }
 

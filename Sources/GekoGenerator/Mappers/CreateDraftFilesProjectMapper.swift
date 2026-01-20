@@ -7,7 +7,7 @@ public final class CreateDraftFilesProjectMapper: ProjectMapping {
     public init() {}
 
     public func map(
-        project: inout GekoGraph.Project,
+        project: inout Project,
         sideTable: inout ProjectSideTable
     ) throws -> [SideEffectDescriptor] {
         var descriptors: [SideEffectDescriptor] = []

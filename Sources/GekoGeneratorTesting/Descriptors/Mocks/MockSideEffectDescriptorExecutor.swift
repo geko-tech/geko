@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoSupport
+import ProjectDescription
 @testable import GekoGenerator
 
 final class MockSideEffectDescriptorExecutor: SideEffectDescriptorExecuting {

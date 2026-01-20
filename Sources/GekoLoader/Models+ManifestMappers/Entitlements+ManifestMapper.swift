@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.Entitlements {
+extension Entitlements {
     /// Maps a ProjectDescription.Entitlements instance into a GekoGraph.Entitlements instance.
     /// - Parameters:
     ///   - generatorPaths: Generator paths.

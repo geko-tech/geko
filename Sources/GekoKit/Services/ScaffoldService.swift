@@ -1,10 +1,10 @@
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoPlugin
 import GekoScaffold
 import GekoSupport
+import ProjectDescription
 
 enum ScaffoldServiceError: FatalError, Equatable {
     var type: ErrorType {

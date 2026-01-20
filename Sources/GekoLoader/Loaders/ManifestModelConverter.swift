@@ -6,13 +6,13 @@ import GekoSupport
 
 /// A component responsible for converting Manifests (`ProjectDescription`) to Models (`GekoCore`)
 public protocol ManifestModelConverting {
-    func convert(manifest: ProjectDescription.Workspace, path: AbsolutePath) throws -> GekoGraph.Workspace
+    func convert(manifest: ProjectDescription.Workspace, path: AbsolutePath) throws -> Workspace
     func convert(
         manifest: ProjectDescription.Project,
         path: AbsolutePath,
         plugins: Plugins,
         isExternal: Bool
-    ) throws -> GekoGraph.Project
+    ) throws -> Project
     func convert(manifest: GekoCore.DependenciesGraph, path: AbsolutePath) throws -> GekoGraph.DependenciesGraph
 }
 
@@ -36,7 +36,7 @@ public final class ManifestModelConverter: ManifestModelConverting {
         path: AbsolutePath,
         plugins: Plugins,
         isExternal: Bool
-    ) throws -> GekoGraph.Project {
+    ) throws -> Project {
         let generatorPaths = GeneratorPaths(manifestDirectory: path)
         var manifest = manifest
 
@@ -56,7 +56,7 @@ public final class ManifestModelConverter: ManifestModelConverting {
     public func convert(
         manifest: ProjectDescription.Workspace,
         path: AbsolutePath
-    ) throws -> GekoGraph.Workspace {
+    ) throws -> Workspace {
         let generatorPaths = GeneratorPaths(manifestDirectory: path)
         var workspace = manifest
 
@@ -84,7 +84,7 @@ public final class ManifestModelConverter: ManifestModelConverting {
             }
         }
 
-        let externalProjects = try [AbsolutePath: GekoGraph.Project](
+        let externalProjects = try [AbsolutePath: Project](
             uniqueKeysWithValues: manifest.externalProjects
                 .map { project in
                     let projectPath = try AbsolutePath(validatingAbsolutePath: project.key.pathString)
@@ -100,7 +100,7 @@ public final class ManifestModelConverter: ManifestModelConverting {
                 }
         )
 
-        var externalFrameworkDependencies: [AbsolutePath: [GekoGraph.TargetDependency]] = [:]
+        var externalFrameworkDependencies: [AbsolutePath: [TargetDependency]] = [:]
         for (key, deps) in manifest.externalFrameworkDependencies {
             externalFrameworkDependencies[key] = []
             let path = try AbsolutePath(validatingAbsolutePath: key.pathString)

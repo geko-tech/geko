@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoSupport
 import GekoGraph
+import ProjectDescription
 
 /// Geko Workspace Identifier Mapper
 ///

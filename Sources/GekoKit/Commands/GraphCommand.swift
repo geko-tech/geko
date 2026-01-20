@@ -2,6 +2,7 @@ import AnyCodable
 import ArgumentParser
 import Foundation
 import struct ProjectDescription.AbsolutePath
+import enum ProjectDescription.Platform
 import GekoGenerator
 import GekoGraph
 import GekoLoader
@@ -115,4 +116,4 @@ enum GraphFormat: String, ExpressibleByArgument {
     case json
 }
 
-extension GekoGraph.Platform: ExpressibleByArgument {}
+extension ProjectDescription.Platform: @retroactive ExpressibleByArgument {}

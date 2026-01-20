@@ -1,11 +1,10 @@
 import Foundation
 import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
-import struct GekoGraph.CocoapodsDependencies
-import struct GekoGraph.Headers
+import GekoGraph
 import GekoSupport
 import GekoCocoapods
+import ProjectDescription
 
 public enum CocoapodsDependenciesInstallerError: FatalError {
     case unknownSpecType(name: String)
@@ -46,8 +45,8 @@ final class CocoapodsDependenciesInstaller {
 
     func install(
         dependencies: consuming CocoapodsDependencyGraph,
-        defaultForceLinking: GekoGraph.CocoapodsDependencies.Linking?,
-        forceLinking: [String: GekoGraph.CocoapodsDependencies.Linking]
+        defaultForceLinking: CocoapodsDependencies.Linking?,
+        forceLinking: [String: CocoapodsDependencies.Linking]
     ) async throws -> GekoCore.DependenciesGraph {
         let bundlesDir = pathProvider.frameworkBundlesDir
         let targetSupportDir = pathProvider.targetSupportDir
@@ -143,8 +142,8 @@ extension CocoapodsDependenciesInstaller {
     private func install(
         dependency: CocoapodsSpec,
         subspecs: Set<String>,
-        defaultForceLinking: GekoGraph.CocoapodsDependencies.Linking?,
-        forceLinking: [String: GekoGraph.CocoapodsDependencies.Linking]
+        defaultForceLinking: CocoapodsDependencies.Linking?,
+        forceLinking: [String: CocoapodsDependencies.Linking]
     ) async throws -> DependenciesGraph {
         let fullPath = handleDependencyDir(for: dependency.name)
         let specInfoProvider = CocoapodsSpecInfoProvider(spec: dependency, subspecs: subspecs)

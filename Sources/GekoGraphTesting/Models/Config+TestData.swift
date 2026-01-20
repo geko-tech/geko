@@ -35,7 +35,7 @@ extension Config.GenerationOptions {
         resolveDependenciesWithSystemScm: Bool = false,
         disablePackageVersionLocking: Bool = false,
         clonedSourcePackagesDirPath: AbsolutePath? = nil,
-        staticSideEffectsWarningTargets: GekoGraph.Config.GenerationOptions.StaticSideEffectsWarningTargets = .all,
+        staticSideEffectsWarningTargets: Config.GenerationOptions.StaticSideEffectsWarningTargets = .all,
         enforceExplicitDependencies: Bool = false
     ) -> Self {
         .options(

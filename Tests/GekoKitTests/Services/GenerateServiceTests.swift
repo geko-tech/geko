@@ -1,10 +1,10 @@
 #if os(macOS)
 
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoLoader
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoCoreTesting
@@ -15,7 +15,7 @@ import XCTest
 private typealias GeneratorParameters = (
     sources: Set<String>,
     cacheOutputType: CacheOutputType,
-    cacheProfile: GekoGraph.Cache.Profile,
+    cacheProfile: ProjectDescription.Cache.Profile,
     ignoreCache: Bool
 )
 

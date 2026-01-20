@@ -1,14 +1,14 @@
 import AnyCodable
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public protocol TargetScriptsContentHashing {
     func hash(
         targetScripts: [TargetScript],
         sourceRootPath: AbsolutePath,
-        cacheProfile: GekoGraph.Cache.Profile
+        cacheProfile: ProjectDescription.Cache.Profile
     ) throws -> (String, [String: AnyCodable])
 }
 
@@ -31,7 +31,7 @@ public final class TargetScriptsContentHasher: TargetScriptsContentHashing {
     public func hash(
         targetScripts: [TargetScript],
         sourceRootPath: AbsolutePath,
-        cacheProfile: GekoGraph.Cache.Profile
+        cacheProfile: ProjectDescription.Cache.Profile
     ) throws -> (String, [String: AnyCodable]) {
         var stringsToHash: [String] = []
         var targetScriptHashInfo: [String: AnyCodable] = [:]

@@ -1,9 +1,9 @@
 #if os(macOS)
 
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoGraphTesting
 import GekoPluginTesting
+import ProjectDescription
 import XCTest
 
 @testable import GekoCore

@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 
 protocol ConfigGenerating: AnyObject {
@@ -94,7 +94,7 @@ final class ConfigGenerator: ConfigGenerating {
         let targetConfigurations = target.settings?.configurations ?? [:]
         let targetBuildConfigurations = targetConfigurations.keys
         let buildConfigurations = Set(projectBuildConfigurations).union(targetBuildConfigurations)
-        let configurationsTuples: [(BuildConfiguration, Configuration?)] = buildConfigurations
+        let configurationsTuples: [(BuildConfiguration, ConfigurationSettings?)] = buildConfigurations
             .map { buildConfiguration in
                 if let configuration = target.settings?.configurations[buildConfiguration] {
                     return (buildConfiguration, configuration)
@@ -123,7 +123,7 @@ final class ConfigGenerator: ConfigGenerating {
 
     private func generateProjectSettingsFor(
         buildConfiguration: BuildConfiguration,
-        configuration: Configuration?,
+        configuration: ConfigurationSettings?,
         project: Project,
         fileElements: ProjectFileElements,
         pbxproj: PBXProj,
@@ -157,7 +157,7 @@ final class ConfigGenerator: ConfigGenerating {
         target: Target,
         project: Project,
         buildConfiguration: BuildConfiguration,
-        configuration: Configuration?,
+        configuration: ConfigurationSettings?,
         fileElements: ProjectFileElements,
         graphTraverser: GraphTraversing,
         pbxproj: PBXProj,

@@ -1,6 +1,5 @@
 import Foundation
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 public enum GraphDependency: Hashable, CustomStringConvertible, Comparable, Codable {
     public struct XCFramework: Hashable, CustomStringConvertible, Comparable, Codable {

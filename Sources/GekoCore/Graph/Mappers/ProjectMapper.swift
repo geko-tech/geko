@@ -1,6 +1,7 @@
 import Foundation
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol ProjectMapping {
     func map(

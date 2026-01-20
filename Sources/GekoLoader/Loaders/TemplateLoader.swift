@@ -1,16 +1,15 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol TemplateLoading {
     /// Load `GekoScaffold.Template` at given `path`
     /// - Parameters:
     ///     - path: Path of template manifest file `name_of_template.swift`
     /// - Returns: Loaded `GekoScaffold.Template`
-    func loadTemplate(at path: AbsolutePath) throws -> GekoGraph.Template
+    func loadTemplate(at path: AbsolutePath) throws -> Template
 }
 
 public class TemplateLoader: TemplateLoading {
@@ -25,27 +24,27 @@ public class TemplateLoader: TemplateLoading {
         self.manifestLoader = manifestLoader
     }
 
-    public func loadTemplate(at path: AbsolutePath) throws -> GekoGraph.Template {
+    public func loadTemplate(at path: AbsolutePath) throws -> Template {
         let template = try manifestLoader.loadTemplate(at: path)
         let generatorPaths = GeneratorPaths(manifestDirectory: path)
-        return try GekoGraph.Template.from(
+        return try Template.from(
             manifest: template,
             generatorPaths: generatorPaths
         )
     }
 }
 
-extension GekoGraph.Template {
-    static func from(manifest: ProjectDescription.Template, generatorPaths: GeneratorPaths) throws -> GekoGraph.Template {
-        let attributes = try manifest.attributes.map(GekoGraph.Template.Attribute.from)
+extension Template {
+    static func from(manifest: ProjectDescription.Template, generatorPaths: GeneratorPaths) throws -> Template {
+        let attributes = try manifest.attributes.map(Template.Attribute.from)
         let items = try manifest.items.map { Item(
             path: try RelativePath(validating: $0.path).pathString,
-            contents: try GekoGraph.Template.Contents.from(
+            contents: try Template.Contents.from(
                 manifest: $0.contents,
                 generatorPaths: generatorPaths
             )
         ) }
-        return GekoGraph.Template(
+        return Template(
             description: manifest.description,
             attributes: attributes,
             items: items
@@ -53,8 +52,8 @@ extension GekoGraph.Template {
     }
 }
 
-extension GekoGraph.Template.Attribute {
-    static func from(manifest: ProjectDescription.Template.Attribute) throws -> GekoGraph.Template.Attribute {
+extension Template.Attribute {
+    static func from(manifest: ProjectDescription.Template.Attribute) throws -> Template.Attribute {
         switch manifest {
         case let .required(name):
             return .required(name)
@@ -64,11 +63,11 @@ extension GekoGraph.Template.Attribute {
     }
 }
 
-extension GekoGraph.Template.Contents {
+extension Template.Contents {
     static func from(
         manifest: ProjectDescription.Template.Contents,
         generatorPaths: GeneratorPaths
-    ) throws -> GekoGraph.Template.Contents {
+    ) throws -> Template.Contents {
         switch manifest {
         case let .string(contents):
             return .string(contents)

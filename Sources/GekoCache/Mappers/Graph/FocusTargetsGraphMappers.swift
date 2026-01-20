@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// `FocusTargetsGraphMappers` is used to filter out some targets and their dependencies and tests targets.
 public final class FocusTargetsGraphMappers: GraphMapping {

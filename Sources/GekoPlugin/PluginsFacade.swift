@@ -1,15 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
-import struct ProjectDescription.Plugin
-import struct ProjectDescription.PluginLocation
-import struct ProjectDescription.ExecutablePlugin
-import struct ProjectDescription.PluginConfigManifest
 import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoScaffold
 import GekoSupport
+import ProjectDescription
 
 public protocol PluginsFacading: AnyObject {
     func loadPlugins(using config: Config) async throws -> Plugins

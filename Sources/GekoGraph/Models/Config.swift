@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias Config = ProjectDescription.Config
-
 extension Config {
     /// Returns the default Geko configuration.
     public static var `default`: Config {

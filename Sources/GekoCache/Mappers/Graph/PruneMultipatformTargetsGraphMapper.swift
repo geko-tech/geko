@@ -6,18 +6,17 @@ import GekoSupport
 
 /// Mapper prune targets that will not participate in the build for the used cache profile and the platforms specified in it.
 public final class PruneMultipatformTargetsGraphMapper: GraphMapping {
-    
     /// Current cache profile
-    private let cacheProfile: GekoGraph.Cache.Profile
-    
+    private let cacheProfile: ProjectDescription.Cache.Profile
+
     // MARK: - Init
-    
-    public init(cacheProfile: GekoGraph.Cache.Profile) {
+
+    public init(cacheProfile: ProjectDescription.Cache.Profile) {
         self.cacheProfile = cacheProfile
     }
-    
+
     // MARK: - GraphMapping
-    
+
     public func map(
         graph: inout Graph,
         sideTable: inout GraphSideTable

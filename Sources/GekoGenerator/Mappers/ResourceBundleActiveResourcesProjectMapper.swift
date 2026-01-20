@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// Project mapper that sets `ENABLE_ONLY_ACTIVE_RESOURCES` build setting for bundle targets
 ///

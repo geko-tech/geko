@@ -1,11 +1,11 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoDependencies
 import GekoGraph
 import GekoLoader
 import GekoPlugin
 import GekoSupport
+import ProjectDescription
 
 enum DependencyDuplicateError: FatalError {
     case duplicate(String)
@@ -155,7 +155,7 @@ final class FetchService {
         fileHandler.currentPath
     }
 
-    private func fetchConfig(path: AbsolutePath) throws -> GekoGraph.Config {
+    private func fetchConfig(path: AbsolutePath) throws -> Config {
         logger.info("Loading config.", metadata: .section)
         return try configLoader.loadConfig(path: path)
     }

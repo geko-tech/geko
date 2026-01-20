@@ -1,14 +1,14 @@
 import Foundation
-import ProjectDescription
 import GekoSupport
 import GekoGraph
 import GekoCore
 import GekoCache
+import ProjectDescription
 
 public final class CacheTargetsPhaseScriptExecutionTask: CacheTask {
     struct TargetWithScripts {
         let graphTarget: GraphTarget
-        let scripts: [GekoGraph.TargetScript]
+        let scripts: [TargetScript]
         
         var projectDirPath: AbsolutePath {
             AbsolutePath(stringLiteral: graphTarget.project.xcodeProjPath.dirname)
@@ -148,7 +148,7 @@ public final class CacheTargetsPhaseScriptExecutionTask: CacheTask {
         buildSettingsResolver: BuildSettingsResolving
     ) throws -> [String: SettingValue] {
         guard let envKeys = scriptEnvs[scriptName] else { return [:] }
-        var environment = [String: GekoGraph.SettingValue]()
+        var environment = [String: SettingValue]()
         try envKeys.forEach(context: .concurrent) { envKey in
             let resolvedVariable = try buildSettingsResolver.commonResolveBuildSetting(
                 key: envKey,

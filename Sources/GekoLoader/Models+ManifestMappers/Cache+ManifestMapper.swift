@@ -1,8 +1,7 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum CacheProfileError: FatalError, Equatable {
     case invalidVersion(string: String)
@@ -22,7 +21,7 @@ enum CacheProfileError: FatalError, Equatable {
     }
 }
 
-extension GekoGraph.Cache {
+extension Cache {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         self.path = try self.path.map { try generatorPaths.resolve(path: $0) }
 

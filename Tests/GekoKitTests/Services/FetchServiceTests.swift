@@ -1,4 +1,3 @@
-import struct ProjectDescription.PackageSettings
 import GekoDependencies
 import GekoDependenciesTesting
 import GekoGraph
@@ -6,6 +5,7 @@ import GekoLoader
 import GekoSupport
 import GekoPluginTesting
 import GekoLoaderTesting
+import ProjectDescription
 import XCTest
 
 @testable import GekoKit
@@ -89,7 +89,7 @@ final class FetchServiceTests: GekoUnitTestCase {
         // Given
         let stubbedNeedCache = false
         let stubbedPath = try temporaryPath()
-        let stubbedPackageSettings = GekoGraph.PackageSettings()
+        let stubbedPackageSettings = PackageSettings()
         packageSettingsLoader.loadPackageSettingsStub = { _, _ in stubbedPackageSettings }
         dependenciesController.needFetchStub = { cocoapodsDependencies, packageSettings, path, cache in
             XCTAssertEqual(packageSettings, stubbedPackageSettings)
@@ -183,7 +183,7 @@ final class FetchServiceTests: GekoUnitTestCase {
         // Given
         let stubbedPath = try temporaryPath()
         
-        let stubbedPackageSettings = GekoGraph.PackageSettings()
+        let stubbedPackageSettings = PackageSettings()
         packageSettingsLoader.loadPackageSettingsStub = { _, _ in stubbedPackageSettings }
         
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]
@@ -325,7 +325,7 @@ final class FetchServiceTests: GekoUnitTestCase {
         let stubbedRepoUpdate = false
         let stubbedDeployment = false
         
-        let stubbedPackageSettings = GekoGraph.PackageSettings()
+        let stubbedPackageSettings = PackageSettings()
         packageSettingsLoader.loadPackageSettingsStub = { _, _ in stubbedPackageSettings }
         
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]

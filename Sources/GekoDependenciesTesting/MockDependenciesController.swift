@@ -33,7 +33,7 @@ public final class MockDependenciesController: DependenciesControlling {
         config: ProjectDescription.Config,
         passthroughArguments: [String],
         cocoapodsDependencies: ProjectDescription.CocoapodsDependencies?,
-        packageSettings: GekoGraph.PackageSettings?
+        packageSettings: PackageSettings?
     ) async throws -> ProjectDescription.DependenciesGraph {
         invokedUpdate = true
         return try updateStub?(path, config, passthroughArguments, cocoapodsDependencies, packageSettings) ?? .none

@@ -1,6 +1,6 @@
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public final class MockXcodeProjectBuildDirectoryLocator: XcodeProjectBuildDirectoryLocating {
     public init() {}
@@ -26,7 +26,7 @@ public final class MockXcodeProjectBuildDirectoryLocator: XcodeProjectBuildDirec
     
     public var locateNoIndexStub: ((Platform, AbsolutePath, AbsolutePath?, String, CacheFrameworkDestination) throws -> AbsolutePath)?
     public func locateNoIndex(
-        platform: GekoGraph.Platform,
+        platform: Platform,
         projectPath: AbsolutePath,
         derivedDataPath: AbsolutePath?,
         configuration: String,

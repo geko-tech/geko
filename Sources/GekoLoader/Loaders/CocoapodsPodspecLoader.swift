@@ -1,27 +1,25 @@
 import Foundation
 import GekoCocoapods
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
-import struct GekoGraph.CocoapodsDependencies
 import GekoSupport
+import ProjectDescription
 
 struct PodspecTargetDependency: Hashable {
-    var target: GekoGraph.Target
+    var target: Target
     var dependencies: [String]
 }
 
 public protocol CocoapodsPodspecLoading {
     func load(
-        config: GekoGraph.Config,
-        workspace: GekoGraph.Workspace,
-        gekoProjects: [GekoGraph.Project],
-        externalDependencies: [String: [GekoGraph.TargetDependency]],
+        config: Config,
+        workspace: Workspace,
+        gekoProjects: [Project],
+        externalDependencies: [String: [TargetDependency]],
         defaultForceLinking: CocoapodsDependencies.Linking?,
         forceLinking: [String : CocoapodsDependencies.Linking],
         sideTable: inout GraphSideTable
-    ) async throws -> ([GekoGraph.Project], [SideEffectDescriptor])
+    ) async throws -> ([Project], [SideEffectDescriptor])
 }
 
 enum CocoapodsPodspecLoaderError: FatalError {
@@ -63,14 +61,14 @@ public class CocoapodsPodspecLoader: CocoapodsPodspecLoading {
     // MARK: - CocoapodsPodspecLoading
 
     public func load(
-        config: GekoGraph.Config,
-        workspace: GekoGraph.Workspace,
-        gekoProjects: [GekoGraph.Project],
-        externalDependencies: [String: [GekoGraph.TargetDependency]],
+        config: Config,
+        workspace: Workspace,
+        gekoProjects: [Project],
+        externalDependencies: [String: [TargetDependency]],
         defaultForceLinking: CocoapodsDependencies.Linking?,
         forceLinking: [String : CocoapodsDependencies.Linking],
         sideTable: inout GraphSideTable
-    ) async throws -> ([GekoGraph.Project], [SideEffectDescriptor]) {
+    ) async throws -> ([Project], [SideEffectDescriptor]) {
         let paths = loadPodspecMapping(
             from: workspace.generationOptions.autogenerateLocalPodsProjects
         )
@@ -88,7 +86,7 @@ public class CocoapodsPodspecLoader: CocoapodsPodspecLoading {
             testPlansByTarget: testPlansByTarget
         )
 
-        var gekoProjectsDict: [String: GekoGraph.Project] = [:]
+        var gekoProjectsDict: [String: Project] = [:]
         gekoProjects.forEach { gekoProjectsDict[$0.name] = $0 }
 
         let podspecs = try loadPodspec(paths: paths, config: config)
@@ -116,7 +114,7 @@ public class CocoapodsPodspecLoader: CocoapodsPodspecLoading {
                 sideTable: tempSideTable
             )
         }
-        .reduce(into: [String: GekoGraph.Project]()) { acc, project in
+        .reduce(into: [String: Project]()) { acc, project in
             sideEffects += project.1
 
             guard acc[project.0.name] == nil else {
@@ -165,7 +163,7 @@ extension CocoapodsPodspecLoader {
 
     private func loadPodspec(
         paths: [AbsolutePath: AbsolutePath],
-        config: GekoGraph.Config
+        config: Config
     ) throws -> [(path: AbsolutePath, podspecPath: AbsolutePath, podspec: CocoapodsSpec)] {
 
         var pathPodspecsTriples: [(AbsolutePath, AbsolutePath, CocoapodsSpec)] = []

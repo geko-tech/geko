@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol TargetScriptExecuting {
     func execute(graph: GekoGraph.Graph) async throws
@@ -11,7 +11,7 @@ public protocol TargetScriptExecuting {
 public final class TargetScriptExecutor: TargetScriptExecuting {
     struct TargetWithScripts {
         let graphTarget: GraphTarget
-        let scripts: [GekoGraph.TargetScript]
+        let scripts: [TargetScript]
 
         var projectDirPath: AbsolutePath {
             AbsolutePath(stringLiteral: graphTarget.project.xcodeProjPath.dirname)
@@ -66,7 +66,7 @@ public final class TargetScriptExecutor: TargetScriptExecuting {
     // MARK: - Initialization
 
     public init(
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         enforceExplicitDependencies: Bool
     ) {
         scriptEnvs = Dictionary(uniqueKeysWithValues: cacheProfile.scripts.map { ($0.name, $0.envKeys) })

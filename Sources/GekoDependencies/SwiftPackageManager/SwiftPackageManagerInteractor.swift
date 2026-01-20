@@ -225,7 +225,6 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
     ) throws {
         let version = try swiftToolsVersion ??
             Version(versionString: try System.shared.swiftVersion(), usesLenientParsing: true)
-        let isLegacy = version < Version(5, 6, 0)
 
         // copy `Package.resolved` directory from lockfiles folder
         if fileHandler.exists(pathsProvider.destinationPackageResolvedPath) {

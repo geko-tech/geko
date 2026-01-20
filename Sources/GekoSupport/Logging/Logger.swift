@@ -61,7 +61,7 @@ public enum LogOutput {
 
 // A `VerboseLogHandler` allows for a LogHandler to be initialised with the `debug` logLevel.
 protocol VerboseLogHandler: LogHandler {
-    static func verbose(label: String) -> LogHandler
+    @Sendable static func verbose(label: String) -> LogHandler
     init(label: String)
 }
 

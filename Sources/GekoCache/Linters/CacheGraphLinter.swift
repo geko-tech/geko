@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// Protocol that defines the interface to lint a graph and warn
 /// the user if the projects have traits that are not caching-compliant.
@@ -11,13 +12,13 @@ public protocol CacheGraphLinting {
     /// - Parameters:
     ///   - graph: Graph to be linted.
     ///   - cacheProfile: Cache profile with additonal information
-    func lint(graph: Graph, cacheProfile: GekoGraph.Cache.Profile)
+    func lint(graph: Graph, cacheProfile: ProjectDescription.Cache.Profile)
 }
 
 public final class CacheGraphLinter: CacheGraphLinting {
     public init() {}
 
-    public func lint(graph: Graph, cacheProfile: GekoGraph.Cache.Profile) {
+    public func lint(graph: Graph, cacheProfile: ProjectDescription.Cache.Profile) {
         let graphTraverser = GraphTraverser(graph: graph)
         let targets = graphTraverser.allTargets()
         let ignoredScripts: [String] = cacheProfile.scripts.map(\.name)

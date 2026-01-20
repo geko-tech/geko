@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// It defines the interface to mutate a graph using information from the cache.
 protocol CacheGraphMutating {

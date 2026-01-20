@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol DependenciesContentHashing {
     func hash(
@@ -147,7 +147,7 @@ public final class DependenciesContentHasher: DependenciesContentHashing {
             return (name, hash)
         case .xctest:
             return ("xctest", try contentHasher.hash("xctest"))
-        case let .local:
+        case .local:
             fatalError("All references to local targets must be resolved before hashing")
         case .external:
             fatalError("All external target dependencies must be resolved before hashing!")

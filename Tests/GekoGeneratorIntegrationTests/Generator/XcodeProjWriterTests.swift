@@ -1,9 +1,9 @@
 
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGeneratorTesting
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoGenerator

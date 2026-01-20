@@ -1,11 +1,11 @@
 import Foundation
 import GekoCache
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoDependencies
 import GekoGenerator
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// The GraphMapperFactorying describes the interface of a factory of graph mappers.
 /// Methods in the interface map with workflows exposed to the user.
@@ -24,7 +24,7 @@ protocol GraphMapperFactorying {
     /// and execute targets scripts.
     func cache(
         config: Config,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusedTargets: Set<String>,
         focusDirectDependencies: Bool,
         focusTests: Bool,
@@ -80,7 +80,7 @@ public final class GraphMapperFactory: GraphMapperFactorying {
 
     public func cache(
         config: Config,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusedTargets: Set<String>,
         focusDirectDependencies: Bool,
         focusTests: Bool,

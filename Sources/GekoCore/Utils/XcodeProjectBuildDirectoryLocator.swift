@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol XcodeProjectBuildDirectoryLocating {
     /// Locates the build output directory for `xcodebuild` command.

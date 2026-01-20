@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 
 /// Protocol that defines the interface of the workspace settings generation.

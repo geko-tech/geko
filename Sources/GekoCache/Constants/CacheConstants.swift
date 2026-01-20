@@ -1,5 +1,6 @@
 import Foundation
 import GekoGraph
+import ProjectDescription
 
 public enum CacheConstants {
     /// Default name of temporary created cache project

@@ -51,7 +51,7 @@ public protocol SwiftPackageManagerGraphGenerating {
     /// - Parameter projectOptions: The custom configurations for generated projects.
     func generate(
         at path: AbsolutePath,
-        productTypes: [String: GekoGraph.Product],
+        productTypes: [String: Product],
         baseSettings: Settings,
         targetSettings: [String: Settings],
         swiftToolsVersion: Version?,
@@ -75,7 +75,7 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
     // swiftlint:disable:next function_body_length
     public func generate(
         at path: AbsolutePath,
-        productTypes: [String: GekoGraph.Product],
+        productTypes: [String: Product],
         baseSettings: Settings,
         targetSettings: [String: Settings],
         swiftToolsVersion: Version?,
@@ -239,7 +239,7 @@ extension ProjectDescription.Platform {
     /// Maps a GekoGraph.Platform instance into a  ProjectDescription.Platform instance.
     /// - Parameters:
     ///   - graph: Graph representation of platform model.
-    static func from(graph: GekoGraph.Platform) -> ProjectDescription.Platform {
+    static func from(graph: Platform) -> ProjectDescription.Platform {
         switch graph {
         case .macOS:
             return .macOS

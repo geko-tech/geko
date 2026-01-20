@@ -2,7 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 public final class SwiftModuleCachingTask: CacheTask {
     
@@ -103,7 +103,7 @@ public final class SwiftModuleCachingTask: CacheTask {
     
     private func archive(
         graph: Graph,
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination,
         hashedXCFrameworks: [AbsolutePath: String]
     ) async throws {
@@ -127,7 +127,7 @@ public final class SwiftModuleCachingTask: CacheTask {
     private func store(
         hashedXCFrameworks: [AbsolutePath: String],
         outputDirectory: AbsolutePath,
-        cacheProfile: GekoGraph.Cache.Profile
+        cacheProfile: ProjectDescription.Cache.Profile
     ) async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for (path, hash) in hashedXCFrameworks {
@@ -167,7 +167,7 @@ public final class SwiftModuleCachingTask: CacheTask {
 
     private func replaceSwiftInterfaces(
         rootPath: AbsolutePath,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         hashesByXCFrameworks: [AbsolutePath: String],
         logging: Bool = false
     ) async throws {

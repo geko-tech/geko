@@ -1,7 +1,5 @@
 import ProjectDescription
 
-public typealias Template = ProjectDescription.Template
-
 extension Template.Attribute {
     public var isOptional: Bool {
         switch self {

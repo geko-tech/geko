@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum CloudManifestMapperError: FatalError {
     /// Thrown when the cloud URL is invalid.
@@ -25,7 +24,7 @@ enum CloudManifestMapperError: FatalError {
     }
 }
 
-extension GekoGraph.Cloud {
+extension Cloud {
     func validateUrl() throws {
         if URL(string: url) == nil {
             throw CloudManifestMapperError.invalidCloudURL(url)

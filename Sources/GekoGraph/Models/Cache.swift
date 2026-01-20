@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias Cache = ProjectDescription.Cache
-
 extension Cache {
     public static let `default` = Cache(
         profiles: [

@@ -1,9 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
-
+import ProjectDescription
 
 enum FocusedTargetsResolverGraphMapperError: FatalError, Equatable {
     case missingScheme(missingScheme: String, availableSchemes: [String])

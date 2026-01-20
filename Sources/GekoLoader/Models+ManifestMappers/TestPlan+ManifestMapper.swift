@@ -1,7 +1,7 @@
 import Foundation
-import ProjectDescription
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 extension TestPlan {
     init(path: AbsolutePath, isDefault: Bool, generatorPaths: GeneratorPaths) throws {

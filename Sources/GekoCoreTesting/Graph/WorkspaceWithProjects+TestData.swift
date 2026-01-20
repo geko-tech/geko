@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoGraphTesting
+import ProjectDescription
 @testable import GekoCore
 
 extension WorkspaceWithProjects {

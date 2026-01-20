@@ -1,17 +1,16 @@
 import Foundation
 import GekoGraph
 import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 
 public protocol CocoapodsApphostDependencyResolving {
-    func resolve(appHostName: String) throws -> ProjectDescription.TargetDependency
+    func resolve(appHostName: String) throws -> TargetDependency
 }
 
 public final class CocoapodsApphostDependencyResolver: CocoapodsApphostDependencyResolving {
     private let localPodspecNameToPath: [String: AbsolutePath]
-    private let externalDependencies: [String: [GekoGraph.TargetDependency]]
+    private let externalDependencies: [String: [TargetDependency]]
 
-    public init(localPodspecNameToPath: [String: AbsolutePath], externalDependencies: [String: [GekoGraph.TargetDependency]]) {
+    public init(localPodspecNameToPath: [String: AbsolutePath], externalDependencies: [String: [TargetDependency]]) {
         self.localPodspecNameToPath = localPodspecNameToPath
         self.externalDependencies = externalDependencies
     }

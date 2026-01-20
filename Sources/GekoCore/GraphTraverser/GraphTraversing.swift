@@ -1,6 +1,6 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
 public protocol GraphTraversing {
     /// Graph name

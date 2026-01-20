@@ -1,9 +1,10 @@
 import Collections
 import Foundation
 import GekoCocoapods
-import PubGrub
 import GekoGraph
 import GekoSupport
+import ProjectDescription
+import PubGrub
 
 extension String: PubGrub.Package {
     public var name: String {
@@ -27,14 +28,14 @@ enum CocoapodsDependenciesResolverError: FatalError, CustomStringConvertible {
 class CocoapodsDependenciesResolver {
     typealias Package = String
     typealias Version = CocoapodsVersion
-    typealias DependenciesMap = [String: GekoGraph.CocoapodsDependencies.Dependency]
+    typealias DependenciesMap = [String: CocoapodsDependencies.Dependency]
     typealias PrefetchSpec = (specName: String, version: CocoapodsVersion, source: String)
 
     private let repoInteractorCdn: CocoapodsRepoInteractor
     private let repoInteractorGit: CocoapodsRepoInteractor
     private let gitInteractor: CocoapodsGitInteractor
     private let pathInteractor: CocoapodsPathInteractor
-    private let rootDependencies: [String: GekoGraph.CocoapodsDependencies.Dependency]
+    private let rootDependencies: [String: CocoapodsDependencies.Dependency]
     private let lockfile: CocoapodsLockfile?
 
     private let rootName = "root"
@@ -47,7 +48,7 @@ class CocoapodsDependenciesResolver {
         repoInteractorGit: CocoapodsRepoInteractor,
         gitInteractor: CocoapodsGitInteractor,
         pathInteractor: CocoapodsPathInteractor,
-        dependencies: GekoGraph.CocoapodsDependencies
+        dependencies: CocoapodsDependencies
     ) {
         self.lockfile = lockfile
         self.repoInteractorCdn = repoInteractorCdn
@@ -491,8 +492,8 @@ extension CocoapodsVersionRange {
     }
 }
 
-extension String: Comparable {
-    static func < (lhs: String, rhs: String) -> Bool {
-        return lhs.compare(rhs) == .orderedAscending
-    }
-}
+//extension String: Comparable {
+//    static func < (lhs: String, rhs: String) -> Bool {
+//        return lhs.compare(rhs) == .orderedAscending
+//    }
+//}

@@ -43,7 +43,7 @@ final class ProjectManifestMapperTests: GekoUnitTestCase {
         try got.resolveGlobs(checkFilesExist: true)
 
         // Then
-        let expected = GekoGraph.Project(
+        let expected = Project(
             path: "/",
             sourceRootPath: "/",
             xcodeProjPath: "/",

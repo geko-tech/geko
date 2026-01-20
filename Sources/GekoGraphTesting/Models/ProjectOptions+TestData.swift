@@ -1,4 +1,5 @@
 import Foundation
+import ProjectDescription
 @testable import GekoGraph
 
 extension Project.Options {

@@ -5,6 +5,7 @@ import GekoGenerator
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import ProjectDescription
 
 /// The protocol describes an interface for getting project mappers.
 protocol ProjectMapperFactorying {
@@ -22,7 +23,7 @@ protocol ProjectMapperFactorying {
     /// Returns a project mappers for cache
     /// - Parameter cacheProfile: Cache profile model
     /// - Returns: Array of project mappers
-    func cache(cacheProfile: GekoGraph.Cache.Profile) -> [ProjectMapping]
+    func cache(cacheProfile: ProjectDescription.Cache.Profile) -> [ProjectMapping]
 }
 
 public final class ProjectMapperFactory: ProjectMapperFactorying {
@@ -49,7 +50,7 @@ public final class ProjectMapperFactory: ProjectMapperFactorying {
         return mappers
     }
 
-    func cache(cacheProfile: GekoGraph.Cache.Profile) -> [ProjectMapping] {
+    func cache(cacheProfile: ProjectDescription.Cache.Profile) -> [ProjectMapping] {
         var mappers: [ProjectMapping] = [
             ResourceBundleActiveResourcesProjectMapper(
                 onlyActiveResources: cacheProfile.options.onlyActiveResourcesInBundles

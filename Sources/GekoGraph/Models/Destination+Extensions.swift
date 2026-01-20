@@ -1,10 +1,5 @@
 import Foundation
-
-import typealias ProjectDescription.Destinations
-import enum ProjectDescription.Destination
-
-public typealias Destinations = ProjectDescription.Destinations
-public typealias Destination = ProjectDescription.Destination
+import ProjectDescription
 
 extension Destination {
     public var platformFilter: PlatformFilter {

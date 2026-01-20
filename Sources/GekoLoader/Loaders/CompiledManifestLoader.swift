@@ -1,11 +1,8 @@
 import Foundation
 import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
+import GekoGraph
 import GekoSupport
-
-import struct GekoGraph.Config
-import struct GekoGraph.Plugins
 
 public class CompiledManifestLoader: ManifestLoading {
 

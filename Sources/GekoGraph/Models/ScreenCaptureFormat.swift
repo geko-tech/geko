@@ -1,4 +1,0 @@
-import Foundation
-import ProjectDescription
-
-public typealias ScreenCaptureFormat = ProjectDescription.ScreenCaptureFormat

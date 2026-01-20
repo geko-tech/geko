@@ -22,7 +22,7 @@ public final class MockTargetBuilder: TargetBuilding {
 
     public func buildTarget(
         _ target: GraphTarget,
-        platform _: GekoGraph.Platform,
+        platform _: Platform,
         workspacePath: AbsolutePath,
         scheme: Scheme,
         clean: Bool,

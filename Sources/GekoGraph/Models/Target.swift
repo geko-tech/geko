@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias Target = ProjectDescription.Target
-
 // swiftlint:disable:next type_body_length
 public extension Target {
     // MARK: - Static

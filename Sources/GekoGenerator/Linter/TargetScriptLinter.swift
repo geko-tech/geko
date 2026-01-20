@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// Protocol that defines the interface of a linter for target scripts.
 protocol TargetScriptLinting {

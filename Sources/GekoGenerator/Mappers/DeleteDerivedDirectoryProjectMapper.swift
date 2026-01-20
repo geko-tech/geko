@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// A workspace mapper that returns side effects to delete the derived directory.
 public final class DeleteDerivedDirectoryWorkspaceMapper: WorkspaceMapping {

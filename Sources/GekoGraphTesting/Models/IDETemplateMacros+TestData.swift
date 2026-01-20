@@ -1,9 +1,10 @@
 import Foundation
 import GekoGraph
 import GekoSupportTesting
+import ProjectDescription
 
-extension IDETemplateMacros {
-    public static func test(fileHeader: String = "Header template") -> IDETemplateMacros {
-        IDETemplateMacros(fileHeader: fileHeader)
+extension FileHeaderTemplate {
+    public static func test(fileHeader: String = "Header template") -> FileHeaderTemplate {
+        FileHeaderTemplate(fileHeader: fileHeader)
     }
 }

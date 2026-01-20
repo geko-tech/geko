@@ -5,6 +5,7 @@ import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import ProjectDescription
 
 enum CacheStorageProviderError: FatalError {
     /// Thrown when the cloud URL is invalid.

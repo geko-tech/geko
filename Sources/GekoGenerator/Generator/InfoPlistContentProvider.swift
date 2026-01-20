@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 /// Defines the interface to obtain the content to generate derived Info.plist files for the targets.
 protocol InfoPlistContentProviding {

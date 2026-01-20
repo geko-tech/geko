@@ -2,4 +2,4 @@ import Foundation
 
 // MARK: - Error
 
-extension String: Error {}
+extension String: @retroactive Error {}

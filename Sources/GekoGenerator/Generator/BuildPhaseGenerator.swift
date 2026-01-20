@@ -1,11 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
-import struct ProjectDescription.HeadersList
-import struct ProjectDescription.FilePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 
 enum BuildPhaseGenerationError: FatalError, Equatable {

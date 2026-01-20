@@ -1,6 +1,7 @@
 import AnyCodable
 import Foundation
 import GekoGraph
+import ProjectDescription
 
 public struct TargetHashesEvent: Codable, Equatable {
     public let name: String

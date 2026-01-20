@@ -1,11 +1,8 @@
 import Foundation
 import ProjectDescription
 
-public typealias LinkingStatus = ProjectDescription.LinkingStatus
-public typealias TargetDependency = ProjectDescription.TargetDependency
-
 public extension TargetDependency {
-    public var condition: PlatformCondition? {
+    var condition: PlatformCondition? {
         switch self {
         case .target(name: _, status: _, condition: let condition):
             condition
@@ -29,7 +26,7 @@ public extension TargetDependency {
         }
     }
 
-    public func withCondition(_ condition: PlatformCondition?) -> TargetDependency {
+    func withCondition(_ condition: PlatformCondition?) -> TargetDependency {
         switch self {
         case .target(name: let name, status: let status, condition: _):
             return .target(name: name, status: status, condition: condition)

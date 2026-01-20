@@ -1,10 +1,10 @@
 import Foundation
-import PathKit
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
+import PathKit
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoGenerator

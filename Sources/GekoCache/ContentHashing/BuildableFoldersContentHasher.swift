@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol BuildableFoldersContentHashing {
     func hash(

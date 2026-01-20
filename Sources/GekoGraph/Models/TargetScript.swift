@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias TargetScript = ProjectDescription.TargetScript
-
 /// It represents a target script build phase
 extension TargetScript {
 

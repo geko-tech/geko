@@ -1,9 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol EnvironmentLinting {
     /// Lints a given Geko configuration.

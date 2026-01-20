@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 extension GekoGraph.Graph {
     /// Filters the project graph
@@ -60,7 +60,7 @@ extension GekoGraph.Graph {
 }
 
 extension GraphDependency {
-    fileprivate func isExternal(_ projects: [AbsolutePath: GekoGraph.Project]) -> Bool {
+    fileprivate func isExternal(_ projects: [AbsolutePath: Project]) -> Bool {
         switch self {
         case let .target(_, path, _):
             return projects[path]?.isExternal ?? false

@@ -2,6 +2,7 @@ import Foundation
 import GekoCache
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public final class MockCacheGraphLinter: CacheGraphLinting {
     public var invokedLint = false
@@ -11,7 +12,7 @@ public final class MockCacheGraphLinter: CacheGraphLinting {
 
     public init() {}
 
-    public func lint(graph: GekoGraph.Graph, cacheProfile _: GekoGraph.Cache.Profile) {
+    public func lint(graph: GekoGraph.Graph, cacheProfile _: ProjectDescription.Cache.Profile) {
         invokedLint = true
         invokedLintCount += 1
         invokedLintParameters = (graph, ())

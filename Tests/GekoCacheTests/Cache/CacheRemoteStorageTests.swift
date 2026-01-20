@@ -1,11 +1,10 @@
 import GekoCacheTesting
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCloud
 import GekoCore
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XCTest
 
 @testable import GekoCache

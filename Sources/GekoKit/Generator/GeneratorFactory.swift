@@ -1,10 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGenerator
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import ProjectDescription
 
 /// The protocol describes the interface of a factory that instantiates
 /// generators for different commands
@@ -32,7 +32,7 @@ protocol GeneratorFactorying {
     func cache(
         config: Config,
         focusedTargets: Set<String>,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusDirectDependencies: Bool,
         focusTests: Bool,
         unsafe: Bool,
@@ -104,7 +104,7 @@ public class GeneratorFactory: GeneratorFactorying {
     func cache(
         config: Config,
         focusedTargets: Set<String>,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusDirectDependencies: Bool,
         focusTests: Bool,
         unsafe: Bool,

@@ -1,6 +1,6 @@
 import Foundation
 import GekoGraph
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 final class CocoapodsProjectOptionsProvider {
 
@@ -12,7 +12,7 @@ final class CocoapodsProjectOptionsProvider {
         self.testPlansByTarget = testPlansByTarget
     }
 
-    func provide(for targets: [GekoGraph.Target]) -> GekoGraph.Project.Options {
+    func provide(for targets: [Target]) -> Project.Options {
         var automaticSchemesOptions: Project.Options.AutomaticSchemesOptions = .disabled
 
         if case .enabled = workspaceGenerationOptions.autogenerateLocalPodsSchemes {
@@ -28,7 +28,7 @@ final class CocoapodsProjectOptionsProvider {
             automaticSchemesOptions: automaticSchemesOptions,
             disableBundleAccessors: true,
             disableShowEnvironmentVarsInScriptPhases: false,
-            textSettings: GekoGraph.Project.Options.TextSettings(
+            textSettings: Project.Options.TextSettings(
                 usesTabs: nil,
                 indentWidth: nil,
                 tabWidth: nil,

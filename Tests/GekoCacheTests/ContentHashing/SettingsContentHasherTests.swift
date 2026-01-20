@@ -1,10 +1,10 @@
 import Foundation
 import GekoCacheTesting
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoCache
 @testable import GekoSupportTesting
@@ -36,7 +36,7 @@ final class SettingsContentHasherTests: GekoUnitTestCase {
             base: ["CURRENT_PROJECT_VERSION": SettingValue.string("1")],
             configurations: [
                 BuildConfiguration
-                    .debug("dev"): Configuration(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: filePath1),
+                    .debug("dev"): ConfigurationSettings(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: filePath1),
             ],
             defaultSettings: .recommended
         )
@@ -59,7 +59,7 @@ final class SettingsContentHasherTests: GekoUnitTestCase {
             base: ["CURRENT_PROJECT_VERSION": SettingValue.string("2")],
             configurations: [
                 BuildConfiguration
-                    .release("prod"): Configuration(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: nil),
+                    .release("prod"): ConfigurationSettings(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: nil),
             ],
             defaultSettings: .essential
         )
@@ -79,9 +79,9 @@ final class SettingsContentHasherTests: GekoUnitTestCase {
             base: ["CURRENT_PROJECT_VERSION": SettingValue.string("2")],
             configurations: [
                 BuildConfiguration
-                    .debug("dev"): Configuration(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: nil),
+                    .debug("dev"): ConfigurationSettings(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: nil),
                 BuildConfiguration
-                    .release("prod-qa"): Configuration(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: nil),
+                    .release("prod-qa"): ConfigurationSettings(settings: ["SWIFT_VERSION": SettingValue.string("5")], xcconfig: nil),
             ],
             defaultSettings: .essential
         )

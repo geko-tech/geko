@@ -2,6 +2,7 @@ import Collections
 import Foundation
 import GekoCocoapods
 import GekoGraph
+import ProjectDescription
 
 enum CocoapodsRepoInteractorError: Error {
     case noAvailableVersions
@@ -10,7 +11,7 @@ enum CocoapodsRepoInteractorError: Error {
 }
 
 final class CocoapodsRepoInteractor {
-    typealias Dependency = GekoGraph.CocoapodsDependencies.Dependency
+    typealias Dependency = CocoapodsDependencies.Dependency
 
     private let repos: [String: CocoapodsRepo]
     private let repoPriority: [String]

@@ -43,7 +43,7 @@ final class TemplateGitLoaderTests: GekoUnitTestCase {
         var pathToLoadTemplateFrom: AbsolutePath?
         templateLoader.loadTemplateStub = { path in
             pathToLoadTemplateFrom = path
-            return GekoGraph.Template(
+            return Template(
                 description: ""
             )
         }

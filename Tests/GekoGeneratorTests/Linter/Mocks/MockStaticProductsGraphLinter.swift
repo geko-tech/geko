@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 @testable import GekoGenerator
 
 class MockStaticProductsGraphLinter: StaticProductsGraphLinting {

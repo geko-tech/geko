@@ -4,6 +4,7 @@ import GekoGraph
 import GekoLoader
 import GekoSupport
 import GekoPlugin
+import ProjectDescription
 
 public final class WorkspaceMapperPluginExecutor: WorkspaceMapping {
     public enum Stage {

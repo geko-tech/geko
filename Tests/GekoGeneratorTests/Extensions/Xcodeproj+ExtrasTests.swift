@@ -1,4 +1,5 @@
 import GekoGraph
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoGenerator

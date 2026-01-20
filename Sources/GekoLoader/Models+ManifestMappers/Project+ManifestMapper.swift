@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.Project {
+extension Project {
     /// Maps a `ProjectDescription.Project` instance into a `GekoGraph.Project` instance.
     /// Glob patterns in file elements are unfolded as part of the mapping.
     /// - Parameters:

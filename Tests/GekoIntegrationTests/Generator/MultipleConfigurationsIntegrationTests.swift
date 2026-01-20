@@ -1,9 +1,8 @@
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoGraphTesting
 import GekoLoaderTesting
+import ProjectDescription
 import XCTest
 import XcodeProj
 
@@ -60,7 +59,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
                 A=A_XCCONFIG
                 B=B_XCCONFIG
                 """)
-        let debugConfiguration = Configuration(
+        let debugConfiguration = ConfigurationSettings(
             settings: ["A": "A", "C": "C"],
             xcconfig: debugFilePath
         )
@@ -81,7 +80,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
 
     func testGenerateWhenConfigurationSettingsOverrideBase() throws {
         // Given
-        let debugConfiguration = Configuration(settings: ["A": "A", "C": "C"])
+        let debugConfiguration = ConfigurationSettings(settings: ["A": "A", "C": "C"])
         let projectSettings = Settings(
             base: ["A": "A_BASE", "B": "B_BASE"],
             configurations: [.debug: debugConfiguration]
@@ -102,7 +101,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
 
     func testGenerateWhenBuildConfigurationWithCustomName() throws {
         // Given
-        let customConfiguration = Configuration(settings: ["A": "A", "C": "C"])
+        let customConfiguration = ConfigurationSettings(settings: ["A": "A", "C": "C"])
         let projectSettings = Settings(
             base: ["A": "A_BASE", "B": "B_BASE"],
             configurations: [
@@ -137,7 +136,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
                 A=A_XCCONFIG
                 B=B_XCCONFIG
                 """)
-        let debugConfiguration = Configuration(
+        let debugConfiguration = ConfigurationSettings(
             settings: ["A": "A", "C": "C"],
             xcconfig: debugFilePath
         )
@@ -159,11 +158,11 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
 
     func testGenerateWhenMultipleConfigurations() throws {
         // Given
-        let projectDebugConfiguration = Configuration(settings: [
+        let projectDebugConfiguration = ConfigurationSettings(settings: [
             "A": "A_PROJECT_DEBUG",
             "B": "B_PROJECT_DEBUG",
         ])
-        let projectReleaseConfiguration = Configuration(settings: [
+        let projectReleaseConfiguration = ConfigurationSettings(settings: [
             "A": "A_PROJECT_RELEASE",
             "C": "C_PROJECT_RELEASE",
         ])
@@ -172,8 +171,8 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
             .release("ProjectRelease"): projectReleaseConfiguration,
         ])
 
-        let targetDebugConfiguration = Configuration(settings: ["B": "B_TARGET_DEBUG"])
-        let targetStagingConfiguration = Configuration(settings: ["B": "B_TARGET_STAGING"])
+        let targetDebugConfiguration = ConfigurationSettings(settings: ["B": "B_TARGET_DEBUG"])
+        let targetStagingConfiguration = ConfigurationSettings(settings: ["B": "B_TARGET_STAGING"])
 
         let targetSettings = Settings(configurations: [
             .debug: targetDebugConfiguration,
@@ -224,7 +223,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
                 F=F_PROJECT_XCCONFIG
                 PROJECT_XCCONFIG=YES
                 """)
-        let projectDebugConfiguration = Configuration(
+        let projectDebugConfiguration = ConfigurationSettings(
             settings: [
                 "C": "C_PROJECT",
                 "D": "D_PROJECT",
@@ -256,7 +255,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
                 TARGET_XCCONFIG=YES
                 """)
 
-        let targetDebugConfiguration = Configuration(
+        let targetDebugConfiguration = ConfigurationSettings(
             settings: [
                 "F": "F_TARGET",
                 "TARGET": "YES",
@@ -296,16 +295,16 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
 
     func testGenerateWhenCustomConfigurations() throws {
         // Given
-        let projectDebugConfiguration = Configuration(settings: [
+        let projectDebugConfiguration = ConfigurationSettings(settings: [
             "A": "A_PROJECT_DEBUG",
             "B": "B_PROJECT_DEBUG",
         ])
-        let projectCustomDebugConfiguration = Configuration(settings: [
+        let projectCustomDebugConfiguration = ConfigurationSettings(settings: [
             "A": "A_PROJECT_RELEASE",
             "C": "C_PROJECT_RELEASE",
         ])
-        let projectReleaseConfiguration = Configuration(settings: [:])
-        let projectCustomReleaseConfiguration = Configuration(settings: ["E": "E_PROJECT_RELEASE"])
+        let projectReleaseConfiguration = ConfigurationSettings(settings: [:])
+        let projectCustomReleaseConfiguration = ConfigurationSettings(settings: ["E": "E_PROJECT_RELEASE"])
         let projectSettings = Settings(configurations: [
             .debug: projectDebugConfiguration,
             .debug("CustomDebug"): projectCustomDebugConfiguration,

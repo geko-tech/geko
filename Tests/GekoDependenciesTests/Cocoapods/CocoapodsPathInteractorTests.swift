@@ -1,12 +1,12 @@
 import Foundation
 @testable import GekoDependencies
 import GekoDependenciesTesting
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoLoader
 import GekoSupport
 import GekoSupportTesting
 import GekoCoreTesting
+import ProjectDescription
 import XCTest
 
 extension CocoapodsPathInteractorError: @retroactive Equatable {
@@ -64,7 +64,7 @@ final class CocoapodsPathInteractorTests: GekoUnitTestCase {
         let firstPodspecData = try XCTUnwrap(firstPodspec.data(using: .utf8))
         let secondPodspecData = try XCTUnwrap(secondPodspec.data(using: .utf8))
 
-        let config = GekoGraph.Config.default
+        let config = Config.default
         let pathConfigsStub: [CocoapodsPathInteractor.PathConfig] = [
             .init(name: "Utils", path: .relativeToRoot(".")),
             .init(name: "Atomic", path: .relativeToRoot("."))
@@ -124,7 +124,7 @@ final class CocoapodsPathInteractorTests: GekoUnitTestCase {
         let firstPodspecData = try XCTUnwrap(firstPodspec.data(using: .utf8))
         let secondPodspecData = try XCTUnwrap(secondPodspec.data(using: .utf8))
 
-        let config = GekoGraph.Config.default
+        let config = Config.default
         let pathConfigsStub: [CocoapodsPathInteractor.PathConfig] = [
             .init(name: "Utils", path: "../some_folder"),
             .init(name: "Atomic", path: "../some_another_folder")

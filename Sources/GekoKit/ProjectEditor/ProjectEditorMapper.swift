@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import ProjectDescription
 
 protocol ProjectEditorMapping: AnyObject {
     func map(

@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol ArtifactLoading {
     /// Reads an artifact and returns its in-memory representation.
@@ -74,12 +74,11 @@ class CachedArtifactLoader: ArtifactLoading {
         default:
             throw CacheArtifactLoaderError.frameworkNotFound(path)
         }
-        
-        
+
         loadedPrecompiledArtifacts[path] = loadedDependency
         return loadedDependency
     }
-    
+
     func loadBundles(path: AbsolutePath) throws -> [GraphDependency] {
         let platforms = try FileHandler.shared.contentsOfDirectory(path).compactMap { Platform(rawValue: $0.basenameWithoutExt) }
         var loadedDependencies: [GraphDependency] = []

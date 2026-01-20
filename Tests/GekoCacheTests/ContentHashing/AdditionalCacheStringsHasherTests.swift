@@ -1,7 +1,7 @@
 import GekoCacheTesting
-import struct ProjectDescription.AbsolutePath
 import GekoSupport
 import GekoGraph
+import ProjectDescription
 import XCTest
 @testable import GekoCache
 @testable import GekoCoreTesting
@@ -30,7 +30,7 @@ final class AdditionalCacheStringsHasherTests: GekoUnitTestCase {
 
     func test() throws {
         // Given
-        let profile = GekoGraph.Cache.Profile.test(name: "Test")
+        let profile = ProjectDescription.Cache.Profile.test(name: "Test")
         mockContentHashing.hashStringsSpy = []
         systeming.swiftlangVersionStub = { "6.0.0" }
         let expectedHash = "Test;Debug;;true,false,false;framework;simulator;6.0.0;1.3.0"

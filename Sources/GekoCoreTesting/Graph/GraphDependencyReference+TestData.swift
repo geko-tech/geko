@@ -3,8 +3,7 @@ import GekoCore
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 extension GraphDependencyReference {
     public static func testFramework(

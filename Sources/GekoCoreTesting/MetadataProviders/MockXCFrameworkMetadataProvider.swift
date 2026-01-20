@@ -1,7 +1,6 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoGraph
+import ProjectDescription
 @testable import GekoCore
 
 public final class MockXCFrameworkMetadataProvider: MockPrecompiledMetadataProvider, XCFrameworkMetadataProviding {

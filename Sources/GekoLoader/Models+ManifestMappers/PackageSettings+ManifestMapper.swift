@@ -1,11 +1,10 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.PackageSettings {
+extension PackageSettings {
     /// Creates `GekoGraph.PackageSettings` instance from `ProjectDescription.PackageSettings`
     /// instance.
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {

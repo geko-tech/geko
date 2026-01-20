@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XCTest
 
 @testable import GekoCache
@@ -137,7 +137,7 @@ final class ContentHashingIntegrationTests: GekoUnitTestCase {
                 ],
             ]
         )
-        let cacheProfile = GekoGraph.Cache.Profile(
+        let cacheProfile = ProjectDescription.Cache.Profile(
             name: "Simulator",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64)]

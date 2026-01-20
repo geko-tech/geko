@@ -1,8 +1,7 @@
 import Foundation
 import GekoGraph
 import GekoSupport
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 // swiftlint:disable type_body_length
 public class GraphTraverser: GraphTraversing {
@@ -960,10 +959,10 @@ public class GraphTraverser: GraphTraversing {
         let allExternalTargets = allExternalTargets()
         return allExternalTargets.subtracting(allTargetExternalDependendedUponTargets)
     }
-    
-    public func allUnusedDependencies() -> Set<GekoGraph.TargetDependency> {
-        var unusedDeps: Set<GekoGraph.TargetDependency> = []
-        for (path, deps) in graph.externalDependenciesGraph.externalDependencies {
+
+    public func allUnusedDependencies() -> Set<TargetDependency> {
+        var unusedDeps: Set<TargetDependency> = []
+        for (_, deps) in graph.externalDependenciesGraph.externalDependencies {
             for dep in deps {
                 switch dep {
                 case let .framework(path, _, _):

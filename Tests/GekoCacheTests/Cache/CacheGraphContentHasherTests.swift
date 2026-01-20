@@ -1,7 +1,7 @@
 import Foundation
 import GekoCache
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 import XCTest
 
 @testable import GekoCacheTesting
@@ -50,7 +50,7 @@ final class CacheGraphContentHasherTests: GekoUnitTestCase {
         _ = try subject.contentHashes(
             for: Graph.test(workspace: .test()),
             sideTable: GraphSideTable(),
-            cacheProfile: GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
+            cacheProfile: ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
             cacheUserVersion: nil,
             cacheOutputType: .framework,
             cacheDestination: .simulator,
@@ -82,7 +82,7 @@ final class CacheGraphContentHasherTests: GekoUnitTestCase {
         _ = try subject.contentHashes(
             for: Graph.test(workspace: .test()),
             sideTable: sideTable,
-            cacheProfile: GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
+            cacheProfile: ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
             cacheUserVersion: nil,
             cacheOutputType: .framework,
             cacheDestination: .simulator,
@@ -122,7 +122,7 @@ final class CacheGraphContentHasherTests: GekoUnitTestCase {
         _ = try subject.contentHashes(
             for: Graph.test(workspace: .test()),
             sideTable: sideTable,
-            cacheProfile: GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
+            cacheProfile: ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
             cacheUserVersion: nil,
             cacheOutputType: .framework,
             cacheDestination: .simulator,
@@ -154,7 +154,7 @@ final class CacheGraphContentHasherTests: GekoUnitTestCase {
         _ = try subject.contentHashes(
             for: Graph.test(workspace: .test()),
             sideTable: sideTable,
-            cacheProfile: GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
+            cacheProfile: ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)]),
             cacheUserVersion: nil,
             cacheOutputType: .framework,
             cacheDestination: .simulator,

@@ -1,5 +1,4 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoLoader
@@ -7,6 +6,7 @@ import GekoLoaderTesting
 import GekoGraph
 import GekoSupport
 import GekoSupportTesting
+import ProjectDescription
 import XCTest
 @testable import GekoKit
 

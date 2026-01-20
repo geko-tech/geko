@@ -1,7 +1,7 @@
 import Foundation
-import PathKit
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import PathKit
+import ProjectDescription
 import XcodeProj
 
 extension PBXFileElement {

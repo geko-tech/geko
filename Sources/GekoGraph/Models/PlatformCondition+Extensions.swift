@@ -1,8 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.PlatformCondition
-
-public typealias PlatformCondition = ProjectDescription.PlatformCondition
+import ProjectDescription
 
 extension PlatformCondition: @retroactive Comparable {
     public static func < (lhs: PlatformCondition, rhs: PlatformCondition) -> Bool {

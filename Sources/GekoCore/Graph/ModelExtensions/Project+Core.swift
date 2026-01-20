@@ -1,7 +1,7 @@
 import Foundation
 import GekoGraph
-import struct ProjectDescription.AbsolutePath
 import GekoSupport
+import ProjectDescription
 
 extension Project {
     /// It returns the project targets sorted based on the target type and the dependencies between them.

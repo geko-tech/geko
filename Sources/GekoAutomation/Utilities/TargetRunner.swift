@@ -17,7 +17,7 @@ public protocol TargetRunning {
     ///   - arguments: Arguments to forward to the runnable target when running.
     func runTarget(
         _ target: GraphTarget,
-        platform: GekoGraph.Platform,
+        platform: ProjectDescription.Platform,
         workspacePath: AbsolutePath,
         schemeName: String,
         configuration: String?,
@@ -75,7 +75,7 @@ public final class TargetRunner: TargetRunning {
 
     public func runTarget(
         _ target: GraphTarget,
-        platform: GekoGraph.Platform,
+        platform: ProjectDescription.Platform,
         workspacePath: AbsolutePath,
         schemeName: String,
         configuration: String?,

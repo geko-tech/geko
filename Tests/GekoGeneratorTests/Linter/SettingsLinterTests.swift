@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoGenerator
 @testable import GekoGraphTesting
@@ -27,8 +27,8 @@ final class SettingsLinterTests: GekoUnitTestCase {
         let debugPath = temporaryPath.appending(component: "Debug.xcconfig")
         let releasePath = temporaryPath.appending(component: "Release.xcconfig")
         let settings = Settings(configurations: [
-            .debug: Configuration(xcconfig: debugPath),
-            .release: Configuration(xcconfig: releasePath),
+            .debug: ConfigurationSettings(xcconfig: debugPath),
+            .release: ConfigurationSettings(xcconfig: releasePath),
         ])
         let project = Project.test(settings: settings)
 
@@ -54,8 +54,8 @@ final class SettingsLinterTests: GekoUnitTestCase {
         let debugPath = temporaryPath.appending(component: "Debug.xcconfig")
         let releasePath = temporaryPath.appending(component: "Release.xcconfig")
         let settings = Settings(configurations: [
-            .debug: Configuration(xcconfig: debugPath),
-            .release: Configuration(xcconfig: releasePath),
+            .debug: ConfigurationSettings(xcconfig: debugPath),
+            .release: ConfigurationSettings(xcconfig: releasePath),
         ])
         let target = Target.test(settings: settings)
 

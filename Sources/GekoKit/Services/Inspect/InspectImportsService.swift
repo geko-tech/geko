@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoSupport
 import GekoGraph
 import GekoLoader
 import GekoCore
+import ProjectDescription
 
 final class InspectImportsService {
     // MARK: - Attributes

@@ -223,7 +223,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         projects: [AbsolutePath: ProjectDescription.Project],
         plugins: Plugins,
         context: ExecutionContext = .concurrent
-    ) throws -> [GekoGraph.Project] {
+    ) throws -> [Project] {
         let tuples = projects.map { (path: $0.key, manifest: $0.value) }
         return try tuples.map(context: context) {
             try converter.convert(
@@ -243,7 +243,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         return plugins
     }
 
-    func loadConfig(at path: AbsolutePath) throws -> GekoGraph.Config {
+    func loadConfig(at path: AbsolutePath) throws -> Config {
         try configLoader.loadConfig(path: path)
     }
 

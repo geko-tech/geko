@@ -1,13 +1,13 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 @testable import GekoGraph
 
-extension Configuration {
+extension ConfigurationSettings {
     public static func test(
         settings: SettingsDictionary = [:],
         xcconfig: AbsolutePath? = try! AbsolutePath(validatingAbsolutePath: "/Config.xcconfig") // swiftlint:disable:this force_try
-    ) -> Configuration {
-        Configuration(settings: settings, xcconfig: xcconfig)
+    ) -> ConfigurationSettings {
+        ConfigurationSettings(settings: settings, xcconfig: xcconfig)
     }
 }
 
@@ -15,9 +15,9 @@ extension Settings {
     public static func test(
         base: SettingsDictionary,
         // swiftlint:disable:next force_try
-        debug: Configuration,
+        debug: ConfigurationSettings,
         // swiftlint:disable:next force_try
-        release: Configuration
+        release: ConfigurationSettings
     ) -> Settings {
         Settings(
             base: base,
@@ -28,7 +28,7 @@ extension Settings {
     public static func test(
         base: SettingsDictionary = [:],
         baseDebug: SettingsDictionary = [:],
-        configurations: [BuildConfiguration: Configuration?] = [:]
+        configurations: [BuildConfiguration: ConfigurationSettings?] = [:]
     ) -> Settings {
         Settings(
             base: base,
@@ -41,8 +41,8 @@ extension Settings {
         Settings(
             base: [:],
             configurations: [
-                .debug: Configuration(settings: [:]),
-                .release: Configuration(settings: [:]),
+                .debug: ConfigurationSettings(settings: [:]),
+                .release: ConfigurationSettings(settings: [:]),
             ],
             defaultSettings: defaultSettings
         )

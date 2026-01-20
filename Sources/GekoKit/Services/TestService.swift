@@ -335,9 +335,9 @@ public final class TestService { // swiftlint:disable:this type_body_length
             throw TestServiceError.schemeWithoutTestableTargets(scheme: scheme.name, testPlan: testPlanConfiguration?.testPlan)
         }
 
-        let buildPlatform: GekoGraph.Platform
+        let buildPlatform: Platform
 
-        if let platform, let inputPlatform = GekoGraph.Platform(rawValue: platform) {
+        if let platform, let inputPlatform = Platform(rawValue: platform) {
             buildPlatform = inputPlatform
         } else {
             buildPlatform = try buildableTarget.target.servicePlatform

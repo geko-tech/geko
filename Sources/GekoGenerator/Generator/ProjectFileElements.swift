@@ -2,10 +2,8 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XcodeProj
-
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 
 enum ProjectFileElementsError: FatalError {
     case buildableFolderConflict(AbsolutePath, AbsolutePath)

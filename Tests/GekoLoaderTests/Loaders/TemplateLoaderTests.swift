@@ -56,7 +56,7 @@ final class TemplateLoaderTests: GekoUnitTestCase {
         let got = try subject.loadTemplate(at: temporaryPath)
 
         // Then
-        XCTAssertEqual(got, GekoGraph.Template(
+        XCTAssertEqual(got, Template(
             description: "desc",
             items: [Template.Item(
                 path: "generateOne",

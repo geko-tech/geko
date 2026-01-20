@@ -1,6 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
+import ProjectDescription
 
 /// It represents th Info.plist contained in an .xcframework bundle.
 public struct XCFrameworkInfoPlist: Codable, Hashable, Equatable {

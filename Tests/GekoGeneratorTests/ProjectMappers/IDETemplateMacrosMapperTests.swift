@@ -1,10 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
 import GekoSupportTesting
+import ProjectDescription
 import XCTest
 
 @testable import GekoGenerator
@@ -25,7 +24,7 @@ final class IDETemplateMacrosMapperTests: XCTestCase {
 
     func test_project_map_template_macros_creates_macros_plist() throws {
         // Given
-        let templateMacros = IDETemplateMacros.test()
+        let templateMacros = FileHeaderTemplate.test()
         let project = Project.test(ideTemplateMacros: templateMacros)
         let macrosStruct = IDETemplateMacrosMapper.TemplateMacros(fileHeader: try templateMacros.normalize())
 
@@ -64,7 +63,7 @@ final class IDETemplateMacrosMapperTests: XCTestCase {
 
     func test_workspace_map_template_macros_creates_macros_plist() throws {
         // Given
-        let templateMacros = IDETemplateMacros.test()
+        let templateMacros = FileHeaderTemplate.test()
         let macrosStruct = IDETemplateMacrosMapper.TemplateMacros(fileHeader: try templateMacros.normalize())
         let workspace = Workspace.test(ideTemplateMacros: templateMacros)
         let workspaceWithProjects = WorkspaceWithProjects.test(workspace: workspace)

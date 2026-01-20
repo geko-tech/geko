@@ -1,11 +1,5 @@
 import Foundation
-import enum ProjectDescription.PlatformFilter
-import typealias ProjectDescription.PlatformFilters
-
-/// Convenience typealias to be used to ensure unique filters are applied
-public typealias PlatformFilters = ProjectDescription.PlatformFilters
-
-public typealias PlatformFilter = ProjectDescription.PlatformFilter
+import ProjectDescription
 
 extension PlatformFilter {
     public var xcodeprojValue: String {

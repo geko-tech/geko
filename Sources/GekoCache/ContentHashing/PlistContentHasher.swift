@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public protocol PlistContentHashing {
     func hash(plist: Plist) throws -> String

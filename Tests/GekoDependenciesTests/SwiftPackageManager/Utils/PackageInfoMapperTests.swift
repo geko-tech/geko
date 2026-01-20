@@ -4399,9 +4399,9 @@ extension PackageInfoMapping {
         package: String,
         basePath: AbsolutePath = "/",
         packageInfos: [String: PackageInfo] = [:],
-        baseSettings: GekoGraph.Settings = .default,
+        baseSettings: Settings = .default,
         targetSettings: [String: Settings] = [:],
-        projectOptions: ProjectDescription.Project.Options? = nil,
+        projectOptions: Project.Options? = nil,
         packageModuleAliases: [String: [String: String]] = [:]
     ) throws -> ProjectDescription.Project? {
         let packageToTargetsToArtifactPaths: [String: [String: AbsolutePath]] = try packageInfos

@@ -1,10 +1,8 @@
 import Foundation
-import struct ProjectDescription.Config
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol ConfigLoading {
     /// Loads the Geko configuration by traversing the file system till the Config manifest is found,
@@ -13,7 +11,7 @@ public protocol ConfigLoading {
     /// - Parameter path: Directory from which look up and load the Config.
     /// - Returns: Loaded Config object.
     /// - Throws: An error if the Config.swift can't be parsed.
-    func loadConfig(path: AbsolutePath) throws -> GekoGraph.Config
+    func loadConfig(path: AbsolutePath) throws -> Config
 
     /// Locates the Config.swift manifest from the given directory.
     func locateConfig(at: AbsolutePath) -> AbsolutePath?
@@ -23,7 +21,7 @@ public final class ConfigLoader: ConfigLoading {
     private let manifestLoader: ManifestLoading
     private let rootDirectoryLocator: RootDirectoryLocating
     private let fileHandler: FileHandling
-    private var cachedConfigs: [AbsolutePath: GekoGraph.Config] = [:]
+    private var cachedConfigs: [AbsolutePath: Config] = [:]
 
     public init(
         manifestLoader: ManifestLoading = CompiledManifestLoader(),
@@ -35,13 +33,13 @@ public final class ConfigLoader: ConfigLoading {
         self.fileHandler = fileHandler
     }
 
-    public func loadConfig(path: AbsolutePath) throws -> GekoGraph.Config {
+    public func loadConfig(path: AbsolutePath) throws -> Config {
         if let cached = cachedConfigs[path] {
             return cached
         }
 
         guard let configPath = locateConfig(at: path) else {
-            let config = GekoGraph.Config.default
+            let config = Config.default
             cachedConfigs[path] = config
             return config
         }

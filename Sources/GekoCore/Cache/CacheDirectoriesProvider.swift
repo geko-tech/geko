@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol CacheDirectoriesProviding {
     /// Returns the cache directory for a cache category

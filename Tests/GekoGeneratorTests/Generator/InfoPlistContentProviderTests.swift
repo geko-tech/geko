@@ -3,6 +3,7 @@ import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
+import ProjectDescription
 import XCTest
 @testable import GekoGenerator
 

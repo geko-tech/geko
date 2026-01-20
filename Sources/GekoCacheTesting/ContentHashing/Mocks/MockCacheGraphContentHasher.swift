@@ -8,14 +8,14 @@ public final class MockCacheGraphContentHasher: CacheGraphContentHashing {
     public init() {}
 
     public var contentHashesStub: (
-        (Graph, GraphSideTable, GekoGraph.Cache.Profile, CacheOutputType, GekoCore.CacheFrameworkDestination, Bool) throws
+        (Graph, GraphSideTable, ProjectDescription.Cache.Profile, CacheOutputType, GekoCore.CacheFrameworkDestination, Bool) throws
             -> [String: String]
     )?
     
     public func contentHashes(
         for graph: GekoGraph.Graph,
         sideTable: GekoGraph.GraphSideTable,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: GekoCore.CacheOutputType,
         cacheDestination: GekoCore.CacheFrameworkDestination,

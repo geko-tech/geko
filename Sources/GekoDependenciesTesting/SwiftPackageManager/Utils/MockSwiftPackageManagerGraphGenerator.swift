@@ -1,6 +1,6 @@
-import ProjectDescription
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 @testable import GekoDependencies
 
@@ -11,9 +11,9 @@ public final class MockSwiftPackageManagerGraphGenerator: SwiftPackageManagerGra
     var generateStub: (
         (
             AbsolutePath,
-            [String: GekoGraph.Product],
-            GekoGraph.Settings,
-            [String: GekoGraph.Settings],
+            [String: Product],
+            Settings,
+            [String: Settings],
             Version?,
             [String: ProjectDescription.Project.Options],
             [String: String?]
@@ -22,9 +22,9 @@ public final class MockSwiftPackageManagerGraphGenerator: SwiftPackageManagerGra
 
     public func generate(
         at path: AbsolutePath,
-        productTypes: [String: GekoGraph.Product],
-        baseSettings: GekoGraph.Settings,
-        targetSettings: [String: GekoGraph.Settings],
+        productTypes: [String: Product],
+        baseSettings: Settings,
+        targetSettings: [String: Settings],
         swiftToolsVersion: Version?,
         projectOptions: [String: ProjectDescription.Project.Options],
         resolvedDependenciesVersions: [String: String?]

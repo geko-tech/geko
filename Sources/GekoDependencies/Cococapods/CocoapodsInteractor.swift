@@ -39,8 +39,8 @@ public protocol CocoapodsInteracting {
         path: AbsolutePath,
         dependenciesDirectory: AbsolutePath,
         generatorPaths: GeneratorPaths,
-        config: GekoGraph.Config,
-        dependencies: GekoGraph.CocoapodsDependencies,
+        config: Config,
+        dependencies: CocoapodsDependencies,
         shouldUpdate: Bool,
         repoUpdate: Bool,
         deployment: Bool
@@ -48,7 +48,7 @@ public protocol CocoapodsInteracting {
 
     func clean(dependenciesDirectory: AbsolutePath) throws
     
-    func needFetch(dependencies: GekoGraph.CocoapodsDependencies, path: AbsolutePath) throws -> Bool
+    func needFetch(dependencies: CocoapodsDependencies, path: AbsolutePath) throws -> Bool
 }
 
 // MARK: - Carthage Interactor
@@ -60,8 +60,8 @@ public final class CocoapodsInteractor: CocoapodsInteracting {
         path: AbsolutePath,
         dependenciesDirectory: AbsolutePath,
         generatorPaths: GeneratorPaths,
-        config: GekoGraph.Config,
-        dependencies: GekoGraph.CocoapodsDependencies,
+        config: Config,
+        dependencies: CocoapodsDependencies,
         shouldUpdate: Bool,
         repoUpdate: Bool,
         deployment: Bool
@@ -164,7 +164,7 @@ public final class CocoapodsInteractor: CocoapodsInteracting {
         logger.info("Cleaning up Cocoapods dependencies")
     }
 
-    public func needFetch(dependencies: GekoGraph.CocoapodsDependencies, path: AbsolutePath) throws -> Bool {
+    public func needFetch(dependencies: CocoapodsDependencies, path: AbsolutePath) throws -> Bool {
         let clock = WallClock()
         let timer = clock.startTimer()
 
@@ -202,7 +202,7 @@ public final class CocoapodsInteractor: CocoapodsInteracting {
         return result
     }
 
-    private func save(dependencies: GekoGraph.CocoapodsDependencies, lockfile: CocoapodsLockfile, path: AbsolutePath) throws {
+    private func save(dependencies: CocoapodsDependencies, lockfile: CocoapodsLockfile, path: AbsolutePath) throws {
         let currentDependencies = try sandboxData(from: dependencies, lockfile: lockfile)
 
         let sandboxLockfileFilePath = path.appending(component: Constants.GekoUserCacheDirectory.name)
@@ -212,7 +212,7 @@ public final class CocoapodsInteractor: CocoapodsInteracting {
     }
 
     private func sandboxData(
-        from dependencies: GekoGraph.CocoapodsDependencies,
+        from dependencies: CocoapodsDependencies,
         lockfile: CocoapodsLockfile
     ) throws -> String {
         let model = CocoapodsDependenciesSandbox(dependencies: dependencies, lockfile: lockfile)
@@ -228,7 +228,7 @@ public final class CocoapodsInteractor: CocoapodsInteracting {
 
 extension CocoapodsInteractor {
     private func createRepos(
-        for deps: GekoGraph.CocoapodsDependencies,
+        for deps: CocoapodsDependencies,
         repoUpdate: Bool,
         pathProvider: CocoapodsPathProviding
     ) throws -> (cdnRepos: [String: CocoapodsRepo], gitRepos: [String: CocoapodsRepo]) {
@@ -285,7 +285,7 @@ extension CocoapodsInteractor {
     }
 
     private func createGitSources(
-        for deps: GekoGraph.CocoapodsDependencies
+        for deps: CocoapodsDependencies
     ) -> [CocoapodsGitInteractor.Source] {
         var sources: [CocoapodsGitInteractor.Source] = []
 
@@ -301,7 +301,7 @@ extension CocoapodsInteractor {
         return sources
     }
 
-    private func createPathConfigs(for deps: GekoGraph.CocoapodsDependencies) -> [CocoapodsPathInteractor.PathConfig] {
+    private func createPathConfigs(for deps: CocoapodsDependencies) -> [CocoapodsPathInteractor.PathConfig] {
         return deps.dependencies.compactMap { dependency in
             if case let .path(name, path) = dependency {
                 return .init(name: name, path: path)

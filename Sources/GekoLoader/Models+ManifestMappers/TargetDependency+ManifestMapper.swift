@@ -1,8 +1,8 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 // MARK: - TargetDependency Mapper Error
 
@@ -19,7 +19,7 @@ public enum TargetDependencyMapperError: FatalError {
     }
 }
 
-extension GekoGraph.TargetDependency {
+extension TargetDependency {
     /// Maps a ProjectDescription.TargetDependency instance into a GekoGraph.TargetDependency instance.
     /// - Parameters:
     ///   - generatorPaths: Generator paths.
@@ -86,19 +86,19 @@ extension GekoGraph.TargetDependency {
 }
 
 extension ProjectDescription.PlatformFilters {
-    var asGraphFilters: GekoGraph.PlatformFilters {
-        Set<GekoGraph.PlatformFilter>(map(\.graphPlatformFilter))
+    var asGraphFilters: ProjectDescription.PlatformFilters {
+        Set<ProjectDescription.PlatformFilter>(map(\.graphPlatformFilter))
     }
 }
 
 extension ProjectDescription.PlatformCondition {
-    var asGraphCondition: GekoGraph.PlatformCondition? {
+    var asGraphCondition: PlatformCondition? {
         .when(Set(platformFilters.asGraphFilters))
     }
 }
 
 extension ProjectDescription.PlatformFilter {
-    fileprivate var graphPlatformFilter: GekoGraph.PlatformFilter {
+    fileprivate var graphPlatformFilter: ProjectDescription.PlatformFilter {
         switch self {
         case .ios:
             .ios

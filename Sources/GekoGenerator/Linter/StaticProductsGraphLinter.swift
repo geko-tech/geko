@@ -1,8 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 /// Static Products Graph Linter
 ///
