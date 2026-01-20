@@ -5,68 +5,72 @@ order: 2
 
 # ProjectDescriptionHelpers Plugin
 
-@Metadata {
-    @PageKind(article)
-}
+There are two types of plugins of this kind:
+* Local plugins, which you describe in the `Geko/ProjectDescriptionHelpers` directory
+* Remote plugins, which you can reuse between different projects and publish
 
-## Overview 
+## Local Plugins 
 
-This plugin type is designed for reusing [ProjectDescriptionHelpers](project_description_helpers) across multiple Geko-based projects. The plugin can be connected both [locally](plugins_connection#Adding-a-local-plugin) and [remotely](plugins_connection#Adding-a-plugin-using-a-zip-archive), simplifying the reuse of project description code.
+Project description helpers are Swift files that get compiled into a module, `ProjectDescriptionHelpers`, that manifest files can import. The module is compiled by gathering all the files in the `Geko/ProjectDescriptionHelpers` directory.
+
+You can import them into your manifest file by adding an import statement at the top of the file:
+
+```swift
+// Project.swift
+import ProjectDescription
+import ProjectDescriptionHelpers
+```
+
+`ProjectDescriptionHelpers` are available in the following manifests:
+* Project.swift
+* Dependencies.swift
+* Package.swift (only behind the #GEKO compiler flag)
+* Workspace.swift
+
+## Remote Plugins 
+
+Remote plugins work similarly, but in this case, you'll be importing your custom module. You must define a ``Plugin`` and create a `ProjectDescriptionHelpers` folder within it.
+
+This type of plugin can be included in the same manifests as local ones, as well as in ProjectDescriptionHelpers itself.
+
 
 ## Creating a plugin
 
-To create this type of plugin, you need to create a `ProjectDescriptionHelpers` folder next to the `Plugin.swift` manifest. All Swift files in the `ProjectDescriptionHelpers/` folder are compiled into a module with the plugin name, for example `ProjectTemplatesGekoPlugin`. Plugin directory structure:
+**Plugin.swift**
+
+```swift
+import ProjectDescription
+
+let plugin = Plugin(
+    name: "GekoPlugin"
+)
+```
+
+Plugin directory structure:
 
 ```
 .
 ├── ...
 ├── Plugin.swift
 ├── ProjectDescriptionHelpers
-├──── Project+Templates.swift
+├──── SharedCode.swift
 └── ...
 ```
 
-```swift
-// Plugin.swift
-import ProjectDescription
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/ProjectDescriptionHelpersPluginExample).
 
-let plugin = Plugin(
-    name: "ProjectTemplatesGekoPlugin"
-)
-```
+**ProjectDescriptionHelpers/SharedCode.swift**
 
 ```swift
-// ProjectDescriptionHelpers/Project+Templates.swift
+import Foundation
 import ProjectDescription
 
-extension Project {
-  public static func featureFramework(name: String, dependencies: [TargetDependency] = []) -> Project {
-    return Project(
-        name: name,
-        targets: [
-            Target(
-                name: name,
-                destinations: .iOS,
-                product: .framework,
-                bundleId: "io.geko.\(name)",
-                infoPlist: "\(name).plist",
-                sources: ["Sources/\(name)/**"],
-                resources: ["Resources/\(name)/**",],
-                dependencies: dependencies
-            ),
-            Target(
-                name: "\(name)Tests",
-                destinations: .iOS,
-                product: .unitTests,
-                bundleId: "io.geko.\(name)Tests",
-                infoPlist: "\(name)Tests.plist",
-                sources: ["Sources/\(name)Tests/**"],
-                resources: ["Resources/\(name)Tests/**",],
-                dependencies: [.target(name: name)]
-            )
-        ]
-    )
-  }
+public struct SharedCode {
+    let name: String
+
+    public init(name: String) {
+        self.name = name
+    }
 }
 ```
 
@@ -75,14 +79,17 @@ extension Project {
 The code above can be reused in any project manifest except `Config.swift` and `Plugin.swift`:
 
 ```swift
-// Project.swift
 import ProjectDescription
-import ProjectTemplatesGekoPlugin
+import GekoPlugin
 
-let project = Project.featureFramework(name: "MyFeature")
+_ = SharedCode(name: "SharedCode")
+
+let config = Config(
+    ...
+)
 ```
 
-## Restrictions
+**Restrictions**
 
 * A plugin cannot depend on another plugin.
 * A plugin cannot depend on third-party Swift packages.
