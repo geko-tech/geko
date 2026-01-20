@@ -1,0 +1,9 @@
+name: 'Select Xcode version'
+runs:
+  using: 'composite'
+  steps:
+    - name: Select Xcode version
+      shell: bash
+      run: |
+        sudo xcode-select --switch /Applications/Xcode_$(cat .xcode-version).app
+        xcode-select --print-path
