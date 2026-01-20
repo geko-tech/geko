@@ -20,7 +20,7 @@ export default defineConfig(async () => {
       nav: [
         { text: 'Home', link: '/' },
         { text: 'Guides', link: '/guides' },
-        { text: 'ProjectDescription', link: '/projectdescription/structs/project' }
+        { text: 'ProjectDescription', link: '/projectdescription/structs/Project' }
       ],
 
       search: {
