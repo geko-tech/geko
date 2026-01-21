@@ -19,6 +19,7 @@ public struct StandardLogHandler: LogHandler {
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
+        source: String,
         file _: String, function _: String, line _: UInt
     ) {
         if let metadata, metadata[Logger.Metadata.geko] == .string(Logger.Metadata.prettyKey) {

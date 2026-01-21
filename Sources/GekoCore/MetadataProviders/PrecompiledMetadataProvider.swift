@@ -123,7 +123,10 @@ public class PrecompiledMetadataProvider: PrecompiledMetadataProviding {
             } else {
                 binary.seek(to: currentOffset)
 
-                guard let architecture = readBinaryArchitecture(cputype: fatArch.cputype, cpusubtype: fatArch.cpusubtype) else {
+                guard let architecture = readBinaryArchitecture(
+                    cputype: UInt32(bitPattern: fatArch.cputype),
+                    cpusubtype: UInt32(bitPattern: fatArch.cpusubtype)
+                ) else {
                     throw PrecompiledMetadataProviderError.architecturesNotFound(binaryPath)
                 }
 
@@ -142,8 +145,8 @@ public class PrecompiledMetadataProvider: PrecompiledMetadataProviding {
 
         guard isMagic(magic) else { return nil }
 
-        let cputype: cpu_type_t
-        let cpusubtype: cpu_subtype_t
+        let cputype: UInt32
+        let cpusubtype: UInt32
         let filetype: UInt32
         let numOfCommands: UInt32
 
@@ -158,16 +161,16 @@ public class PrecompiledMetadataProvider: PrecompiledMetadataProviding {
             let _header: mach_header_64 = binary.read()
             let header = ByteSwapper(_header, swap: swapBytes)
 
-            cputype = header.cputype
-            cpusubtype = header.cpusubtype
+            cputype = UInt32(bitPattern: header.cputype)
+            cpusubtype = UInt32(bitPattern: header.cpusubtype)
             filetype = header.filetype
             numOfCommands = header.ncmds
         } else {
             let _header: mach_header = binary.read()
             let header = ByteSwapper(_header, swap: swapBytes)
 
-            cputype = header.cputype
-            cpusubtype = header.cpusubtype
+            cputype = UInt32(bitPattern: header.cputype)
+            cpusubtype = UInt32(bitPattern: header.cpusubtype)
             filetype = header.filetype
             numOfCommands = header.ncmds
         }
@@ -219,45 +222,12 @@ public class PrecompiledMetadataProvider: PrecompiledMetadataProviding {
     }
 
     private func readBinaryArchitecture(cputype: cpu_type_t, cpusubtype: cpu_subtype_t) -> BinaryArchitecture? {
-#if os(macOS)
-        guard let archInfo = NXGetArchInfoFromCpuType(cputype, cpusubtype),
-              let arch = BinaryArchitecture(rawValue: String(cString: archInfo.pointee.name))
-        else {
+        guard let archName = machoArchNameFromCpuType(cputype: cputype, cpusubtype: cpusubtype),
+            let arch = BinaryArchitecture(rawValue: archName) else {
             return nil
         }
-        return arch
-#else
-        let _CPU_ARCH_ABI64: Int32 = 0x01000000
-        let cpuTypeNames: [cpu_type_t: String] = [
-            7: "i386",
-            _CPU_ARCH_ABI64 | 7: "x86_64",
-            12: "arm",
-            _CPU_ARCH_ABI64 | 12: "arm64",
-        ]
-        let armSubtypeSuffix: [cpu_subtype_t: String] = [
-            9: "v7",
-            11: "v7s",
-            12: "v7k"
-        ]
 
-        let arm64SubtypeSuffix: [cpu_subtype_t: String] = [
-            0: "",
-            2: "e",
-        ]
-        func binaryArch(cputype: cpu_type_t, cpusubtype: cpu_subtype_t, suffixMap: [cpu_subtype_t: String]) -> BinaryArchitecture? {
-            if let subtypeSuffix = suffixMap[cpusubtype] {
-                return BinaryArchitecture(rawValue: cpuTypeNames[cputype, default: ""] + subtypeSuffix)
-            }
-            return nil
-        }
-        if cputype == 12 {
-            return binaryArch(cputype: cputype, cpusubtype: cpusubtype, suffixMap: armSubtypeSuffix)
-        }
-        if cputype == (_CPU_ARCH_ABI64 | 12) {
-            return binaryArch(cputype: cputype, cpusubtype: cpusubtype, suffixMap: arm64SubtypeSuffix)
-        }
-        return cpuTypeNames[cputype].flatMap(BinaryArchitecture.init(rawValue:))
-#endif
+        return arch
     }
 
     private func readArchiveFormatIfAvailable(binary: FileHandle) {
@@ -318,10 +288,7 @@ extension FileHandle {
     }
 }
 
-#if !os(macOs)
-typealias cpu_type_t = Int32
-typealias cpu_subtype_t = Int32
-
+#if !os(macOS)
 var FAT_MAGIC: UInt32 = 0xCAFEBABE
 var FAT_CIGAM: UInt32 = 0xBEBAFECA
 var FAT_MAGIC_64: UInt32 = 0xCAFEBABF

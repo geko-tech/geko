@@ -10,9 +10,8 @@ extension CocoapodsDependencies {
             try dependencies[i].resolvePaths(generatorPaths: generatorPaths)
         }
 
-        var newLocalPodspecs: [FilePath: [FilePath]] = [:]
         var seenDependencies = Set(dependencies)
-        try localPodspecs?.forEach{ rootDir, podspecPaths in
+        try self.localPodspecs?.forEach{ rootDir, podspecPaths in
             let resolvedRootDirPath = try generatorPaths.resolve(path: rootDir)
             podspecPaths.forEach { podspecPath in
                 FileHandler.shared.glob(
@@ -30,11 +29,11 @@ extension CocoapodsDependencies {
             }
         }
 
-        self.localPodspecs = newLocalPodspecs
+        self.localPodspecs = [:]
     }
 }
 
-extension CocoapodsDependencies.Dependency: Hashable {
+extension CocoapodsDependencies.Dependency {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         switch self {
         case .cdn:

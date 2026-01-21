@@ -7,9 +7,6 @@ import XCTest
 
 final class FileManagerExtrasTests: GekoUnitTestCase {
     func testSubdirectoriesResolvingSymbolicLinks_whenNoSymbolicLinks() throws {
-        // Given
-        let fileManager = FileManager.default
-
         // When
 
         // - <Root>
@@ -39,9 +36,6 @@ final class FileManagerExtrasTests: GekoUnitTestCase {
     }
 
     func testSubdirectoriesResolvingSymbolicLinks_whenSymbolicLinksToFiles() throws {
-        // Given
-        let fileManager = FileManager.default
-
         // When
 
         // - <Root>
@@ -75,9 +69,6 @@ final class FileManagerExtrasTests: GekoUnitTestCase {
     }
 
     func testSubdirectoriesResolvingSymbolicLinks_whenSymbolicLinksToDirectory() throws {
-        // Given
-        let fileManager = FileManager.default
-
         // When
 
         // - <Root>
@@ -109,9 +100,6 @@ final class FileManagerExtrasTests: GekoUnitTestCase {
     }
 
     func testSubdirectoriesResolvingSymbolicLinks_whenSymbolicLinkAndOriginalInSameSubtree() throws {
-        // Given
-        let fileManager = FileManager.default
-
         // When
 
         // - <Root>
@@ -141,9 +129,6 @@ final class FileManagerExtrasTests: GekoUnitTestCase {
     }
 
     func testSubdirectoriesResolvingSymbolicLinks_whenNestedDirectories() throws {
-        // Given
-        let fileManager = FileManager.default
-
         // When
 
         // - <Root>
@@ -181,9 +166,6 @@ final class FileManagerExtrasTests: GekoUnitTestCase {
     }
 
     func testSubdirectoriesResolvingSymbolicLinks_whenNestedSymlinks() throws {
-        // Given
-        let fileManager = FileManager.default
-
         // When
 
         // - <Root>

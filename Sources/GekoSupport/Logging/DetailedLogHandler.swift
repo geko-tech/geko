@@ -23,6 +23,7 @@ public struct DetailedLogHandler: LogHandler {
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
+        source: String,
         file: String, function: String, line: UInt
     ) {
         var log = "\(timestamp()) \(level.rawValue) \(label)"
@@ -35,8 +36,7 @@ public struct DetailedLogHandler: LogHandler {
 
         log.append(message.description)
 
-        (output(for: level) as? SuppressedWarningLogHandler)?
-            .log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
+        output(for: level).log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
     }
 
     func output(for level: Logger.Level) -> LogHandler {
@@ -74,17 +74,3 @@ func timestamp() -> String {
         }
     }
 }
-
-// Protocol needed to suppress the warning because we don't have a valid `source` to pass to the `log` method
-protocol SuppressedWarningLogHandler {
-    func log(
-        level: Logging.Logger.Level,
-        message: Logging.Logger.Message,
-        metadata: Logging.Logger.Metadata?,
-        file: String,
-        function: String,
-        line: UInt
-    )
-}
-
-extension StreamLogHandler: SuppressedWarningLogHandler {}

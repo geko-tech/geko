@@ -23,6 +23,7 @@ public struct OSLogHandler: LogHandler {
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
+        source: String,
         file: String, function _: String, line: UInt
     ) {
         let metadataLog: String?

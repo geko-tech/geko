@@ -15,7 +15,7 @@ public struct AcceptanceTestCaseLogHandler: LogHandler {
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
-        source _: String,
+        source: String,
         file: String,
         function: String,
         line: UInt
@@ -24,6 +24,7 @@ public struct AcceptanceTestCaseLogHandler: LogHandler {
             level: level,
             message: message,
             metadata: metadata,
+            source: source,
             file: file,
             function: function,
             line: line
@@ -32,6 +33,7 @@ public struct AcceptanceTestCaseLogHandler: LogHandler {
             level: level,
             message: message,
             metadata: metadata,
+            source: source,
             file: file,
             function: function,
             line: line
