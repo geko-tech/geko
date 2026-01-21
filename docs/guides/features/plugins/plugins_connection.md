@@ -26,7 +26,7 @@ let config = Config(
 
 ### Adding a plugin from a git repository
 
-Only the [ProjectDescriptionHelpers Plugin](projectDescriptionHelpers_plugin) and [Templates plugin](templates_plugin) can be distributed this way. This method clones the repository and switches to the specified `tag` or `sha`. Cloning large repositories can take a long time, so it is recommended to include plugins supplied via a zip archive (see below).
+Only the [ProjectDescriptionHelpers Plugin](projectdescriptionhelpers_plugin) and [Templates plugin](templates_plugin) can be distributed this way. This method clones the repository and switches to the specified `tag` or `sha`. Cloning large repositories can take a long time, so it is recommended to include plugins supplied via a zip archive (see below).
 
 ```swift
 import ProjectDescription

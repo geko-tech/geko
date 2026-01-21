@@ -2,6 +2,9 @@ name: build_and_test
 
 on:
   pull_request:
+    paths:
+        - '!docs/**'
+        - '!.github/workflows/docs.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
