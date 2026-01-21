@@ -2,6 +2,10 @@ name: build_and_test
 
 on:
   pull_request:
+    paths:
+      - '!docs/**'
+      # TODO remove
+      - '!.github/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
