@@ -89,7 +89,8 @@ public final class GraphMapperFactory: GraphMapperFactorying {
         scheme: String?
     ) -> [GraphMapping] {
         var mappers: [GraphMapping] = []
-        mappers.append(FocusedTargetsResolverGraphMapper(sources: focusedTargets, focusTests: focusTests, schemeName: scheme))
+        mappers.append(UserFocusedTargetsMapper(focusedTargets: focusedTargets))
+        mappers.append(FocusedTargetsResolverGraphMapper(focusTests: focusTests, schemeName: scheme))
         mappers.append(FocusTargetsGraphMappers())
         mappers.append(TreeShakePrunedTargetsGraphMapper())
         mappers.append(UpdateWorkspaceProjectsGraphMapper())
@@ -109,7 +110,8 @@ public final class GraphMapperFactory: GraphMapperFactorying {
         scheme: String?
     ) -> [GraphMapping] {
         var mappers: [GraphMapping] = []
-        mappers.append(FocusedTargetsResolverGraphMapper(sources: focusedTargets, focusTests: focusTests, schemeName: scheme))
+        mappers.append(UserFocusedTargetsMapper(focusedTargets: focusedTargets))
+        mappers.append(FocusedTargetsResolverGraphMapper(focusTests: focusTests, schemeName: scheme))
         mappers.append(FocusTargetsGraphMappers())
         mappers.append(TreeShakePrunedTargetsGraphMapper())
         mappers.append(UpdateWorkspaceProjectsGraphMapper())
