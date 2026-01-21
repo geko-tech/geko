@@ -4,8 +4,7 @@ on:
   pull_request:
     paths:
       - '!docs/**'
-      # TODO remove
-      - '!.github/**'
+      - '!.github/workflows/docs.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
