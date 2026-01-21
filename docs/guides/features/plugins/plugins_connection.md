@@ -26,7 +26,7 @@ let config = Config(
 
 ### Adding a plugin from a git repository
 
-Only the **ProjectDescriptionHelpers plugin** and **Templates plugin** can be distributed this way. This method clones the repository and switches to the specified `tag` or `sha`. Cloning large repositories can take a long time, so it is recommended to include plugins supplied via a zip archive (see below).
+Only the [ProjectDescriptionHelpers Plugin](projectDescriptionHelpers_plugin) and [Templates plugin](templates_plugin) can be distributed this way. This method clones the repository and switches to the specified `tag` or `sha`. Cloning large repositories can take a long time, so it is recommended to include plugins supplied via a zip archive (see below).
 
 ```swift
 import ProjectDescription
@@ -71,7 +71,7 @@ let config = Config(
 
 **Adding an archive without a Plugin manifest inside**
 
-You may need to add an archive published **not** via Geko Archive, for example, for executables delivered via podspec wrapping. In this case, you need to define the Plugin manifest directly in the project's Config. Check ``PluginLocation`` struct documentation.
+You may need to add an archive published **NOT** via Geko Archive, for example, for executables delivered via podspec wrapping. In this case, you need to define the Plugin manifest directly in the project's Config. Check [PluginLocation.remote(url:manifest:)](../../../projectdescription/structs/PluginLocation#remote-url-manifest) struct documentation.
 
 ```swift
 let config = Config(
@@ -125,21 +125,3 @@ let config = Config(
     ]
 )
 ```
-
-## Building Geko Plugin
-
-You can build a ZIP archive with the plugin using the `geko plugin archive` command. This will build the executable files specified in the Plugin manifest using SPM, creating a ZIP archive with the following folder structure:
-```
-.
-├── ...
-├── Plugin.swift
-├── ProjectDescriptionHelpers
-├── Templates
-└── Executables
-```
-
-You can also create a zip archive with yourself (without using `geko plugin archive`), as long as the folder structure matches the one described above. The presence of each folder is optional.
-
-## Downloading plugins
-
-Plugins are downloaded when you run `geko fetch`. There's also a flag that allows you to download only plugins: `geko fetch --plugins-only`.

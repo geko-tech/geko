@@ -5,91 +5,80 @@ order: 2
 
 # ProjectDescriptionHelpers Plugin
 
-There are two types of plugins of this kind:
-* Local plugins, which you describe in the `Geko/ProjectDescriptionHelpers` directory
-* Remote plugins, which you can reuse between different projects and publish
-
-## Local Plugins 
-
-Project description helpers are Swift files that get compiled into a module, `ProjectDescriptionHelpers`, that manifest files can import. The module is compiled by gathering all the files in the `Geko/ProjectDescriptionHelpers` directory.
-
-You can import them into your manifest file by adding an import statement at the top of the file:
-
-```swift
-// Project.swift
-import ProjectDescription
-import ProjectDescriptionHelpers
-```
-
-`ProjectDescriptionHelpers` are available in the following manifests:
-* Project.swift
-* Dependencies.swift
-* Package.swift (only behind the #GEKO compiler flag)
-* Workspace.swift
-
-## Remote Plugins 
-
-Remote plugins work similarly, but in this case, you'll be importing your custom module. You must define a ``Plugin`` and create a `ProjectDescriptionHelpers` folder within it.
-
-This type of plugin can be included in the same manifests as local ones, as well as in ProjectDescriptionHelpers itself.
-
+This plugin type is designed for reusing [ProjectDescriptionHelpers](../project-generation/project_description_helpers) across multiple Geko-based projects. The plugin can be connected both [locally](plugins_connection#adding-a-local-plugin) and [remotely](plugins_connection#adding-a-plugin-using-a-zip-archive), simplifying the reuse of project description code.
 
 ## Creating a plugin
 
-**Plugin.swift**
-
-```swift
-import ProjectDescription
-
-let plugin = Plugin(
-    name: "GekoPlugin"
-)
-```
-
-Plugin directory structure:
+To create this type of plugin, you need to create a `ProjectDescriptionHelpers` folder next to the `Plugin.swift` manifest. All Swift files in the `ProjectDescriptionHelpers/` folder are compiled into a module with the plugin name, for example `ProjectTemplatesGekoPlugin`. Plugin directory structure:
 
 ```
 .
 ├── ...
 ├── Plugin.swift
 ├── ProjectDescriptionHelpers
-├──── SharedCode.swift
+├──── Project+Templates.swift
 └── ...
 ```
 
-[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/ProjectDescriptionHelpersPluginExample).
-
-**ProjectDescriptionHelpers/SharedCode.swift**
-
 ```swift
-import Foundation
+// Plugin.swift
 import ProjectDescription
 
-public struct SharedCode {
-    let name: String
+let plugin = Plugin(
+    name: "ProjectTemplatesGekoPlugin"
+)
+```
 
-    public init(name: String) {
-        self.name = name
-    }
+```swift
+// ProjectDescriptionHelpers/Project+Templates.swift
+import ProjectDescription
+
+extension Project {
+  public static func featureFramework(name: String, dependencies: [TargetDependency] = []) -> Project {
+    return Project(
+        name: name,
+        targets: [
+            Target(
+                name: name,
+                destinations: .iOS,
+                product: .framework,
+                bundleId: "io.geko.\(name)",
+                infoPlist: "\(name).plist",
+                sources: ["Sources/\(name)/**"],
+                resources: ["Resources/\(name)/**",],
+                dependencies: dependencies
+            ),
+            Target(
+                name: "\(name)Tests",
+                destinations: .iOS,
+                product: .unitTests,
+                bundleId: "io.geko.\(name)Tests",
+                infoPlist: "\(name)Tests.plist",
+                sources: ["Sources/\(name)Tests/**"],
+                resources: ["Resources/\(name)Tests/**",],
+                dependencies: [.target(name: name)]
+            )
+        ]
+    )
+  }
 }
 ```
+
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/ProjectDescriptionHelpersPluginExample).
 
 ## Usage
 
 The code above can be reused in any project manifest except `Config.swift` and `Plugin.swift`:
 
 ```swift
+// Project.swift
 import ProjectDescription
-import GekoPlugin
+import ProjectTemplatesGekoPlugin
 
-_ = SharedCode(name: "SharedCode")
-
-let config = Config(
-    ...
-)
+let project = Project.featureFramework(name: "MyFeature")
 ```
 
-**Restrictions**
+## Restrictions
 
 * A plugin cannot depend on another plugin.
 * A plugin cannot depend on third-party Swift packages.

@@ -9,7 +9,7 @@ Allows you to reuse executable files among multiple projects.
 
 ## Creating a plugin
 
-In the ``Plugin`` manifest, you must define the names of the executable files; based on these, the executable files specified in `Package.swift` will be compiled.
+In the ``Plugin`` manifest, you must define the names of the executable files ``ExecutablePlugin``; based on these, the executable files specified in `Package.swift` will be compiled.
 
 **Plugin.swift**
 
@@ -19,7 +19,7 @@ import ProjectDescription
 let plugin = Plugin(
     name: "GekoPlugin",
     executables: [
-        .init(name: "ExampleGekoExecutable")
+        ExecutablePlugin(name: "ExampleGekoExecutable")
     ]
 )
 ```
