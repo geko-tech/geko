@@ -1,8 +1,5 @@
 import Foundation
-
-import enum ProjectDescription.Product
-
-public typealias Product = ProjectDescription.Product
+import ProjectDescription
 
 extension Product: @retroactive CustomStringConvertible {
     public var caseValue: String {

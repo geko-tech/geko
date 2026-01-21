@@ -1,5 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 /// The metadata associated with a precompiled xcframework
 public struct XCFrameworkMetadata: Equatable {

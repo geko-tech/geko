@@ -1,9 +1,9 @@
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoScaffold
 import GekoSupport
+import ProjectDescription
 
 enum InitServiceError: FatalError, Equatable {
     case ungettableProjectName(AbsolutePath)

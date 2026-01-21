@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum FocusTargetsGraphMapperError: FatalError, Equatable {
     case missingTargets(missingTargets: [String], availableTargets: [String])

@@ -16,7 +16,7 @@ protocol WorkspaceMapperFactorying {
     /// - Parameter config: The project configuration.
     /// - Parameter cacheProfile: The caching profile.
     /// - Returns: A workspace mapping instance.
-    func cache(config: Config, cacheProfile: GekoGraph.Cache.Profile) -> [WorkspaceMapping]
+    func cache(config: Config, cacheProfile: ProjectDescription.Cache.Profile) -> [WorkspaceMapping]
 
     /// Returns a mapper for automation commands like build and test.
     /// - Parameter config: The project configuration.
@@ -40,7 +40,7 @@ public final class WorkspaceMapperFactory: WorkspaceMapperFactorying {
         return mappers
     }
 
-    func cache(config: Config, cacheProfile: GekoGraph.Cache.Profile) -> [WorkspaceMapping] {
+    func cache(config: Config, cacheProfile: ProjectDescription.Cache.Profile) -> [WorkspaceMapping] {
         var mappers: [WorkspaceMapping] = [GenerateCacheProjectMapper(cacheProfile: cacheProfile)]
         mappers.append(contentsOf: self.default(config: config))
         return mappers

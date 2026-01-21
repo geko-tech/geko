@@ -9,7 +9,7 @@ extension Workspace {
         name: String = "test",
         projects: [AbsolutePath] = [],
         schemes: [Scheme] = [],
-        ideTemplateMacros: IDETemplateMacros? = nil,
+        ideTemplateMacros: FileHeaderTemplate? = nil,
         additionalFiles: [FileElement] = [],
         generationOptions: GenerationOptions = .test()
     ) -> Workspace {

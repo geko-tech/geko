@@ -1,5 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 public struct GraphTargetReference: Equatable, Comparable, Hashable, CustomDebugStringConvertible, CustomStringConvertible,
     Codable

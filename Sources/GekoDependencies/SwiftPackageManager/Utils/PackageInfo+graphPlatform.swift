@@ -4,7 +4,7 @@ import GekoGraph
 import GekoSupport
 
 extension PackageInfo.Platform {
-    func graphPlatform() throws -> GekoGraph.Platform {
+    func graphPlatform() throws -> Platform {
         switch platformName.lowercased() {
         case "ios", "maccatalyst":
             return .iOS

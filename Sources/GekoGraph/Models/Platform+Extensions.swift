@@ -1,9 +1,5 @@
 import Foundation
-import enum ProjectDescription.Platform
-import enum ProjectDescription.PackagePlatform
-
-public typealias Platform = ProjectDescription.Platform
-public typealias PackagePlatform = ProjectDescription.PackagePlatform
+import ProjectDescription
 
 extension Platform {
     public var xcodeSdkRoot: String {

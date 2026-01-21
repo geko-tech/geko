@@ -1,11 +1,10 @@
 import Crypto
 import Foundation
 import GekoCocoapods
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum CocoapodsGitDownloaderError: FatalError {
     case invalidUtf8Json(AbsolutePath)
@@ -21,7 +20,7 @@ enum CocoapodsGitDownloaderError: FatalError {
 }
 
 final class CocoapodsGitDownloader {
-    typealias Ref = GekoGraph.CocoapodsDependencies.GitRef
+    typealias Ref = CocoapodsDependencies.GitRef
     typealias SpecsMap = [String: (spec: CocoapodsSpec, contentsDir: AbsolutePath, source: CocoapodsSource)]
 
     private let gitHandler: GitHandling
@@ -157,7 +156,7 @@ final class CocoapodsGitDownloader {
     }
 }
 
-extension GekoGraph.CocoapodsDependencies.GitRef {
+extension CocoapodsDependencies.GitRef {
     fileprivate var asString: String {
         switch self {
         case let .branch(branch):

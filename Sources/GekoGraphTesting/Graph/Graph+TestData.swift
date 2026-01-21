@@ -1,6 +1,6 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
 extension Graph {
     public static func test(

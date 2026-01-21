@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.TargetScript {
+extension TargetScript {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         switch self.script {
         case .embedded, .tool: break

@@ -1,11 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoGenerator

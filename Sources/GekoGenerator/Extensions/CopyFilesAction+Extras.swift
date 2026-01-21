@@ -1,5 +1,6 @@
 import GekoCore
 import GekoGraph
+import ProjectDescription
 import XcodeProj
 
 extension CopyFilesAction.Destination {

@@ -94,7 +94,7 @@ final class CoreDataModelManifestMapperTests: GekoUnitTestCase {
 
         XCTAssertEqual(
             model,
-            GekoGraph.CoreDataModel(
+            CoreDataModel(
                 temporaryPath.appending(component: "model.xcdatamodeld"),
                 versions: [],
                 currentVersion: "model"

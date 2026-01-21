@@ -1,10 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoAutomation
 import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import ProjectDescription
 
 enum BuildServiceError: FatalError {
     case workspaceNotFound(path: String)
@@ -107,9 +107,9 @@ final class BuildService {
                 throw TargetBuilderError.schemeWithoutBuildableTargets(scheme: scheme.name)
             }
 
-            let buildPlatform: GekoGraph.Platform
+            let buildPlatform: Platform
 
-            if let platform, let inputPlatform = GekoGraph.Platform(rawValue: platform) {
+            if let platform, let inputPlatform = Platform(rawValue: platform) {
                 buildPlatform = inputPlatform
             } else {
                 buildPlatform = try graphTarget.target.servicePlatform
@@ -138,9 +138,9 @@ final class BuildService {
                     throw TargetBuilderError.schemeWithoutBuildableTargets(scheme: scheme.name)
                 }
 
-                let buildPlatform: GekoGraph.Platform
+                let buildPlatform: Platform
 
-                if let platform, let inputPlatform = GekoGraph.Platform(rawValue: platform) {
+                if let platform, let inputPlatform = Platform(rawValue: platform) {
                     buildPlatform = inputPlatform
                 } else {
                     buildPlatform = try graphTarget.target.servicePlatform

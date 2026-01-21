@@ -114,9 +114,9 @@ public protocol PackageInfoMapping {
     func map(
         packageInfo: PackageInfo,
         path: AbsolutePath,
-        productTypes: [String: GekoGraph.Product],
-        baseSettings: GekoGraph.Settings,
-        targetSettings: [String: GekoGraph.Settings],
+        productTypes: [String: Product],
+        baseSettings: Settings,
+        targetSettings: [String: Settings],
         projectOptions: ProjectDescription.Project.Options?,
         targetsToArtifactPaths: [String: AbsolutePath],
         packageModuleAliases: [String: [String: String]]
@@ -280,9 +280,9 @@ public final class PackageInfoMapper: PackageInfoMapping {
     public func map(
         packageInfo: PackageInfo,
         path: AbsolutePath,
-        productTypes: [String: GekoGraph.Product],
-        baseSettings: GekoGraph.Settings,
-        targetSettings: [String: GekoGraph.Settings],
+        productTypes: [String: Product],
+        baseSettings: Settings,
+        targetSettings: [String: Settings],
         projectOptions: ProjectDescription.Project.Options?,
         targetsToArtifactPaths: [String: AbsolutePath],
         packageModuleAliases: [String: [String: String]]
@@ -680,7 +680,7 @@ extension ProjectDescription.Product {
         name: String,
         type: PackageInfo.Target.TargetType,
         products: Set<PackageInfo.Product>,
-        productTypes: [String: GekoGraph.Product]
+        productTypes: [String: Product]
     ) -> Self? {
         // Swift Macros are command line tools that run in the host (macOS) at compilation time.
         switch type {
@@ -1057,7 +1057,7 @@ extension ProjectDescription.Settings {
 extension ProjectDescription.Configuration {
     fileprivate static func from(
         buildConfiguration: BuildConfiguration,
-        configuration: GekoGraph.Configuration?,
+        configuration: ConfigurationSettings?,
         packageFolder: AbsolutePath
     ) -> Self {
         let name = ConfigurationName(stringLiteral: buildConfiguration.name)
@@ -1123,7 +1123,7 @@ extension PackageInfo {
         let configurations = baseSettings.configurations.lazy
             .sorted(by: { $0.key < $1.key })
             .map { buildConfiguration, configuration -> ProjectDescription.Configuration in
-                var configuration = configuration ?? Configuration(settings: [:])
+                var configuration = configuration ?? ConfigurationSettings(settings: [:])
                 configuration.settings = configuration.settings
                 
                 return .from(

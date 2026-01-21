@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
+import ProjectDescription
 import XCTest
 
 @testable import GekoCache
@@ -24,7 +24,7 @@ final class GraphContentHasherTests: GekoUnitTestCase {
     func test_contentHashes_emptyGraph() throws {
         // Given
         let graph = Graph.test()
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
 
         // When
         let hashes = try subject.contentHashes(
@@ -109,7 +109,7 @@ final class GraphContentHasherTests: GekoUnitTestCase {
                 ],
             ]
         )
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
 
         let expectedCachableTargets = [frameworkTarget.target.name, secondFrameworkTarget.target.name].sorted()
 

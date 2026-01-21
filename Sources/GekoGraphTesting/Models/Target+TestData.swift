@@ -1,6 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.HeadersList
+import ProjectDescription
 @testable import GekoGraph
 
 extension Target {

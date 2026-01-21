@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoSupport
 import GekoGraph
+import ProjectDescription
 
 public protocol SwiftModuleMetadataProviding {
     /// Parse given swiftmodule file name and tries to find metadata

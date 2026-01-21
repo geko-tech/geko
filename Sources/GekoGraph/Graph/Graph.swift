@@ -1,5 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 /// A directed acyclic graph (DAG) that Geko uses to represent the dependency tree.
 public struct Graph: Equatable, Codable {

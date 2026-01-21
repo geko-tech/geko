@@ -1,8 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 // MARK: - Provider Errors
 

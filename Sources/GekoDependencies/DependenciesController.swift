@@ -1,10 +1,8 @@
-import ProjectDescription
 import GekoCore
 import GekoLoader
 import GekoGraph
 import GekoSupport
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 // MARK: - Dependencies Controller Error
 
@@ -89,7 +87,7 @@ public protocol DependenciesControlling {
         config: Config,
         passthroughArguments: [String],
         cocoapodsDependencies: CocoapodsDependencies?,
-        packageSettings: GekoGraph.PackageSettings?
+        packageSettings: PackageSettings?
     ) async throws -> DependenciesGraph
 
     /// Save dependencies graph.
@@ -156,7 +154,7 @@ public final class DependenciesController: DependenciesControlling {
         config: Config,
         passthroughArguments: [String],
         cocoapodsDependencies: CocoapodsDependencies?,
-        packageSettings: GekoGraph.PackageSettings?
+        packageSettings: PackageSettings?
     ) async throws -> DependenciesGraph {
         try await install(
             at: path,
@@ -209,7 +207,7 @@ public final class DependenciesController: DependenciesControlling {
 
     private func install(
         at path: AbsolutePath,
-        config: GekoGraph.Config,
+        config: Config,
         cocoapods: CocoapodsDependencies?,
         packageSettings: PackageSettings?,
         passthroughArguments: [String],

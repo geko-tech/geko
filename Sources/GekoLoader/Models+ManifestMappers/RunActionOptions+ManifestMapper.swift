@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.RunActionOptions {
+extension RunActionOptions {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         self.storeKitConfigurationPath = try storeKitConfigurationPath.map {
             try generatorPaths.resolveSchemeActionProjectPath($0)

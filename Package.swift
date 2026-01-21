@@ -14,7 +14,8 @@ var targets: [Target] = [
         dependencies: [
             "AnyCodable",
             "GekoSupport",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoGraphTesting",
@@ -24,6 +25,7 @@ var targets: [Target] = [
             "GekoSupportTesting",
             "AnyCodable",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
@@ -36,7 +38,8 @@ var targets: [Target] = [
             "xxHash",
             .product(name: "Collections", package: "swift-collections"),
             .product(name: "Crypto", package: "swift-crypto"),
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoCoreTesting",
@@ -45,6 +48,7 @@ var targets: [Target] = [
             "GekoSupportTesting",
             "GekoGraphTesting",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
@@ -65,7 +69,8 @@ var targets: [Target] = [
             "GekoPlugin",
             "GekoGraph",
             "GekoCache",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .executableTarget(
         name: "geko",
@@ -76,7 +81,8 @@ var targets: [Target] = [
         ]
     ),
     .target(
-        name: "ProjectAutomation"
+        name: "ProjectAutomation",
+        exclude: ["LICENSE.md"]
     ),
     .target(name: "Glob"),
     .target(
@@ -91,6 +97,7 @@ var targets: [Target] = [
             .product(name: "SystemPackage", package: "swift-system"),
             .product(name: "Crypto", package: "swift-crypto"),
         ],
+        exclude: ["LICENSE.md"],
         cSettings: [.define("_GNU_SOURCE", .when(platforms: [.linux]))],
         linkerSettings: [
             .linkedLibrary("z")
@@ -102,6 +109,7 @@ var targets: [Target] = [
             "GekoSupport",
             "GekoGraph",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
@@ -113,25 +121,28 @@ var targets: [Target] = [
             "GekoSupportTesting",
             "XcodeProj",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
         name: "GekoGenerator",
         dependencies: [
             "XcodeProj",
-            "GekoCore",
+           "GekoCore",
             "GekoCache",
             "GekoDependencies",
             "GekoGraph",
             "GekoSupport",
             "StencilSwiftKit",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoGeneratorTesting",
         dependencies: [
             "GekoGenerator",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
@@ -142,7 +153,8 @@ var targets: [Target] = [
             "GekoSupport",
             "StencilSwiftKit",
             "Stencil",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoScaffoldTesting",
@@ -154,6 +166,7 @@ var targets: [Target] = [
             "Stencil",
             "GekoScaffold",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
@@ -164,14 +177,16 @@ var targets: [Target] = [
             "GekoCore",
             "GekoGraph",
             "GekoSupport",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoAutomationTesting",
         dependencies: [
             "GekoAutomation",
             "GekoCoreTesting"
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoCocoapods",
@@ -196,11 +211,18 @@ var targets: [Target] = [
             .product(name: "PathKit", package: "PathKit"),
             .product(name: "AEXML", package: "AEXML"),
         ],
-        path: "Sources/Vendor/XcodeProj"
+        path: "Sources/Vendor/XcodeProj",
+        exclude: [
+            "LICENSE.md",
+            "Utils/ReferenceGenerator.swift.original",
+            "Objects/Project/PBXObject.swift.original",
+            "Utils/CommentedString.swift.original"
+        ]
     ),
     .target(
         name: "AnyCodable", // 0.6.7
-        path: "Sources/Vendor/AnyCodable"
+        path: "Sources/Vendor/AnyCodable",
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoCache",
@@ -249,14 +271,16 @@ var targets: [Target] = [
             "GekoSupport",
             "GekoPlugin",
             .product(name: "Crypto", package: "swift-crypto"),
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoDependenciesTesting",
         dependencies: [
             "GekoDependencies",
             "GekoGraphTesting",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoMigration",
@@ -265,7 +289,8 @@ var targets: [Target] = [
             "GekoGraph",
             "GekoSupport",
             "XcodeProj",
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoMigrationTesting",
@@ -276,6 +301,7 @@ var targets: [Target] = [
             "XcodeProj",
             "GekoMigration",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(
@@ -288,7 +314,8 @@ var targets: [Target] = [
             projectDescriptionDependency,
             "GekoCocoapods",
             .product(name: "Collections", package: "swift-collections"),
-        ]
+        ],
+        exclude: ["LICENSE.md"]
     ),
     .target(
         name: "GekoLoaderTesting",
@@ -299,6 +326,7 @@ var targets: [Target] = [
             projectDescriptionDependency,
             "GekoSupportTesting",
         ],
+        exclude: ["LICENSE.md"],
         linkerSettings: [.linkedFramework("XCTest")]
     ),
     .target(

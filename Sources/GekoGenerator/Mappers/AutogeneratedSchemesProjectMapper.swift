@@ -1,9 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.SchemeLanguage
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// A project mapper that auto-generates schemes for each of the targets of the `Project`
 /// if the user hasn't already defined schemes for those.

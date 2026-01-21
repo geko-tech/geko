@@ -1,6 +1,7 @@
 import Foundation
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol CocoapodsLocationProviding {
     func shellCommand(config: Config) throws -> [String]

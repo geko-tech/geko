@@ -630,7 +630,7 @@ final class PluginsFacadeTests: GekoUnitTestCase {
         XCTAssertEqual(plugins, expectedPlugins)
     }
 
-    private func mockConfig(plugins: [PluginLocation]) -> GekoGraph.Config {
+    private func mockConfig(plugins: [PluginLocation]) -> Config {
         Config(
             compatibleXcodeVersions: .all,
             cloud: nil,

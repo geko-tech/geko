@@ -1,6 +1,6 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
 @testable import GekoCore
 @testable import GekoScaffold

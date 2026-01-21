@@ -3,8 +3,6 @@ import ProjectDescription
 
 // MARK: - Plist
 
-public typealias Plist = ProjectDescription.Plist
-
 extension Plist.Value {
     public var value: Any {
         switch self {
@@ -31,11 +29,3 @@ extension Dictionary where Value == Plist.Value {
         mapValues { $0.value }
     }
 }
-
-// MARK: - InfoPlist
-
-public typealias InfoPlist = ProjectDescription.InfoPlist
-
-// MARK: - Entitlements
-
-public typealias Entitlements = ProjectDescription.Entitlements

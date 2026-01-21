@@ -1,12 +1,12 @@
 import Collections
 import Foundation
 import GekoCocoapods
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 final class CocoapodsGitInteractor {
-    typealias Ref = GekoGraph.CocoapodsDependencies.GitRef
+    typealias Ref = CocoapodsDependencies.GitRef
     typealias SpecsMap = [String: (spec: CocoapodsSpec, contentsDir: AbsolutePath, source: CocoapodsSource)]
 
     struct Source {

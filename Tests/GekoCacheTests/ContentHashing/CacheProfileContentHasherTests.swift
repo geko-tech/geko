@@ -1,10 +1,10 @@
 import Foundation
 import GekoCacheTesting
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoCache
 @testable import GekoSupportTesting
@@ -27,7 +27,7 @@ final class CacheProfileContentHasherTests: GekoUnitTestCase {
 
     func test_hash_callsContentHasherWithExpectedStrings() throws {
         // When
-        let cacheProfile = GekoGraph.Cache.Profile(
+        let cacheProfile = ProjectDescription.Cache.Profile(
             name: "Development",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64, os: "15.0.0", device: "iPhone 12")]
@@ -42,7 +42,7 @@ final class CacheProfileContentHasherTests: GekoUnitTestCase {
 
     func test_hash_withDefaultOptions() throws {
         // When
-        let cacheProfile = GekoGraph.Cache.Profile(
+        let cacheProfile = ProjectDescription.Cache.Profile(
             name: "Development",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64, os: "15.0.0", device: "iPhone 12")],
@@ -57,7 +57,7 @@ final class CacheProfileContentHasherTests: GekoUnitTestCase {
 
     func test_hash_withActiveResourcesOption() throws {
         // When
-        let cacheProfile = GekoGraph.Cache.Profile(
+        let cacheProfile = ProjectDescription.Cache.Profile(
             name: "Development",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64, os: "15.0.0", device: "iPhone 12")],
@@ -74,7 +74,7 @@ final class CacheProfileContentHasherTests: GekoUnitTestCase {
 
     func test_hash_withExportCoverageProfiles() throws {
         // When
-        let cacheProfile = GekoGraph.Cache.Profile(
+        let cacheProfile = ProjectDescription.Cache.Profile(
             name: "Development",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64, os: "15.0.0", device: "iPhone 12")],
@@ -91,7 +91,7 @@ final class CacheProfileContentHasherTests: GekoUnitTestCase {
 
     func test_hash_withSwiftModuleCacheEnabled() throws {
         // When
-        let cacheProfile = GekoGraph.Cache.Profile(
+        let cacheProfile = ProjectDescription.Cache.Profile(
             name: "Development",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64, os: "15.0.0", device: "iPhone 12")],

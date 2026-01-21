@@ -4,6 +4,7 @@ import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 @testable import GekoGenerator
 
 class MockProjectLinter: ProjectLinting {

@@ -4,7 +4,7 @@ import GekoCore
 import GekoGraph
 
 public protocol CacheProfileContentHashing {
-    func hash(cacheProfile: GekoGraph.Cache.Profile) throws -> String
+    func hash(cacheProfile: ProjectDescription.Cache.Profile) throws -> String
 }
 
 /// `CacheProfileContentHasher`
@@ -20,7 +20,7 @@ public final class CacheProfileContentHasher: CacheProfileContentHashing {
 
     // MARK: - CacheProfileContentHashing
 
-    public func hash(cacheProfile: GekoGraph.Cache.Profile) throws -> String {
+    public func hash(cacheProfile: ProjectDescription.Cache.Profile) throws -> String {
         var stringsToHash = [
             cacheProfile.name,
             cacheProfile.configuration,

@@ -10,7 +10,7 @@ public final class MockSimulatorController: SimulatorControlling {
 
     public var findAvailableDevicesStub: ((Platform, Version?, Version?, String?) -> [SimulatorDeviceAndRuntime])?
     public func findAvailableDevices(
-        platform: GekoGraph.Platform,
+        platform: Platform,
         version: Version?,
         minVersion: Version?,
         deviceName: String?

@@ -1,10 +1,9 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.RunAction {
+extension RunAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         self.customLLDBInitFile = try customLLDBInitFile.map {
             try generatorPaths.resolve(path: $0)

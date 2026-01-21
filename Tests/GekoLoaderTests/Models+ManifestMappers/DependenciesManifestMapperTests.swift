@@ -22,7 +22,7 @@ final class DependenciesManifestMapperTests: GekoUnitTestCase {
         try got.resolvePaths(generatorPaths: generatorPaths)
 
         // Then
-        let expected: GekoGraph.Dependencies = .init(
+        let expected: Dependencies = .init(
             cocoapods: nil
         )
         XCTAssertEqual(got, expected)
@@ -45,7 +45,7 @@ final class DependenciesManifestMapperTests: GekoUnitTestCase {
         // assert
         XCTAssertEqual(
             result,
-            GekoGraph.CocoapodsDependencies(
+            CocoapodsDependencies(
                 repos: ["a"],
                 dependencies: [.cdn(name: "a", requirement: .atLeast("0"), source: "source")],
                 defaultForceLinking: nil,
@@ -74,7 +74,7 @@ final class DependenciesManifestMapperTests: GekoUnitTestCase {
         // assert
         XCTAssertEqual(
             result,
-            GekoGraph.CocoapodsDependencies(
+            CocoapodsDependencies(
                 repos: ["a"],
                 dependencies: [
                     .cdn(name: "a", requirement: .atLeast("0"), source: "source"),
@@ -96,7 +96,7 @@ final class DependenciesManifestMapperTests: GekoUnitTestCase {
             "inner/dir/BBBpodspec3.podspec",
         ])
 
-        let output: [GekoGraph.CocoapodsDependencies.Dependency] = [
+        let output: [CocoapodsDependencies.Dependency] = [
             .cdn(name: "a", requirement: .atLeast("0"), source: "source"),
             .path(name: "b", path: "\(temporaryPath.pathString)/b-path"),
             .path(name: "Podspec1", path: "\(temporaryPath.pathString)"),
@@ -151,7 +151,7 @@ final class DependenciesManifestMapperTests: GekoUnitTestCase {
         // assert
         XCTAssertEqual(
             result,
-            GekoGraph.CocoapodsDependencies(
+            CocoapodsDependencies(
                 repos: [],
                 dependencies: [],
                 defaultForceLinking: nil,
@@ -178,7 +178,7 @@ final class DependenciesManifestMapperTests: GekoUnitTestCase {
         // assert
         XCTAssertEqual(
             result,
-            GekoGraph.CocoapodsDependencies(
+            CocoapodsDependencies(
                 repos: [],
                 dependencies: [],
                 defaultForceLinking: .static,

@@ -1,13 +1,13 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoSupport
 import GekoCore
+import ProjectDescription
 
 public protocol XCFrameworksContentHashing {
     func contentHashes(
         for graph: Graph,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: CacheOutputType,
         cacheDestination: CacheFrameworkDestination
@@ -68,7 +68,7 @@ public final class XCFrameworksContentHasher: XCFrameworksContentHashing {
 
     public func contentHashes(
         for graph: Graph,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: CacheOutputType,
         cacheDestination: CacheFrameworkDestination

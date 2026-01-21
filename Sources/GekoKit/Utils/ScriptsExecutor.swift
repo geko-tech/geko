@@ -2,9 +2,10 @@ import Foundation
 import GekoGraph
 import GekoSupport
 import GekoPlugin
+import ProjectDescription
 
 protocol ScriptsExecuting {
-    func execute(using config: GekoGraph.Config, scripts: [GekoGraph.Config.Script]) throws
+    func execute(using config: Config, scripts: [Config.Script]) throws
 }
 
 final class ScriptsExecutor: ScriptsExecuting {
@@ -23,7 +24,7 @@ final class ScriptsExecutor: ScriptsExecuting {
     }
     
     func execute(
-        using config: GekoGraph.Config, scripts: [GekoGraph.Config.Script]
+        using config: Config, scripts: [Config.Script]
     ) throws {
         for script in scripts {
             switch script {
@@ -37,7 +38,7 @@ final class ScriptsExecutor: ScriptsExecuting {
     
     // MARK: - Private
     
-    private func execute(script: GekoGraph.Config.ShellScript) throws {
+    private func execute(script: Config.ShellScript) throws {
         do {
             logger.info("Executing '\(script.script)'", metadata: .section)
             let scriptParameters = [try shellPath(script: script), "-c", script.script]
@@ -62,7 +63,7 @@ final class ScriptsExecutor: ScriptsExecuting {
         }
     }
     
-    private func shellPath(script: GekoGraph.Config.ShellScript) throws -> String {
+    private func shellPath(script: Config.ShellScript) throws -> String {
         if let shellPath = script.shellPath {
             shellPath
         } else {
@@ -70,7 +71,7 @@ final class ScriptsExecutor: ScriptsExecuting {
         }
     }
     
-    private func execute(config: GekoGraph.Config, plugin: GekoGraph.Config.ExecutablePlugin) throws {
+    private func execute(config: Config, plugin: Config.ExecutablePlugin) throws {
         logger.info("Executing plugin: \(info(plugin: plugin))", metadata: .section)
         
         let (executablePath, _) = try pluginExecutablePathBuilder.path(

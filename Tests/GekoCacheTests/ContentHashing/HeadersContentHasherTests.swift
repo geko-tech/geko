@@ -1,11 +1,10 @@
 import Foundation
 import GekoCacheTesting
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.HeadersList
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoCache
 @testable import GekoSupportTesting

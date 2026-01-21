@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoAutomation
 import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import ProjectDescription
 
 enum RunServiceError: FatalError {
     case schemeNotFound(scheme: String, existing: [String])

@@ -1,5 +1,6 @@
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol TemplateGitLoading {
     /// Load `GekoGraph.Template` from the given Git repository
@@ -7,7 +8,7 @@ public protocol TemplateGitLoading {
     /// - Parameters:
     ///     - templateURL: Git repository url
     ///     - closure: Closure to perform work on loaded template
-    func loadTemplate(from templateURL: String, closure: (GekoGraph.Template) throws -> Void) throws
+    func loadTemplate(from templateURL: String, closure: (Template) throws -> Void) throws
 }
 
 public final class TemplateGitLoader: TemplateGitLoading {
@@ -38,7 +39,7 @@ public final class TemplateGitLoader: TemplateGitLoading {
         self.templateLocationParser = templateLocationParser
     }
 
-    public func loadTemplate(from templateURL: String, closure: (GekoGraph.Template) throws -> Void) throws {
+    public func loadTemplate(from templateURL: String, closure: (Template) throws -> Void) throws {
         let repoURL = templateLocationParser.parseRepositoryURL(from: templateURL)
         let repoBranch = templateLocationParser.parseRepositoryBranch(from: templateURL)
         try fileHandler.inTemporaryDirectory { temporaryPath in

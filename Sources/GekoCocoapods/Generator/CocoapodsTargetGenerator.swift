@@ -1,7 +1,5 @@
 import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoSupport
-import struct GekoGraph.CocoapodsDependencies
 import XcodeProj
 import Glob
 
@@ -147,7 +145,7 @@ public final class CocoapodsTargetGenerator {
         // TODO: This parameter is a workaround. We need to come up with something better.
         includeEmptyTargets: Bool = false,
         defaultForceLinking: CocoapodsDependencies.Linking? = nil,
-        forceLinking: [String: GekoGraph.CocoapodsDependencies.Linking] = [:]
+        forceLinking: [String: CocoapodsDependencies.Linking] = [:]
     ) throws -> ([ProjectDescription.Target], [SideEffectDescriptor]) {
         var sideEffects: [SideEffectDescriptor] = []
         var targets: [ProjectDescription.Target] = []

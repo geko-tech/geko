@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.UNIXPath
 import GekoCore
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoCoreTesting
 @testable import GekoGenerator

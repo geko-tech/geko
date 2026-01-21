@@ -4,7 +4,7 @@ import GekoCore
 import GekoGraph
 import GekoSupport
 
-extension GekoGraph.ResourceFileElement {
+extension ResourceFileElement {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         switch self {
         case let .glob(pattern, excluding, tags, condition):

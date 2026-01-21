@@ -2,13 +2,13 @@ import Foundation
 import GekoSupport
 import GekoGraph
 import GekoCore
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 struct ArchivingContext {
     let graph: Graph
     let projectPath: AbsolutePath
     let workDirectory: AbsolutePath
-    let cacheProfile: GekoGraph.Cache.Profile
+    let cacheProfile: ProjectDescription.Cache.Profile
     let buildTargetsWithHash: [(GraphTarget, String)]
     let schemesByPlatform: [Platform: Scheme]
     let outputType: CacheOutputType

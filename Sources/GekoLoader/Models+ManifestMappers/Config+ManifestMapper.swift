@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.Config {
+extension Config {
     mutating public func resolvePaths(generatorPaths: GeneratorPaths) throws {
         try generationOptions.resolvePaths(generatorPaths: generatorPaths)
 
@@ -18,7 +18,7 @@ extension GekoGraph.Config {
     }
 }
 
-extension GekoGraph.Config.GenerationOptions {
+extension Config.GenerationOptions {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         if let path = clonedSourcePackagesDirPath {
             self.clonedSourcePackagesDirPath = try generatorPaths.resolve(path: path)

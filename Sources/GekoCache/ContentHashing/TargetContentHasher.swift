@@ -1,10 +1,10 @@
 import AnyCodable
 import Foundation
 import GekoAnalytics
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public struct TargetContentHash {
     public let target: GraphTarget
@@ -47,7 +47,7 @@ public struct TargetContentHashContext {
 public protocol TargetContentHashing {
     func contentHash(
         for target: GraphTarget,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         additionalStrings: [String]
     ) throws -> TargetContentHash
 }
@@ -120,7 +120,7 @@ public final class TargetContentHasher: TargetContentHashing {
     // swiftlint:disable:next function_body_length
     public func contentHash(
         for graphTarget: GraphTarget,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         additionalStrings: [String] = []
     ) throws -> TargetContentHash {
         let name = graphTarget.target.name

@@ -1,11 +1,9 @@
 import Foundation
 import GekoCocoapods
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
-import struct GekoGraph.CocoapodsDependencies
 import GekoSupport
+import ProjectDescription
 
 final class CocoapodsProjectGenerator {
     let cocoapodsTargetGenerator = CocoapodsTargetGenerator()
@@ -22,14 +20,14 @@ final class CocoapodsProjectGenerator {
         path: AbsolutePath,
         podspecPath: AbsolutePath,
         workspacePath: AbsolutePath,
-        externalDependencies: [String: [GekoGraph.TargetDependency]],
+        externalDependencies: [String: [TargetDependency]],
         appHostDependencyResolver: CocoapodsApphostDependencyResolving,
         projectOptionsProvider: CocoapodsProjectOptionsProvider,
         convertPathsToBuildableFolders: Bool,
         defaultForceLinking: CocoapodsDependencies.Linking?,
         forceLinking: [String : CocoapodsDependencies.Linking],
         sideTable: Atomic<GraphSideTable>
-    ) throws -> (GekoGraph.Project, [SideEffectDescriptor]) {
+    ) throws -> (Project, [SideEffectDescriptor]) {
         let projectPath = path
         let sourceRootPath = podspecPath.parentDirectory
         let generatorPaths = GeneratorPaths(manifestDirectory: sourceRootPath)
@@ -58,7 +56,7 @@ final class CocoapodsProjectGenerator {
 
         saveGlobs(cocoapodsTargets: cocoapodsTargets, path: path, podspecPath: podspecPath, workspacePath: workspacePath, sideTable: sideTable)
 
-        var convertedTargets: [GekoGraph.Target] = []
+        var convertedTargets: [Target] = []
         var sideEffects: [SideEffectDescriptor] = targetSideEffects
         for target in cocoapodsTargets {
             let target = try convertCocoapodsTarget(
@@ -178,13 +176,13 @@ final class CocoapodsProjectGenerator {
 
     private func project(
         name: String,
-        with targets: [GekoGraph.Target],
+        with targets: [Target],
         generatorPaths: GeneratorPaths,
         path: AbsolutePath,
         workspacePath: AbsolutePath,
         podspecPath: AbsolutePath,
-        options: GekoGraph.Project.Options
-    ) -> GekoGraph.Project {
+        options: Project.Options
+    ) -> Project {
         let xcodeProjectName = name
 
         // TODO: We need to work with the settings properly somehow
@@ -227,8 +225,8 @@ final class CocoapodsProjectGenerator {
     private func convertCocoapodsTarget(
         _ target: consuming ProjectDescription.Target,
         generatorPaths: GeneratorPaths,
-        externalDependencies: [String: [GekoGraph.TargetDependency]]
-    ) throws -> GekoGraph.Target {        
+        externalDependencies: [String: [TargetDependency]]
+    ) throws -> Target {
         target.dependencies = target.dependencies.map { dep -> ProjectDescription.TargetDependency in
             if case let .external(name, condition) = dep {
                 if externalDependencies[name] != nil {
@@ -246,7 +244,7 @@ final class CocoapodsProjectGenerator {
     }
 }
 
-extension ProjectDescription.Target: Hashable {
+extension ProjectDescription.Target: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
         hasher.combine(destinations)

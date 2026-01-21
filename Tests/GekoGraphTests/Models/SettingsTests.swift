@@ -1,6 +1,6 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoSupportTesting
+import ProjectDescription
 import XCTest
 @testable import GekoGraph
 
@@ -15,14 +15,14 @@ final class SettingsTests: XCTestCase {
 
     func testXcconfigs() {
         // Given
-        let configurations: [BuildConfiguration: Configuration?] = [
-            BuildConfiguration(name: "D", variant: .debug): Configuration(
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
+            BuildConfiguration(name: "D", variant: .debug): ConfigurationSettings(
                 settings: [:],
                 xcconfig: try! AbsolutePath(validating: "/D")
             ),
             .release("C"): nil,
-            .debug("A"): Configuration(settings: [:], xcconfig: try! AbsolutePath(validating: "/A")),
-            .release("B"): Configuration(settings: [:], xcconfig: try! AbsolutePath(validating: "/B")),
+            .debug("A"): ConfigurationSettings(settings: [:], xcconfig: try! AbsolutePath(validating: "/A")),
+            .release("B"): ConfigurationSettings(settings: [:], xcconfig: try! AbsolutePath(validating: "/B")),
         ]
 
         // When
@@ -34,7 +34,7 @@ final class SettingsTests: XCTestCase {
 
     func testSortedByBuildConfigurationName() {
         // Given
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             BuildConfiguration(name: "D", variant: .debug): emptyConfiguration(),
             .release("C"): nil,
             .debug("A"): nil,
@@ -51,7 +51,7 @@ final class SettingsTests: XCTestCase {
     func testDefaultDebugConfigurationWhenDefaultExists() {
         // Given
         // .debug (i.e. name: "Debug", variant: .debug) is the default debug
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             .release("C"): nil,
             .debug("A"): nil,
             .release("B"): nil,
@@ -69,7 +69,7 @@ final class SettingsTests: XCTestCase {
     func testDefaultDebugConfigurationWhenDefaultDoesNotExist() {
         // Given
         // .debug (i.e. name: "Debug", variant: .debug) is the default debug
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             .release("C"): nil,
             .debug("A"): nil,
             .release("B"): nil,
@@ -85,7 +85,7 @@ final class SettingsTests: XCTestCase {
 
     func testDefaultDebugConfigurationWhenNoDebugConfigurationsExist() {
         // Given
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             .release("C"): nil,
             .release("B"): nil,
         ]
@@ -101,7 +101,7 @@ final class SettingsTests: XCTestCase {
     func testDefaultReleaseConfigurationWhenDefaultExist() {
         // Given
         // .release (i.e. name: "Release", variant: .release) is the default release
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             .release("C"): nil,
             .debug("A"): nil,
             .release("B"): nil,
@@ -119,7 +119,7 @@ final class SettingsTests: XCTestCase {
     func testDefaultReleaseConfigurationWhenDefaultDoesNotExist() {
         // Given
         // .release (i.e. name: "Release", variant: .release) is the default release
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             .release("C"): nil,
             .debug("A"): nil,
             .release("B"): nil,
@@ -135,7 +135,7 @@ final class SettingsTests: XCTestCase {
 
     func testDefaultReleaseConfigurationWhenNoReleaseConfigurationsExist() {
         // Given
-        let configurations: [BuildConfiguration: Configuration?] = [
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
             .debug("A"): nil,
             .debug("B"): nil,
         ]
@@ -150,8 +150,8 @@ final class SettingsTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func emptyConfiguration() -> Configuration {
-        Configuration(settings: [:], xcconfig: nil)
+    private func emptyConfiguration() -> ConfigurationSettings {
+        ConfigurationSettings(settings: [:], xcconfig: nil)
     }
 }
 

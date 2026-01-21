@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
 import GekoAnalytics
+import ProjectDescription
 
 public protocol GraphContentHashing {
     /// Hashes graph
@@ -13,7 +13,7 @@ public protocol GraphContentHashing {
     ///     - additionalStrings: Additional strings to be used when hashing graph
     func contentHashes(
         for graph: Graph,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         filter: (GraphTarget) -> Bool,
         additionalStrings: [String],
         unsafe: Bool
@@ -29,7 +29,7 @@ extension GraphContentHashing {
     ///     - unsafe: If passed, doesn't check direct dependencies is hashable
     public func contentHashes(
         for graph: Graph,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         filter: (GraphTarget) -> Bool = { _ in true },
         additionalStrings: [String] = [],
         unsafe: Bool
@@ -80,7 +80,7 @@ public final class GraphContentHasher: GraphContentHashing {
 
     public func contentHashes(
         for graph: Graph,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         filter: (GraphTarget) -> Bool,
         additionalStrings: [String],
         unsafe: Bool

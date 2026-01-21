@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias Workspace = ProjectDescription.Workspace
-
 extension Workspace {
     public init(
         path: AbsolutePath,
@@ -26,7 +24,7 @@ extension Workspace {
             commonSettings: [],
             configurations: ["Debug": .debug, "Release": .release]
         ),
-        ideTemplateMacros: IDETemplateMacros? = nil,
+        ideTemplateMacros: FileHeaderTemplate? = nil,
         additionalFiles: [FileElement] = []
     ) {
         self.init(
@@ -42,7 +40,7 @@ extension Workspace {
         self.xcWorkspacePath = xcWorkspacePath
     }
 
-    public var ideTemplateMacros: IDETemplateMacros? {
+    public var ideTemplateMacros: FileHeaderTemplate? {
         fileHeaderTemplate
     }
 

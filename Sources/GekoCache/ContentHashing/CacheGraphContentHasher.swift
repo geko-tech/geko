@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol CacheGraphContentHashing {
     /// Hashes graph
@@ -15,7 +15,7 @@ public protocol CacheGraphContentHashing {
     func contentHashes(
         for graph: Graph,
         sideTable: GraphSideTable,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: CacheOutputType,
         cacheDestination: CacheFrameworkDestination,
@@ -56,13 +56,12 @@ public final class CacheGraphContentHasher: CacheGraphContentHashing {
     public func contentHashes(
         for graph: Graph,
         sideTable: GraphSideTable,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: CacheOutputType,
         cacheDestination: CacheFrameworkDestination,
         unsafe: Bool
     ) throws -> [String: String] {
-        let graphTraverser = GraphTraverser(graph: graph)
         return try graphContentHasher.contentHashes(
             for: graph,
             cacheProfile: cacheProfile,
@@ -94,7 +93,7 @@ public final class CacheGraphContentHasher: CacheGraphContentHashing {
 
     private func filterHashTarget(
         _ target: GraphTarget,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusedTargets: Set<String>
     ) -> Bool {
         let product = target.target.product
@@ -106,10 +105,9 @@ public final class CacheGraphContentHasher: CacheGraphContentHashing {
 
     private func unsafeFilterHashTarget(
         _ target: GraphTarget,
-        cacheProfile: GekoGraph.Cache.Profile
+        cacheProfile: ProjectDescription.Cache.Profile
     ) -> Bool {
         let product = target.target.product
-        let name = target.target.name
 
         return CacheConstants.cachableProducts.contains(product)
     }

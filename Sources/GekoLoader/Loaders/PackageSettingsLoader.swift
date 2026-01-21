@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// Entity responsible for providing `PackageSettings`.
 public protocol PackageSettingsLoading {
@@ -11,7 +10,7 @@ public protocol PackageSettingsLoading {
     /// - Parameter path: The absolute path for the `PackageSettings` to load.
     /// - Parameter plugins: The plugins for the `PackageSettings` to load.
     /// - Returns: The `PackageSettings` loaded from the specified path.
-    func loadPackageSettings(at path: AbsolutePath, with plugins: Plugins) throws -> GekoGraph.PackageSettings
+    func loadPackageSettings(at path: AbsolutePath, with plugins: Plugins) throws -> PackageSettings
 }
 
 public final class PackageSettingsLoader: PackageSettingsLoading {
@@ -21,7 +20,7 @@ public final class PackageSettingsLoader: PackageSettingsLoading {
         self.manifestLoader = manifestLoader
     }
 
-    public func loadPackageSettings(at path: AbsolutePath, with plugins: Plugins) throws -> GekoGraph.PackageSettings {
+    public func loadPackageSettings(at path: AbsolutePath, with plugins: Plugins) throws -> PackageSettings {
         try manifestLoader.register(plugins: plugins)
         var manifest = try manifestLoader.loadPackageSettings(at: path)
         let generatorPaths = GeneratorPaths(manifestDirectory: path)

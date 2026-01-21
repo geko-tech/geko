@@ -1,11 +1,10 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.Workspace {
+extension Workspace {
     /// Maps a ProjectDescription.Workspace instance into a GekoGraph.Workspace model.
     /// - Parameters:
     ///   - generatorPaths: Generator paths.

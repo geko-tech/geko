@@ -46,7 +46,7 @@ final class DependenciesModelLoaderTests: GekoUnitTestCase {
         let got = try subject.loadDependencies(at: temporaryPath, with: plugins)
 
         // Then
-        let expected: GekoGraph.Dependencies = .init(
+        let expected: Dependencies = .init(
             cocoapods: nil
         )
         XCTAssertEqual(manifestLoader.registerPluginsCount, 1)

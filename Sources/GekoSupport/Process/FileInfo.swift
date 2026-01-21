@@ -15,7 +15,7 @@ extension FileAttributeType: UnsafeSendable {}
 extension Date: UnsafeSendable {}
 #endif
 
-extension FileAttributeType: Codable {}
+extension FileAttributeType: @retroactive Codable {}
 
 /// File system information for a particular file.
 public struct FileInfo: Equatable, Codable, Sendable {

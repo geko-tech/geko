@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.TestAction {
+extension TestAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         if let plans = testPlans {
             self.testPlans = try plans.enumerated().compactMap { index, plan in

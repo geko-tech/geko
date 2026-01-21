@@ -1,5 +1,6 @@
 import Foundation
 import GekoCore
+import ProjectDescription
 import XCTest
 
 @testable import GekoGraph

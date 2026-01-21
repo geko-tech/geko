@@ -1,11 +1,10 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.Configuration {
+extension ConfigurationSettings {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         xcconfig = try xcconfig.map { try generatorPaths.resolve(path: $0) }
     }

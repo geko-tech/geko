@@ -26,7 +26,7 @@ public struct CacheContext {
     // Immutable Values
     public let path: AbsolutePath
     public let config: Config
-    public let cacheProfile: GekoGraph.Cache.Profile
+    public let cacheProfile: ProjectDescription.Cache.Profile
     public let outputType: CacheOutputType
     public let destination: CacheFrameworkDestination
     public let userFocusedTargets: Set<String>
@@ -48,7 +48,7 @@ public struct CacheContext {
     public init(
         path: AbsolutePath,
         config: Config,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         outputType: CacheOutputType,
         destination: CacheFrameworkDestination,
         userFocusedTargets: Set<String>,

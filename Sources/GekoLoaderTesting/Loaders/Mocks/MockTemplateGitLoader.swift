@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoLoader
+import ProjectDescription
 
 public final class MockTemplateGitLoader: TemplateGitLoading {
     public var loadTemplateStub: ((String) throws -> Template)?

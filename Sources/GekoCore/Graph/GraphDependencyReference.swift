@@ -1,7 +1,6 @@
 import Foundation
 import GekoGraph
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 public enum GraphDependencyReference: Equatable, Comparable, Hashable {
     var condition: PlatformCondition? {
@@ -193,7 +192,7 @@ public enum GraphDependencyReference: Equatable, Comparable, Hashable {
     }
 }
 
-extension PlatformCondition?: Comparable {
+extension PlatformCondition?: @retroactive Comparable {
     public static func < (lhs: Optional, rhs: Optional) -> Bool {
         guard let lhs else { return false }
         guard let rhs else { return true }

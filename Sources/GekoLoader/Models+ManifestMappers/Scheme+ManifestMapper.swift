@@ -1,10 +1,9 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.Scheme {
+extension Scheme {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         try self.buildAction?.resolvePaths(generatorPaths: generatorPaths)
         try self.testAction?.resolvePaths(generatorPaths: generatorPaths)

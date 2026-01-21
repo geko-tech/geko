@@ -1,5 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 import GekoGraph
 import GekoSupport
 import GekoCore
@@ -7,7 +7,7 @@ import GekoCore
 /// Returns a hash of additional strings that need to be mixed into the final hash
 public protocol AdditionalCacheStringsHashing {
     func contentHash(
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: CacheOutputType,
         destination: CacheFrameworkDestination
@@ -46,7 +46,7 @@ public final class AdditionalCacheStringsHasher: AdditionalCacheStringsHashing {
     // MARK: - AdditionalCacheStringsHashing
     
     public func contentHash(
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         cacheUserVersion: String?,
         cacheOutputType: CacheOutputType,
         destination: CacheFrameworkDestination

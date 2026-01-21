@@ -1,12 +1,11 @@
 import Collections
 import Foundation
 import GekoCocoapods
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.FilePath
 import GekoCore
 import GekoLoader
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum CocoapodsPathInteractorError: FatalError {
     case specNotFound(name: String, path: AbsolutePath)

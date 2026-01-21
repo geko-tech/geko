@@ -1,11 +1,10 @@
 import Foundation
-import PathKit
-import StencilSwiftKit
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import PathKit
+import ProjectDescription
+import StencilSwiftKit
 
 /// Interface for generating content defined in template manifest
 public protocol TemplateGenerating {

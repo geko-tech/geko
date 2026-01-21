@@ -348,7 +348,7 @@ final class SettingsMapperTests: XCTestCase {
 
 // OTHER_LDFLAGS
 
-extension GekoGraph.SettingsDictionary {
+extension SettingsDictionary {
     func stringValueFor(_ key: String) throws -> String {
         try XCTUnwrap(self[key]?.stringValue)
     }
@@ -358,7 +358,7 @@ extension GekoGraph.SettingsDictionary {
     }
 }
 
-extension GekoGraph.SettingValue {
+extension SettingValue {
     var stringValue: String? {
         if case let .string(string) = self {
             return string

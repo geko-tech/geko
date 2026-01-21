@@ -2,6 +2,7 @@ import AnyCodable
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public protocol CopyFilesContentHashing {
     func hash(copyFiles: [CopyFilesAction]) throws -> (String, [String: AnyCodable])

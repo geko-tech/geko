@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 
 /// A project mapper that generates derived Info.plist files for targets that define it as a dictonary.

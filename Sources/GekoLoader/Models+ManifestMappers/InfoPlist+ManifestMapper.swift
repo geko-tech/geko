@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.InfoPlist {
+extension InfoPlist {
     /// Maps a ProjectDescription.InfoPlist instance into a GekoGraph.InfoPlist instance.
     /// - Parameters:
     ///   - manifest: Manifest representation of the Info plist model.

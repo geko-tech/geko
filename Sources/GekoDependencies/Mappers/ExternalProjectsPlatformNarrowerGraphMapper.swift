@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /**
  When Swift Packages don't declare the platforms that they support, the Swift Package Manager defaults the value

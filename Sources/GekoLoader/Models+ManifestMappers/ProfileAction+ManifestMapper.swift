@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
-extension GekoGraph.ProfileAction {
+extension ProfileAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         try self.executable?.resolvePaths(generatorPaths: generatorPaths)
 

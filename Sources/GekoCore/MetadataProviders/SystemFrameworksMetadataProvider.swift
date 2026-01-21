@@ -1,8 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 // MARK: - Provider Errors
 
@@ -50,7 +49,7 @@ public final class SystemFrameworkMetadataProvider: SystemFrameworkMetadataProvi
     ) throws -> SystemFrameworkMetadata {
         let sdkNamePath = try AbsolutePath(validatingAbsolutePath: "/\(sdkName)")
         guard let sdkExtension = sdkNamePath.extension,
-              let sdkType = SDKType(rawValue: sdkExtension)
+              let sdkType = GekoGraph.SDKType(rawValue: sdkExtension)
         else {
             throw SystemFrameworkMetadataProviderError.unsupportedSDK(name: sdkName)
         }
@@ -63,7 +62,7 @@ public final class SystemFrameworkMetadataProvider: SystemFrameworkMetadataProvi
         )
     }
 
-    private func sdkPath(name: String, platform: Platform, type: SDKType, source: SDKSource) throws -> AbsolutePath {
+    private func sdkPath(name: String, platform: Platform, type: GekoGraph.SDKType, source: SDKSource) throws -> AbsolutePath {
         switch source {
         case .developer:
             let xcodeDeveloperSdkRootPath = platform.xcodeDeveloperSdkRootPath

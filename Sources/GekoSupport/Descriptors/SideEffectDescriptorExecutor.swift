@@ -1,11 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias CommandDescriptor = ProjectDescription.CommandDescriptor
-public typealias DirectoryDescriptor = ProjectDescription.DirectoryDescriptor
-public typealias FileDescriptor = ProjectDescription.FileDescriptor
-public typealias SideEffectDescriptor = ProjectDescription.SideEffectDescriptor
-
 /// The protocol defines an interface for executing side effects.
 public protocol SideEffectDescriptorExecuting: AnyObject {
     /// Executes the given side effects sequentially.

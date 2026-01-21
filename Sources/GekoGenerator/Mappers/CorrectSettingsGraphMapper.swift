@@ -1,6 +1,7 @@
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 private let definesModule = "DEFINES_MODULE"
 

@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum ModuleMapMapperError: FatalError {
     case invalidTargetDependency(sourceProject: AbsolutePath, sourceTarget: String, dependentTarget: String)
@@ -68,7 +68,7 @@ public final class ModuleMapMapper: GraphMapping {
     public func map(
         graph: inout GekoGraph.Graph,
         sideTable: inout GekoGraph.GraphSideTable
-    ) async throws -> [GekoSupport.SideEffectDescriptor] {
+    ) async throws -> [SideEffectDescriptor] {
         var targetToDependenciesMetadata: [TargetID: Set<DependencyMetadata>] = [:]
         let graphTraverser = GraphTraverser(graph: graph)
         for target in graphTraverser.allTargets().filter({ $0.project.projectType != .cocoapods }) {

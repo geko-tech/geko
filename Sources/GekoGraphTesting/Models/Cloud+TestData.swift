@@ -1,6 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoSupportTesting
+import ProjectDescription
+
 @testable import GekoGraph
 
 extension Cloud {

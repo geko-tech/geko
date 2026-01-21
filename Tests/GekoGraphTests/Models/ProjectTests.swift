@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraphTesting
+import ProjectDescription
 import XCTest
 @testable import GekoGraph
 
@@ -75,7 +75,7 @@ final class ProjectTests: XCTestCase {
 
     func test_defaultDebugBuildConfigurationName_when_defaultDebugConfigDoesntExist() {
         // Given
-        let settings = Settings.test(base: [:], configurations: [.debug("Test"): Configuration.test()])
+        let settings = Settings.test(base: [:], configurations: [.debug("Test"): ConfigurationSettings.test()])
         let project = Project.test(settings: settings)
 
         // When

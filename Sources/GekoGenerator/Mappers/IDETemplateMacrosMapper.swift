@@ -1,10 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
-
+import ProjectDescription
 
 public final class IDETemplateMacrosMapper: ProjectMapping, WorkspaceMapping {
     struct TemplateMacros: Codable {
@@ -36,7 +34,7 @@ public final class IDETemplateMacrosMapper: ProjectMapping, WorkspaceMapping {
     }
 
     private func sideEffects(
-        for ideTemplateMacros: IDETemplateMacros?,
+        for ideTemplateMacros: FileHeaderTemplate?,
         to path: AbsolutePath
     ) throws -> [SideEffectDescriptor] {
         guard let ideTemplateMacros else { return [] }

@@ -1,102 +1,127 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, UserConfig } from 'vitepress'
+import { generateSidebar,generateSidebarOrdered, wrapSidebarSection } from './scripts/generateSidebar.mts';
 
-// https://vitepress.dev/reference/site-config
-export default defineConfig({
-  title: "Geko",
-  description: "Geko is a CLI utility that provides development infrastructure for Xcode based projects.",
-  head: [['link', { rel: 'icon', href: '/geko/favicon.ico' }]],
-  base: '/geko/',
-  cleanUrls: true,
-  themeConfig: {
-    logo: '/logo-nav.png',
+export default defineConfig(async () => {
+  const referencesSidebar = await generateSidebar({
+    scanDir: "docs/projectdescription",
+    baseUrl: "/projectdescription/",
+  });
 
-    // https://vitepress.dev/reference/default-theme-config
-    nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Guides', link: '/main-description' }
-    ],
+  return {
+    title: "Geko",
+    description: "Command-line tool for managing development infrastructure for Xcode-based projects.",
+    head: [['link', { rel: 'icon', href: '/geko/favicon.ico' }]],
+    base: '/geko/',
+    cleanUrls: true,
+    themeConfig: {
+      logo: '/logo-nav.png',
 
-    sidebar: [
-      {
-        text: 'Get Started',
-        items: [
-          { text: 'Install Geko', link: '/general/setup' },
-          { text: 'How to use Geko', link: '/general/usage' }
-        ],
+      // https://vitepress.dev/reference/default-theme-config
+      nav: [
+        { text: 'Home', link: '/' },
+        { text: 'Guides', link: '/guides' },
+        { text: 'ProjectDescription', link: '/projectdescription/structs/Project' }
+      ],
+
+      search: {
+        provider: 'local'
       },
-      {
-        text: 'Features',
-        items: [
+
+      sidebar: {
+        '/guides/': [
+            wrapSidebarSection(
+              await generateSidebarOrdered({
+                scanDir: "docs/guides/general",
+                baseUrl: "/guides/general/",
+                useTitleFromFileHeading: true
+              }),
+              {
+                sectionText: "Get Started",
+              }
+            ),
+            {
+              text: 'Features',
+              items: [
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/project-generation",
+                    baseUrl: "/guides/features/project-generation/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Project Generation",
+                    collapsed: true
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/cache",
+                    baseUrl: "/guides/features/cache/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Build Cache",
+                    collapsed: true
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/plugins",
+                    baseUrl: "/guides/features/plugins/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Plugins",
+                    collapsed: true
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/linux",
+                    baseUrl: "/guides/features/linux/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Linux",
+                    collapsed: true
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/desktop",
+                    baseUrl: "/guides/features/desktop/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Desktop App",
+                    collapsed: true
+                  }
+                )
+              ]
+            },
+            wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/commands/",
+                    baseUrl: "/guides/commands/",
+                    useTitleFromFileHeading: true,
+                  }),
+                  {
+                    sectionText: "Commands",
+                  }
+            )
+
+          ],
+        '/projectdescription/': [
           {
-            text: 'Project Generation',
-            collapsed: true,
-            items: [
-              { text: 'Overview', link: '/features/project-generation/' },
-              { text: 'Directory structure', link: '/features/project-generation/dir_structure' },
-              { text: 'Editing', link: '/features/project-generation/editing' },
-              { text: 'Buildable folders', link: '/features/project-generation/buildable_folders' },
-              { text: 'Linking', link: '/features/project-generation/linking' },
-              { text: 'Cocoapods Multiplatform', link: '/features/project-generation/cocoapods_multiplatform' },
-              { text: 'ProjectDescriptionHelpers', link: '/features/project-generation/project_description_helpers' }
-            ]
+            text: "ProjectDescription",
+            items: referencesSidebar
           },
-          {
-            text: 'Build Cache',
-            collapsed: true,
-            items: [
-              { text: 'Overview', link: '/features/cache/' },
-              { text: 'Setup', link: '/features/cache/cache_setup' },
-              { text: 'Usage', link: '/features/cache/cache_usage' },
-              { text: 'Debug', link: '/features/cache/cache_debug' },
-            ]
-          },
-          {
-            text: 'Plugins',
-            collapsed: true,
-            items: [
-              { text: 'Overview', link: '/features/plugins/' },
-              { text: 'ProjectDescriptionHelper', link: '/features/plugins/projectdescriptionhelpers_plugin' },
-              { text: 'Templates', link: '/features/plugins/templates_plugin' },
-              { text: 'WorkspaceMapper', link: '/features/plugins/workspacemapper_plugin' },
-              { text: 'Executable', link: '/features/plugins/executable_plugin' },
-              { text: 'Plugin usage', link: '/features/plugins/plugins_connection' },
-              { text: 'OfficialPlugins', items: [
-                { text: 'ImpactAnalysis', link: '/features/plugins/OfficialPlugins/ImpactAnalysis' }
-              ]}
-            ]
-          },
-          {
-            text: 'Linux',
-            collapsed: true,
-            items: [
-              { text: 'Overview', link: '/features/linux/' },
-            ]
-          },
-          {
-            text: 'Desktop App',
-            collapsed: true,
-            items: [
-              { text: 'Overview', link: '/features/desktop/' },
-              { text: 'Install', link: '/features/desktop/desktop_install' },
-              { text: 'Setup', link: '/features/desktop/desktop_setup' },
-              { text: 'Configuration', link: '/features/desktop/desktop_settings' },
-              { text: 'Shortcuts', link: '/features/desktop/desktop_shortcuts' },
-              { text: 'Features & Issues', link: '/features/desktop/desktop_other' },
-            ]
-          }
         ]
       },
-      {
-        text: 'Commands',
-        items: [
-          { text: 'Clean', link: '/commands/clean' },
-          { text: 'Inspect', link: '/commands/inspect' },
-        ]
-      }
-    ],
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/geko-tech/geko' }
-    ]
-  }
-})
+      socialLinks: [
+        { icon: 'github', link: 'https://github.com/geko-tech/geko' }
+      ]
+    }
+  };
+});

@@ -1,11 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
-import struct ProjectDescription.HeadersList
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoLoaderTesting
+import ProjectDescription
 
 @testable import GekoGenerator
 @testable import GekoSupport

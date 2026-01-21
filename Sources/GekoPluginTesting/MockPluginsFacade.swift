@@ -1,7 +1,6 @@
 import GekoGraph
 import GekoPlugin
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.PluginConfigManifest
+import ProjectDescription
 
 public final class MockPluginsFacade: PluginsFacading {
     public init() {}

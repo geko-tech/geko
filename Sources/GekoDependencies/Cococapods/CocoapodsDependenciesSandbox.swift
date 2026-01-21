@@ -1,7 +1,8 @@
 import Foundation
 import GekoGraph
+import ProjectDescription
 
 public struct CocoapodsDependenciesSandbox: Codable, Equatable {
-    public let dependencies: GekoGraph.CocoapodsDependencies
+    public let dependencies: CocoapodsDependencies
     public let lockfile: CocoapodsLockfile
 }

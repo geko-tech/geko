@@ -1,5 +1,6 @@
 import GekoCore
 import GekoGraph
+import ProjectDescription
 import XCTest
 @testable import GekoCache
 @testable import GekoCoreTesting
@@ -16,7 +17,7 @@ final class CacheGraphLinterTests: GekoUnitTestCase {
 
     func test_lint() {
         // Given
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
         let project = Project.test()
         let target = Target.test(scripts: [
             .init(name: "test", order: .post, script: .embedded("echo 'Hello World'")),
@@ -44,7 +45,7 @@ final class CacheGraphLinterTests: GekoUnitTestCase {
     
     func test_lint_with_allowed_scripts() {
         // Given
-        let profile = GekoGraph.Cache.Profile(
+        let profile = ProjectDescription.Cache.Profile(
             name: "Development",
             configuration: "Debug",
             platforms: [.iOS: .options(arch: .arm64)],

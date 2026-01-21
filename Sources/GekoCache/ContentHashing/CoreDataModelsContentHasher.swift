@@ -2,6 +2,7 @@ import AnyCodable
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public protocol CoreDataModelsContentHashing {
     func hash(coreDataModels: [CoreDataModel]) throws -> (String, [String: AnyCodable])

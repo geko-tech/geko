@@ -1,10 +1,10 @@
 #if os(macOS)
 
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoScaffold
 import GekoSupport
+import ProjectDescription
 import XCTest
 
 @testable import GekoKit

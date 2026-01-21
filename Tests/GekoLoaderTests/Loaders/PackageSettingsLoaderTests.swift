@@ -43,7 +43,7 @@ final class PackageSettingsLoaderTests: GekoUnitTestCase {
         let got = try subject.loadPackageSettings(at: temporaryPath, with: plugins)
 
         // Then
-        let expected: GekoGraph.PackageSettings = .init(
+        let expected: PackageSettings = .init(
             productTypes: [:],
             baseSettings: .init(configurations: [
                 .debug: .init(settings: [:], xcconfig: nil),

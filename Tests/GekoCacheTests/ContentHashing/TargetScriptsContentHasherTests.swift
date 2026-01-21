@@ -69,7 +69,7 @@ final class TargetScriptsContentHasherTests: GekoUnitTestCase {
             outputFileListPaths: [try AbsolutePath(validating: "/outputFileListPaths1")],
             dependencyFile: try AbsolutePath(validating: "/$(DERIVED_FILE_DIR)/file.d")
         )
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
 
         // When
         _ = try subject.hash(targetScripts: [targetScript], sourceRootPath: "/", cacheProfile: profile)
@@ -103,7 +103,7 @@ final class TargetScriptsContentHasherTests: GekoUnitTestCase {
         mockContentHasher.stubHashForPath[try AbsolutePath(validating: "/inputFileListPaths1")] = inputFileListPaths1
         mockContentHasher.stubHashForPath[try AbsolutePath(validating: "/dependencyFile1")] = dependencyFileHash
         let targetScript = makeTargetScript()
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
 
         // When
         _ = try subject.hash(targetScripts: [targetScript], sourceRootPath: "/", cacheProfile: profile)
@@ -134,7 +134,7 @@ final class TargetScriptsContentHasherTests: GekoUnitTestCase {
         mockContentHasher.stubHashForPath[try AbsolutePath(validating: "/dependencyFile1")] = dependencyFileHash
 
         let targetScript = makeTargetScript()
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
 
         // When
         _ = try subject.hash(targetScripts: [targetScript], sourceRootPath: "/", cacheProfile: profile)
@@ -163,7 +163,7 @@ final class TargetScriptsContentHasherTests: GekoUnitTestCase {
         mockContentHasher.stubHashForPath[try AbsolutePath(validating: "/inputPaths2")] = inputPaths2Hash
         mockContentHasher.stubHashForPath[try AbsolutePath(validating: "/inputFileListPaths2")] = inputFileListPaths2
         mockContentHasher.stubHashForPath[try AbsolutePath(validating: "/dependencyFilePath4")] = dependencyFileHash
-        let profile = GekoGraph.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
+        let profile = ProjectDescription.Cache.Profile(name: "Development", configuration: "Debug", platforms: [.iOS: .options(arch: .arm64)])
 
         let targetScript = makeTargetScript(
             name: "2",

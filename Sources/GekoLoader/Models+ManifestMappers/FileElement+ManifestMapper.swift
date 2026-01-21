@@ -1,11 +1,10 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.FileElement {
+extension FileElement {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         switch self {
         case let .glob(pattern: pattern):

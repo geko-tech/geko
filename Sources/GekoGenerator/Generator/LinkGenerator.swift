@@ -3,10 +3,8 @@ import PathKit
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 import XcodeProj
-
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 
 enum LinkGeneratorError: FatalError, Equatable {
     case missingProduct(name: String)

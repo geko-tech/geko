@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 @testable import GekoGraphTesting
 
 public final class MockGraphLoader: GraphLoading {

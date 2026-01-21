@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias RunActionOptions = ProjectDescription.RunActionOptions
-
 extension RunActionOptions.SimulatedLocation {
     /// A unique identifier string for the selected simulated location.
     ///

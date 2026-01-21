@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias BinaryArchitecture = ProjectDescription.BinaryArchitecture
-
 public enum BinaryLinking: String, Hashable, Codable {
     case `static`, dynamic
 }

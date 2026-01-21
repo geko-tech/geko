@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 private let frameworkSearchPaths = "FRAMEWORK_SEARCH_PATHS"
 private let librarySearchPaths = "LIBRARY_SEARCH_PATHS"

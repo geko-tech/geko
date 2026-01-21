@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoDependencies
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public final class TransitiveResourcesGraphMapper: GraphMapping {
     public init() {}

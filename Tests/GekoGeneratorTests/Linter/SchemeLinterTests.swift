@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XCTest
 @testable import GekoGenerator
 @testable import GekoSupportTesting
@@ -165,7 +165,7 @@ class SchemeLinterTests: GekoTestCase {
         // Given
         let project = Project.test(
             settings: Settings(configurations: [
-                BuildConfiguration.debug: Configuration(settings: .init(), xcconfig: nil),
+                BuildConfiguration.debug: ConfigurationSettings(settings: .init(), xcconfig: nil),
             ]),
             schemes: [
                 .init(
@@ -193,7 +193,7 @@ class SchemeLinterTests: GekoTestCase {
         // Given
         let project = Project.test(
             settings: Settings(configurations: [
-                BuildConfiguration.debug: Configuration(settings: .init(), xcconfig: nil),
+                BuildConfiguration.debug: ConfigurationSettings(settings: .init(), xcconfig: nil),
             ]),
             schemes: [
                 .init(

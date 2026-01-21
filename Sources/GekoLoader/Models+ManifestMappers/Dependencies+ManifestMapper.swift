@@ -1,12 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-import struct ProjectDescription.AbsolutePath
-
-extension GekoGraph.Dependencies {
+extension Dependencies {
     /// Maps a ProjectDescription.Dependencies instance into a GekoGraph.Dependencies instance.
     /// - Parameters:
     ///   - generatorPaths: Generator paths.

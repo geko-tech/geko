@@ -1,9 +1,9 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
 import XcodeProj
+import ProjectDescription
 
 /// A project mapper that generates derived entitlements files for targets that define it as a dictonary.
 public final class GenerateEntitlementsProjectMapper: ProjectMapping {

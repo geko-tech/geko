@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public protocol BuildGraphInspecting {
     /// Returns the build arguments to be used with the given target.
@@ -71,8 +71,8 @@ public final class BuildGraphInspector: BuildGraphInspecting {
         skipSigning: Bool
     ) -> [XcodeBuildArgument] {
         var arguments = [XcodeBuildArgument]()
-        
-        let configurations: [BuildConfiguration: Configuration?]
+
+        let configurations: [BuildConfiguration: ConfigurationSettings?]
         if let targetConfigurations = target.settings?.configurations, !targetConfigurations.isEmpty {
             configurations = targetConfigurations
         } else {

@@ -2,10 +2,6 @@ import Foundation
 import ProjectDescription
 import GekoSupport
 
-public typealias SettingsDictionary = ProjectDescription.SettingsDictionary
-
-public typealias SettingValue = ProjectDescription.SettingValue
-
 extension SettingValue {
     public func normalize() -> SettingValue {
         switch self {
@@ -98,27 +94,19 @@ extension SettingsDictionary {
     }
 }
 
-public typealias Configuration = ProjectDescription.ConfigurationSettings
-
-extension Configuration {
+extension ConfigurationSettings {
     // MARK: - Attributes
     /// Returns a copy of the configuration with the given settings set.
     /// - Parameter settings: SettingsDictionary to be set to the copy.
-    public func with(settings: SettingsDictionary) -> Configuration {
-        Configuration(
+    public func with(settings: SettingsDictionary) -> ConfigurationSettings {
+        ConfigurationSettings(
             settings: settings,
             xcconfig: xcconfig
         )
     }
 }
 
-// MARK: - DefaultSettings
-
-public typealias DefaultSettings = ProjectDescription.DefaultSettings
-
 // MARK: - Settings
-
-public typealias Settings = ProjectDescription.Settings
 
 extension Settings {
 
@@ -169,7 +157,7 @@ extension Settings {
 }
 
 extension [BuildConfiguration: ConfigurationSettings?] {
-    public func sortedByBuildConfigurationName() -> [(key: BuildConfiguration, value: Configuration?)] {
+    public func sortedByBuildConfigurationName() -> [(key: BuildConfiguration, value: ConfigurationSettings?)] {
         sorted(by: { first, second -> Bool in first.key < second.key })
     }
 

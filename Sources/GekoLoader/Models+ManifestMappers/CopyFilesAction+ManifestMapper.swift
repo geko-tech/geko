@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public enum CopyFilesManifestMapperError: FatalError {
     case invalidResourcesGlob(actionName: String, invalidGlobs: [InvalidGlob])
@@ -19,7 +18,7 @@ public enum CopyFilesManifestMapperError: FatalError {
     }
 }
 
-extension GekoGraph.CopyFilesAction {
+extension CopyFilesAction {
     /// - Parameters:
     ///   - isExternal: Indicates whether the project is imported through `Dependencies.swift`.
     mutating func resolvePaths(
@@ -42,7 +41,7 @@ extension GekoGraph.CopyFilesAction {
                     into: &self.files,
                     isExternal: isExternal,
                     checkFilesExist: checkFilesExist,
-                    includeFiles: { GekoGraph.Target.isResource(path: $0) }
+                    includeFiles: { Target.isResource(path: $0) }
                 )
             } catch let FileHandlerError.nonExistentGlobDirectory(pattern, path) {
                 invalidResourceGlobs.append(.init(pattern: pattern, nonExistentPath: path))
@@ -60,7 +59,7 @@ extension GekoGraph.CopyFilesAction {
 
 // MARK: - Array Extension FileElement
 
-extension [GekoGraph.FileElement] {
+extension [FileElement] {
     /// Packages should be added as a whole folder not individually.
     /// (e.g. bundled file formats recognized by the OS like .pages, .numbers, .rtfd...)
     ///

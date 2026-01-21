@@ -1,9 +1,7 @@
 import Foundation
 import GekoGraph
 import GekoSupport
-import struct ProjectDescription.WorkspaceWithProjects
-
-public typealias WorkspaceWithProjects = ProjectDescription.WorkspaceWithProjects
+import ProjectDescription
 
 public protocol WorkspaceMapping {
     func map(

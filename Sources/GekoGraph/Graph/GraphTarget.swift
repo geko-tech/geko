@@ -1,5 +1,5 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 public struct GraphTarget: Equatable, Hashable, Comparable, CustomDebugStringConvertible, CustomStringConvertible, Codable {
     /// Path to the directory that contains the project where the target is defined.

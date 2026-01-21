@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupportTesting
+import ProjectDescription
 import XCTest
 
 @testable import GekoCocoapods

@@ -1,10 +1,10 @@
 import Foundation
-import ProjectDescription
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.Settings {
+extension Settings {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         for key in configurations.keys {
             guard let settings = configurations[key], var settings = settings else { continue }

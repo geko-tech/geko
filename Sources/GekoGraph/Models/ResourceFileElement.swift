@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias ResourceFileElement = ProjectDescription.ResourceFileElement
-
 extension ResourceFileElement {
     public var path: AbsolutePath {
         switch self {
@@ -49,9 +47,9 @@ extension ResourceFileElement {
     }
 }
 
-extension [GekoGraph.ResourceFileElement] {
+extension [ResourceFileElement] {
     public mutating func remove(path: AbsolutePath) {
-        guard let index = firstIndex(of: GekoGraph.ResourceFileElement(path: path)) else { return }
+        guard let index = firstIndex(of: ResourceFileElement(path: path)) else { return }
         remove(at: index)
     }
 }

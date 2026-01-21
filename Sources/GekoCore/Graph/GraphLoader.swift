@@ -1,7 +1,6 @@
 import Foundation
 import GekoGraph
-
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 // MARK: - GraphLoading
 
@@ -16,8 +15,8 @@ public final class GraphLoader: GraphLoading {
     private let xcframeworkMetadataProvider: XCFrameworkMetadataProviding
     private let systemFrameworkMetadataProvider: SystemFrameworkMetadataProviding
 
-    private let frameworkDependencies: [AbsolutePath: [GekoGraph.TargetDependency]]
-    private let externalDependenciesGraph: GekoGraph.DependenciesGraph
+    private let frameworkDependencies: [AbsolutePath: [TargetDependency]]
+    private let externalDependenciesGraph: DependenciesGraph
 
     private var projectsToLoad: [AbsolutePath] = []
     private var seenProjects: Set<AbsolutePath> = []
@@ -26,8 +25,8 @@ public final class GraphLoader: GraphLoading {
     private var seenTargets: [AbsolutePath: Set<String>] = [:]
 
     public convenience init(
-        frameworkDependencies: [AbsolutePath: [GekoGraph.TargetDependency]] = [:],
-        externalDependenciesGraph: GekoGraph.DependenciesGraph = .none
+        frameworkDependencies: [AbsolutePath: [TargetDependency]] = [:],
+        externalDependenciesGraph: DependenciesGraph = .none
     ) {
         self.init(
             frameworkMetadataProvider: FrameworkMetadataProvider(),
@@ -44,7 +43,7 @@ public final class GraphLoader: GraphLoading {
         libraryMetadataProvider: LibraryMetadataProviding,
         xcframeworkMetadataProvider: XCFrameworkMetadataProviding,
         systemFrameworkMetadataProvider: SystemFrameworkMetadataProviding,
-        frameworkDependencies: [AbsolutePath: [GekoGraph.TargetDependency]] = [:],
+        frameworkDependencies: [AbsolutePath: [TargetDependency]] = [:],
         externalDependenciesGraph: GekoGraph.DependenciesGraph
     ) {
         self.frameworkMetadataProvider = frameworkMetadataProvider

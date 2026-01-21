@@ -3,6 +3,7 @@ import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
+import ProjectDescription
 @testable import GekoGenerator
 
 final class MockInfoPlistContentProvider: InfoPlistContentProviding {

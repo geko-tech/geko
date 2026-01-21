@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 struct XCFrameworkBuildData {
     let path: AbsolutePath
@@ -67,7 +67,7 @@ enum SwiftModuleBuilderError: FatalError, Equatable {
 public protocol SwiftModulesBuilding {
     func build(
         with graph: Graph,
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination,
         hashedXCFrameworks: [AbsolutePath: String],
         into outputDirectory: AbsolutePath
@@ -96,7 +96,7 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
 
     public func build(
         with graph: Graph,
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination,
         hashedXCFrameworks: [AbsolutePath: String],
         into outputDirectory: AbsolutePath
@@ -283,7 +283,7 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
         transitiveDependencies: Set<GraphDependency>,
         platform: Platform,
         graph: Graph,
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination
     ) throws -> XCFrameworkBuildData? {
         guard case let .xcframework(frameworkInfo) = dependency else {
@@ -403,7 +403,7 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
     }
 
     private func sdkPaths(
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination
     ) throws -> [Platform: SdkPath] {
         let sdkNames = profile.platforms.keys.reduce(into: [Platform: String]()) { acc, next in
@@ -421,7 +421,7 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
     }
 }
 
-extension GekoGraph.Platform {
+extension ProjectDescription.Platform {
     var xcframeworkPlatform: XCFrameworkInfoPlist.Library.Platform {
         switch self {
         case .iOS:

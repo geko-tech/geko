@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoGenerator
+import ProjectDescription
 import XCTest
 
 import GekoGraphTesting

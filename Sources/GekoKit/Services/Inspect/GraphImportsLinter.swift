@@ -2,8 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
+import ProjectDescription
 
 enum InspectType {
     case redundant

@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoSupport
 import XcodeProj
+import ProjectDescription
 
 /// Workspace Descriptor
 ///

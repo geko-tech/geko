@@ -1,22 +1,22 @@
 import Foundation
 import GekoSupport
 import GekoGraph
+import ProjectDescription
 
 public protocol CacheContextFolderProviding {
-    
     func contextFolderName() -> String
 }
 
 public final class CacheContextFolderProvider: CacheContextFolderProviding {
     // MARK: - Attributes
-    
-    private let profile: GekoGraph.Cache.Profile
+
+    private let profile: ProjectDescription.Cache.Profile
     private let developerEnvironment: DeveloperEnvironmenting
-    
+
     // MARK: - Initialization
-    
+
     public init(
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         developerEnvironment: DeveloperEnvironmenting = DeveloperEnvironment.shared
     ) {
         self.profile = profile

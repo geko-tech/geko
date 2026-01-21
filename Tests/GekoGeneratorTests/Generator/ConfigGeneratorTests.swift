@@ -1,10 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoGenerator
@@ -806,17 +806,17 @@ final class ConfigGeneratorTests: GekoUnitTestCase {
         try "".write(to: xcconfigsDir.appending(component: "release.xcconfig").url, atomically: true, encoding: .utf8)
 
         // CustomDebug, CustomRelease, Debug, Release
-        let configurations: [BuildConfiguration: Configuration?] = [
-            .debug: Configuration(
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
+            .debug: ConfigurationSettings(
                 settings: ["Debug": "Debug"],
                 xcconfig: xcconfigsDir.appending(component: "debug.xcconfig")
             ),
-            .debug("CustomDebug"): Configuration(settings: ["CustomDebug": "CustomDebug"], xcconfig: nil),
-            .release: Configuration(
+            .debug("CustomDebug"): ConfigurationSettings(settings: ["CustomDebug": "CustomDebug"], xcconfig: nil),
+            .release: ConfigurationSettings(
                 settings: ["Release": "Release"],
                 xcconfig: xcconfigsDir.appending(component: "release.xcconfig")
             ),
-            .release("CustomRelease"): Configuration(settings: ["CustomRelease": "CustomRelease"], xcconfig: nil),
+            .release("CustomRelease"): ConfigurationSettings(settings: ["CustomRelease": "CustomRelease"], xcconfig: nil),
         ]
         let project = Project.test(
             path: dir,
@@ -838,17 +838,17 @@ final class ConfigGeneratorTests: GekoUnitTestCase {
         try FileHandler.shared.createFolder(xcconfigsDir)
         try "".write(to: xcconfigsDir.appending(component: "debug.xcconfig").url, atomically: true, encoding: .utf8)
         try "".write(to: xcconfigsDir.appending(component: "release.xcconfig").url, atomically: true, encoding: .utf8)
-        let configurations: [BuildConfiguration: Configuration?] = [
-            .debug: Configuration(
+        let configurations: [BuildConfiguration: ConfigurationSettings?] = [
+            .debug: ConfigurationSettings(
                 settings: ["Debug": "Debug"],
                 xcconfig: xcconfigsDir.appending(component: "debug.xcconfig")
             ),
-            .debug("CustomDebug"): Configuration(settings: ["CustomDebug": "CustomDebug"], xcconfig: nil),
-            .release: Configuration(
+            .debug("CustomDebug"): ConfigurationSettings(settings: ["CustomDebug": "CustomDebug"], xcconfig: nil),
+            .release: ConfigurationSettings(
                 settings: ["Release": "Release"],
                 xcconfig: xcconfigsDir.appending(component: "release.xcconfig")
             ),
-            .release("CustomRelease"): Configuration(settings: ["CustomRelease": "CustomRelease"], xcconfig: nil),
+            .release("CustomRelease"): ConfigurationSettings(settings: ["CustomRelease": "CustomRelease"], xcconfig: nil),
         ]
         let target = Target.test(
             name: "Test",

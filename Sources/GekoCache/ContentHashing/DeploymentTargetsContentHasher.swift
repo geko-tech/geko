@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public protocol DeploymentTargetsContentHashing {
     func hash(deploymentTargets: DeploymentTargets) throws -> (hash: String, info: String)

@@ -808,7 +808,7 @@ final class GraphLinterTests: GekoUnitTestCase {
     func test_lint_missingProjectConfigurationsFromDependencyProjects() throws {
         // Given
         let path: AbsolutePath = "/project"
-        let customConfigurations: [BuildConfiguration: GekoGraph.Configuration?] = [
+        let customConfigurations: [BuildConfiguration: ConfigurationSettings?] = [
             .debug("Debug"): nil,
             .debug("Testing"): nil,
             .release("Beta"): nil,
@@ -872,7 +872,7 @@ final class GraphLinterTests: GekoUnitTestCase {
     func test_lint_mismatchingProjectConfigurationsFromDependencyProjects() throws {
         // Given
         let path: AbsolutePath = "/project"
-        let customConfigurations: [BuildConfiguration: GekoGraph.Configuration?] = [
+        let customConfigurations: [BuildConfiguration: ConfigurationSettings?] = [
             .debug("Debug"): nil,
             .debug("Testing"): nil,
             .release("Beta"): nil,
@@ -894,7 +894,7 @@ final class GraphLinterTests: GekoUnitTestCase {
             settings: Settings(configurations: customConfigurations)
         )
 
-        let mismatchingConfigurations: [BuildConfiguration: GekoGraph.Configuration?] = [
+        let mismatchingConfigurations: [BuildConfiguration: ConfigurationSettings?] = [
             .release("Debug"): nil,
             .release("Testing"): nil,
             .release("Beta"): nil,
@@ -950,7 +950,7 @@ final class GraphLinterTests: GekoUnitTestCase {
 
         // Given
         let path: AbsolutePath = "/project"
-        let customConfigurations: [BuildConfiguration: GekoGraph.Configuration?] = [
+        let customConfigurations: [BuildConfiguration: ConfigurationSettings?] = [
             .debug("Debug"): nil,
             .release("Beta"): nil,
             .release("Release"): nil,
@@ -971,7 +971,7 @@ final class GraphLinterTests: GekoUnitTestCase {
             settings: Settings(configurations: customConfigurations)
         )
 
-        let additionalConfigurations: [BuildConfiguration: GekoGraph.Configuration?] = [
+        let additionalConfigurations: [BuildConfiguration: ConfigurationSettings?] = [
             .debug("Debug"): nil,
             .debug("Testing"): nil,
             .release("Beta"): nil,

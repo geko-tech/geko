@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// Project mapper that sets additional compiler flags for coverage profile generation
 ///

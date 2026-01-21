@@ -1,8 +1,5 @@
 import Foundation
-
-import struct ProjectDescription.DeploymentTargets
-
-public typealias DeploymentTargets = ProjectDescription.DeploymentTargets
+import ProjectDescription
 
 // MARK: - DeploymentTargets
 

@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 public final class CacheGraphMutatingTask: CacheTask {
     public enum State {
@@ -70,8 +71,8 @@ public final class CacheGraphMutatingTask: CacheTask {
     }
     
     // MARK: - Private
-    
-    private func cacheMapper(cacheProfile: GekoGraph.Cache.Profile) -> GraphMapping {
+
+    private func cacheMapper(cacheProfile: ProjectDescription.Cache.Profile) -> GraphMapping {
         switch state {
         case .beforeWarmup:
             return CacheProjectDependenciesMapper(

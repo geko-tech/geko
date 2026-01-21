@@ -1,8 +1,6 @@
 import Foundation
 import GekoSupport
-import struct ProjectDescription.LintingIssue
-
-public typealias LintingIssue = ProjectDescription.LintingIssue
+import ProjectDescription
 
 public struct LintingError: FatalError, Equatable {
     public let description: String = "Fatal linting issues found"

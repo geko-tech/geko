@@ -1,5 +1,6 @@
 import Foundation
 import GekoGraph
+import ProjectDescription
 import XcodeProj
 
 protocol BuildRulesGenerating: AnyObject {

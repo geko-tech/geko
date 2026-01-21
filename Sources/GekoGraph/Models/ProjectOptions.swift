@@ -1,4 +1,5 @@
 import Foundation
+import ProjectDescription
 
 // MARK: - Array + ProjectOption
 

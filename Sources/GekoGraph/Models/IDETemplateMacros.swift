@@ -1,9 +1,7 @@
 import Foundation
 import ProjectDescription
 
-public typealias IDETemplateMacros = ProjectDescription.FileHeaderTemplate
-
-extension IDETemplateMacros {
+extension FileHeaderTemplate {
     public init(fileHeader: String) {
         self = .string(fileHeader)
     }

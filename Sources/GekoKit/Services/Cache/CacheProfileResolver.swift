@@ -1,6 +1,7 @@
 import Foundation
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 enum CacheProfileResolverError: FatalError, Equatable {
     case missingProfile(name: String, availableProfiles: [String])
@@ -24,7 +25,7 @@ struct CacheProfileResolver {
     func resolveCacheProfile(
         named profileName: String?,
         from config: Config
-    ) throws -> GekoGraph.Cache.Profile {
+    ) throws -> ProjectDescription.Cache.Profile {
         let profiles: [Cache.Profile]
         let fromConfig: Bool
         if let cacheConfig = config.cache,
@@ -34,7 +35,7 @@ struct CacheProfileResolver {
             profiles = cacheConfig.profiles
         } else {
             fromConfig = false
-            profiles = GekoGraph.Cache.default.profiles
+            profiles = ProjectDescription.Cache.default.profiles
         }
         if let name = profileName {
             guard let profile = profiles.first(where: { $0.name == name }) else {

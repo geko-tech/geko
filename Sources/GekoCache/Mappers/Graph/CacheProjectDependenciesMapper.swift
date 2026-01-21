@@ -1,19 +1,19 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// The mapper fills the aggregated target with dependencies that need to be build for the cache and create build scheme
 public final class CacheProjectDependenciesMapper: GraphMapping {
     // MARK: - Attributes
 
-    private let cacheProfile: GekoGraph.Cache.Profile
+    private let cacheProfile: ProjectDescription.Cache.Profile
 
     // MARK: - Initializtion
 
     public init(
-        cacheProfile: GekoGraph.Cache.Profile
+        cacheProfile: ProjectDescription.Cache.Profile
     ) {
         self.cacheProfile = cacheProfile
     }

@@ -19,7 +19,7 @@ public protocol TargetBuilding {
     ///   - graphTraverser: The Graph traverser.
     func buildTarget(
         _ target: GraphTarget,
-        platform: GekoGraph.Platform,
+        platform: ProjectDescription.Platform,
         workspacePath: AbsolutePath,
         scheme: Scheme,
         clean: Bool,
@@ -76,7 +76,7 @@ public final class TargetBuilder: TargetBuilding {
 
     public func buildTarget(
         _ target: GraphTarget,
-        platform: GekoGraph.Platform,
+        platform: ProjectDescription.Platform,
         workspacePath: AbsolutePath,
         scheme: Scheme,
         clean: Bool,
@@ -135,7 +135,7 @@ public final class TargetBuilder: TargetBuilding {
         to outputPath: AbsolutePath,
         projectPath: AbsolutePath,
         derivedDataPath: AbsolutePath?,
-        platform: GekoGraph.Platform,
+        platform: ProjectDescription.Platform,
         configuration: String
     ) throws {
         let xcodeSchemeBuildPath = try xcodeProjectBuildDirectoryLocator.locate(

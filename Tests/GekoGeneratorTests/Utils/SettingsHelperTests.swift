@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
+import ProjectDescription
 import XcodeProj
 import XCTest
 @testable import GekoGenerator

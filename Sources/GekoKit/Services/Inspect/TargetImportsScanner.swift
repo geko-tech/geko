@@ -1,7 +1,7 @@
 import Foundation
 import GekoSupport
 import GekoGraph
-import struct ProjectDescription.AbsolutePath
+import ProjectDescription
 
 protocol TargetImportsScanning {
     func imports(
@@ -29,7 +29,7 @@ final class TargetImportsScanner: TargetImportsScanning {
     // MARK: - TargetImportsScanning
 
     func imports(
-        for target: GekoGraph.Target,
+        for target: Target,
         sideEffects: [SideEffectDescriptor]
     ) async throws -> Set<String> {
         let sideEffectsFiles: Set<AbsolutePath> = Set(sideEffects.compactMap { sideEffect in

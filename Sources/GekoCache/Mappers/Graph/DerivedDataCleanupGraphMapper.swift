@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// Mapper automatically deletes previously cached modules in DerivedData in the Build and index.noindex folders when generating a project.
 ///
@@ -11,8 +11,8 @@ public final class DerivedDataCleanupGraphMapper: GraphMapping {
 
     // MARK: - Attributes
 
-    private let config: GekoGraph.Config
-    private let cacheProfile: GekoGraph.Cache.Profile
+    private let config: Config
+    private let cacheProfile: ProjectDescription.Cache.Profile
     private let destination: CacheFrameworkDestination
     private let hashesByCacheableTarget: [String: String]
     private let buildDirectoryLocator: XcodeProjectBuildDirectoryLocating
@@ -20,8 +20,8 @@ public final class DerivedDataCleanupGraphMapper: GraphMapping {
     // MARK: - Initialization
 
     public init(
-        config: GekoGraph.Config,
-        cacheProfile: GekoGraph.Cache.Profile,
+        config: Config,
+        cacheProfile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination,
         hashesByCacheableTarget: [String : String],
         buildDirectoryLocator: XcodeProjectBuildDirectoryLocating = XcodeProjectBuildDirectoryLocator()

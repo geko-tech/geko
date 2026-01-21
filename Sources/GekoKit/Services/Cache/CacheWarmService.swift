@@ -1,7 +1,6 @@
 import Foundation
 import GekoCache
 import GekoCloud
-import struct ProjectDescription.AbsolutePath
 import GekoAutomation
 import GekoCore
 import GekoGraph
@@ -9,6 +8,7 @@ import GekoLoader
 import GekoPlugin
 import GekoSupport
 import GekoGenerator
+import ProjectDescription
 
 final class CacheWarmService {
     // MARK: - Attributes
@@ -87,7 +87,7 @@ final class CacheWarmService {
     
     private func pipelineTasks(
         config: Config,
-        profile: GekoGraph.Cache.Profile,
+        profile: ProjectDescription.Cache.Profile,
         cacheOutputType: CacheOutputType,
         destination: CacheFrameworkDestination,
         ignoreRemoteCache: Bool,
@@ -180,7 +180,7 @@ final class CacheWarmService {
         return tasks
     }
     
-    private func cacheOutputType(profile: GekoGraph.Cache.Profile) -> CacheOutputType {
+    private func cacheOutputType(profile: ProjectDescription.Cache.Profile) -> CacheOutputType {
         // By default, if we have only 1 platform for cache,
         // we compile only frameworks since creating xcframework takes a significant amount of time on large projects.
         // If we need to compile cache for several platforms at once, we must compile xcframeworks

@@ -1,6 +1,6 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
+import ProjectDescription
 
 @testable import GekoCore
 
@@ -327,7 +327,7 @@ final class MockGraphTraverser: GraphTraversing {
         return stubbedAppExtensionDependenciesResult
     }
 
-    func resourceDependencies(path: AbsolutePath, name: String) -> Set<GekoGraph.ResourceFileElement> {
+    func resourceDependencies(path: AbsolutePath, name: String) -> Set<ResourceFileElement> {
         return []
     }
 
@@ -614,7 +614,7 @@ final class MockGraphTraverser: GraphTraversing {
         path: AbsolutePath, name: String
     ) -> [(
         GekoGraph.GraphTarget,
-        GekoGraph.PlatformCondition?
+        PlatformCondition?
     )] {
         invokedExtensionKitExtensionDependenciesWithConditions = true
         invokedExtensionKitExtensionDependenciesWithConditionsCount += 1

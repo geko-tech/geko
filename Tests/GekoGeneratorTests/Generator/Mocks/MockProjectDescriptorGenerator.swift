@@ -1,10 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
 import GekoSupport
+import ProjectDescription
 import XcodeProj
 @testable import GekoGenerator
 
@@ -16,7 +16,7 @@ final class MockProjectDescriptorGenerator: ProjectDescriptorGenerating {
     var generatedProjects: [Project] = []
     var generateStub: ((Project, GraphTraversing) throws -> ProjectDescriptor)?
 
-    func generate(project: GekoGraph.Project, graphTraverser: GekoCore.GraphTraversing, verbose: Bool) throws -> GekoGenerator.ProjectDescriptor {
+    func generate(project: Project, graphTraverser: GekoCore.GraphTraversing, verbose: Bool) throws -> GekoGenerator.ProjectDescriptor {
         guard let generateStub else {
             throw MockError.stubNotImplemented
         }

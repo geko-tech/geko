@@ -1,4 +1,5 @@
 import Foundation
+import ProjectDescription
 
 /// A type that represents a list of source files defined by a glob.
 public struct SourceFileGlob: Equatable {

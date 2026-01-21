@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// A target mapper that enforces explicit dependneices by adding custom build directories
 public struct ExplicitDependencyGraphMapper: GraphMapping {

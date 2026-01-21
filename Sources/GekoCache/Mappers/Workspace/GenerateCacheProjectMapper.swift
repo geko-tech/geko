@@ -1,17 +1,17 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public final class GenerateCacheProjectMapper: WorkspaceMapping {
     // MARK: - Attributes
 
-    private let cacheProfile: GekoGraph.Cache.Profile
+    private let cacheProfile: ProjectDescription.Cache.Profile
 
     // MARK: - Initialization
 
-    public init(cacheProfile: GekoGraph.Cache.Profile) {
+    public init(cacheProfile: ProjectDescription.Cache.Profile) {
         self.cacheProfile = cacheProfile
     }
 

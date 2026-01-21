@@ -1,8 +1,6 @@
 import Foundation
 import ProjectDescription
 
-public typealias CompatibleXcodeVersions = ProjectDescription.CompatibleXcodeVersions
-
 extension CompatibleXcodeVersions {
     public func isCompatible(versionString: String) -> Bool {
         let xCodeVersion: Version = "\(versionString)"

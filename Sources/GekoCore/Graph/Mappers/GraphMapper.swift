@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// A protocol that defines an interface to map dependency graphs.
 public protocol GraphMapping {

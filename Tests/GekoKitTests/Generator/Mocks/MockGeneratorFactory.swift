@@ -1,7 +1,7 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
+import ProjectDescription
 @testable import GekoKit
 
 final class MockGeneratorFactory: GeneratorFactorying {
@@ -69,9 +69,9 @@ final class MockGeneratorFactory: GeneratorFactorying {
     var invokedCache = false
     var invokedCacheCount = 0
     var invokedCacheParameters: (
-        config: GekoGraph.Config,
+        config: Config,
         focusedTargets: Set<String>,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusDirectDependencies: Bool,
         focusTests: Bool,
         unsafe: Bool,
@@ -80,9 +80,9 @@ final class MockGeneratorFactory: GeneratorFactorying {
     )?
     var invokedCacheParametersList =
         [(
-            config: GekoGraph.Config,
+            config: Config,
             focusedTargets: Set<String>,
-            cacheProfile: GekoGraph.Cache.Profile,
+            cacheProfile: ProjectDescription.Cache.Profile,
             focusDirectDependencies: Bool,
             focusTests: Bool,
             unsafe: Bool,
@@ -91,9 +91,9 @@ final class MockGeneratorFactory: GeneratorFactorying {
         )]()
     var stubbedCacheResult: Generating!
     func cache(
-        config: GekoGraph.Config,
+        config: Config,
         focusedTargets: Set<String>,
-        cacheProfile: GekoGraph.Cache.Profile,
+        cacheProfile: ProjectDescription.Cache.Profile,
         focusDirectDependencies: Bool,
         focusTests: Bool,
         unsafe: Bool,
@@ -128,14 +128,14 @@ final class MockGeneratorFactory: GeneratorFactorying {
     var invokedFocus = false
     var invokedFocusCount = 0
     var invokedFocusParameters: (
-        config: GekoGraph.Config,
+        config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
         scheme: String?
     )?
     var invokedFocusParametersList =
         [(
-            config: GekoGraph.Config,
+            config: Config,
             focusedTargets: Set<String>,
             focusTests: Bool,
             scheme: String?
@@ -143,7 +143,7 @@ final class MockGeneratorFactory: GeneratorFactorying {
     var stubbedFocusResult: Generating!
 
     func focus(
-        config: GekoGraph.Config,
+        config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
         scheme: String?

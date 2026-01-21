@@ -1,16 +1,16 @@
 import AnyCodable
 import ArgumentParser
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGenerator
 import GekoGraph
 import GekoLoader
 import GekoScaffold
 import GekoSupport
+import ProjectDescription
 
-private typealias Platform = GekoGraph.Platform
-private typealias Product = GekoGraph.Product
+private typealias Platform = ProjectDescription.Platform
+private typealias Product = ProjectDescription.Product
 
 public struct InitCommand: ParsableCommand, HasTrackableParameters {
     public static var configuration: CommandConfiguration {

@@ -1,11 +1,10 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
-extension GekoGraph.CocoapodsDependencies {
+extension CocoapodsDependencies {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         for i in 0 ..< dependencies.count {
             try dependencies[i].resolvePaths(generatorPaths: generatorPaths)
@@ -35,7 +34,7 @@ extension GekoGraph.CocoapodsDependencies {
     }
 }
 
-extension GekoGraph.CocoapodsDependencies.Dependency: Hashable {
+extension CocoapodsDependencies.Dependency: Hashable {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         switch self {
         case .cdn:

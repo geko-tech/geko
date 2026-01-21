@@ -1,9 +1,7 @@
 import Foundation
 import ProjectDescription
 
-public typealias Project = ProjectDescription.Project
-
-extension Project: CustomStringConvertible, CustomDebugStringConvertible {
+extension Project: @retroactive CustomStringConvertible, CustomDebugStringConvertible {
     /// Initializes the project with its attributes.
     ///
     /// - Parameters:
@@ -35,7 +33,7 @@ extension Project: CustomStringConvertible, CustomDebugStringConvertible {
         filesGroup: ProjectGroup,
         targets: [Target],
         schemes: [Scheme],
-        ideTemplateMacros: IDETemplateMacros?,
+        ideTemplateMacros: FileHeaderTemplate?,
         additionalFiles: [FileElement],
         lastUpgradeCheck: Version?,
         isExternal: Bool,

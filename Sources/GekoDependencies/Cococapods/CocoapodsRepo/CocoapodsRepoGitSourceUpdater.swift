@@ -1,10 +1,9 @@
 import Foundation
 import GekoCocoapods
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 final class CocoapodsRepoGitSourceUpdater {
     private let gitHandler: GitHandling

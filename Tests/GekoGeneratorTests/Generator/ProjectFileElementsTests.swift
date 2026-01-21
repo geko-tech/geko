@@ -3,11 +3,9 @@ import GekoCore
 import GekoCoreTesting
 import GekoGraph
 import GekoGraphTesting
+import ProjectDescription
 import XCTest
 import XcodeProj
-
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 
 @testable import GekoGenerator
 @testable import GekoSupportTesting
@@ -40,8 +38,8 @@ final class ProjectFileElementsTests: GekoUnitTestCase {
         let settings = Settings(
             base: [:],
             configurations: [
-                .debug: Configuration(xcconfig: try! AbsolutePath(validating: "/project/debug.xcconfig")),
-                .release: Configuration(xcconfig: try! AbsolutePath(validating: "/project/release.xcconfig")),
+                .debug: ConfigurationSettings(xcconfig: try! AbsolutePath(validating: "/project/debug.xcconfig")),
+                .release: ConfigurationSettings(xcconfig: try! AbsolutePath(validating: "/project/release.xcconfig")),
             ]
         )
 
@@ -399,11 +397,11 @@ final class ProjectFileElementsTests: GekoUnitTestCase {
         // Given
         let settings = Settings.test(
             base: [:],
-            debug: Configuration(
+            debug: ConfigurationSettings(
                 settings: ["Configuration": "A"],
                 xcconfig: try AbsolutePath(validating: "/project/debug.xcconfig")
             ),
-            release: Configuration(
+            release: ConfigurationSettings(
                 settings: ["Configuration": "B"],
                 xcconfig: try AbsolutePath(validating: "/project/release.xcconfig")
             )

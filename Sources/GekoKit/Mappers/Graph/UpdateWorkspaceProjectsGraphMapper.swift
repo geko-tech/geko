@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 /// A mapper that ensures that the list of projects of the workspace is in sync
 /// with the projects available in the graph.

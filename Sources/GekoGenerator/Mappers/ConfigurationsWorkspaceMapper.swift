@@ -26,7 +26,7 @@ public final class ConfigurationsWorkspaceMapper: WorkspaceMapping {
         return []
     }
 
-    private func updateProject(_ project: inout GekoGraph.Project, configurations expectedConfigurations: [BuildConfiguration]) {
+    private func updateProject(_ project: inout Project, configurations expectedConfigurations: [BuildConfiguration]) {
         let settings = project.settings
         let newSettings = Settings(
             base: settings.base,
@@ -40,7 +40,7 @@ public final class ConfigurationsWorkspaceMapper: WorkspaceMapping {
         }
     }
 
-    private func updateTarget(_ target: inout GekoGraph.Target, configurations expectedConfigurations: [BuildConfiguration]) {
+    private func updateTarget(_ target: inout Target, configurations expectedConfigurations: [BuildConfiguration]) {
         let settings = target.settings ?? .default
         let newSettings = Settings(
             base: settings.base,

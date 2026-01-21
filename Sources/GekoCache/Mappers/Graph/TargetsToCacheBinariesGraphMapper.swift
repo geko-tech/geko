@@ -1,8 +1,8 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public final class TargetsToCacheBinariesGraphMapper: GraphMapping {
     // MARK: - Attributes

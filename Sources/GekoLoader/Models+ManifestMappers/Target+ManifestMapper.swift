@@ -1,9 +1,8 @@
 import Foundation
-import ProjectDescription
-import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import ProjectDescription
 
 public enum TargetManifestMapperError: FatalError {
     case invalidResourcesGlob(targetName: String, invalidGlobs: [InvalidGlob])
@@ -19,7 +18,7 @@ public enum TargetManifestMapperError: FatalError {
 }
 
 // swiftlint:disable function_body_length
-extension GekoGraph.Target {
+extension Target {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         for i in 0 ..< self.dependencies.count {
             try self.dependencies[i].resolvePaths(generatorPaths: generatorPaths)

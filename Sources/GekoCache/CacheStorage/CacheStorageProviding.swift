@@ -2,6 +2,7 @@ import Foundation
 import GekoCloud
 import GekoCore
 import GekoGraph
+import ProjectDescription
 
 /// It defines the interface to get the storages that should be used given a config.
 public protocol CacheStorageProviding: AnyObject {
