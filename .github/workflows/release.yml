@@ -11,7 +11,6 @@ on:
           - major
           - minor
           - patch
-          - none
 
 jobs:
   build_for_all_platforms:
@@ -19,25 +18,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macOS, Linux]
-    runs-on: [self-hosted, "${{ matrix.os }}"]
+        os: [macos-26, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     env:
-      GH_PAT: ${{ secrets.GH_PAT }}
       COMMIT_SHA: ${{ github.sha }}
       GEKO_LINUX_AUTOUPDATE_SOURCE: ${{ vars.GEKO_LINUX_AUTOUPDATE_SOURCE }}
       GEKO_MACOS_AUTOUPDATE_SOURCE: ${{ vars.GEKO_MACOS_AUTOUPDATE_SOURCE }}
       BUMP_TYPE: ${{ github.event.inputs.bump_type }}
     steps:
       - uses: actions/checkout@v6.0.1
-        with:
-          persist-credentials: false
 
       - name: Build
         id: build
         run: |
-          git config --global credential.helper '!f() { echo "username=${GH_USER}"; echo "password=${GH_PAT}"; }; f'
           export CI_COMMIT_SHORT_SHA=${COMMIT_SHA:0:8}
           scripts/linux/build.sh -n Geko -b ${BUMP_TYPE:-"minor"}
           echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
@@ -63,12 +58,11 @@ jobs:
   draft_release:
     name: Make GitHub Release
     needs: build_for_all_platforms
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     env:
-      GH_RELEASE_PAT: ${{ secrets.GH_RELEASE_PAT }}
-      GH_AUTOMATION_PAT: ${{ secrets.GH_AUTOMATION_PAT }}
       TAG: ${{ needs.build_for_all_platforms.outputs.tag }}
       COMMIT_SHA: ${{ github.sha }}
       BUMP_TYPE: ${{ github.event.inputs.bump_type }}
@@ -81,31 +75,13 @@ jobs:
           path: build_artifacts
           merge-multiple: true
 
-      - name: Install Github CLI
-        run: |
-          if [[ "$(uname)" == "Darwin" ]]; then
-            brew install gh
-          else
-            (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
-              && sudo mkdir -p -m 755 /etc/apt/keyrings \
-              && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-              && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-              && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-              && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
-              && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-              && sudo apt update \
-              && sudo apt install gh -y
-          fi
-
       - name: Create draft release
         run: |
-          export GH_TOKEN=$GH_RELEASE_PAT
+          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh release create $TAG -d --generate-notes --target $COMMIT_SHA build_artifacts/*
 
       - name: Bump version
         run: |
-          git config --local user.email "kinipa1997@gmail.com"
-          git config --local user.name nikislyak
           NEW_VERSION=$(scripts/linux/new_version_number.sh -n Geko -b $BUMP_TYPE)
           branch="automation/bump_version_geko"
           git branch -D $branch || true
@@ -116,6 +92,6 @@ jobs:
               exit 0
           fi
           git push -u origin "$branch"
-          export GH_TOKEN=$GH_AUTOMATION_PAT
+          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh pr create --fill
           # gh pr merge --auto --merge --delete-branch || echo "Automerge is disabled in private repos, manual merge needed"

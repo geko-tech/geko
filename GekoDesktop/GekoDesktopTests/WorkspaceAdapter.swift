@@ -19,7 +19,7 @@ final class WorkspaceAdapter {
         return workspace
     }
     
-    private func map(project: GekoGraph.Project, graph: Graph) throws -> GekoDesktop.GraphProject {
+    private func map(project: ProjectDescription.Project, graph: Graph) throws -> GekoDesktop.GraphProject {
         let graphProject = GekoDesktop.GraphProject(
             name: project.name,
             path: try AbsolutePath(validating: project.path.pathString),
@@ -30,7 +30,7 @@ final class WorkspaceAdapter {
         return graphProject
     }
     
-    private func map(target: GekoGraph.Target, project: GekoGraph.Project, graph: Graph) -> GekoDesktop.GraphTarget {
+    private func map(target: ProjectDescription.Target, project: ProjectDescription.Project, graph: Graph) -> GekoDesktop.GraphTarget {
         let graphTarget = GekoDesktop.GraphTarget(
             name: target.name,
             product: map(product: target.product),
@@ -121,7 +121,7 @@ private extension WorkspaceAdapter {
         }
     }
     
-    func map(status: GekoGraph.LinkingStatus) -> GekoDesktop.LinkingStatus {
+    func map(status: ProjectDescription.LinkingStatus) -> GekoDesktop.LinkingStatus {
         switch status {
         case .required:
             return .required
@@ -132,7 +132,7 @@ private extension WorkspaceAdapter {
         }
     }
     
-    func map(scheme: GekoGraph.Scheme) -> GekoDesktop.GraphScheme {
+    func map(scheme: ProjectDescription.Scheme) -> GekoDesktop.GraphScheme {
         // ignore buildAction
         GekoDesktop.GraphScheme(name: scheme.name, buildAction: nil)
     }

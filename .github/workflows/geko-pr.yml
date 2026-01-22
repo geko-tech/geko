@@ -13,7 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.1
         with:
-          persist-credentials: false
           ref: ${{ github.head_ref }}
           fetch-depth: 0
       - uses: ./.github/actions/xcode-select
@@ -41,9 +40,9 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v6.0.1
-        with:
-          persist-credentials: false
+
       - uses: ./.github/actions/xcode-select
+
       - uses: actions/cache@v4
         with:
           path: .build
@@ -62,13 +61,11 @@ jobs:
       GH_USER: ${{ secrets.GH_USER }}
     steps:
       - uses: actions/checkout@v6.0.1
-        with:
-          persist-credentials: false
+
       - uses: ./.github/actions/show-swift-version
 
       - name: build_and_test
         run: |
-          git config --global credential.helper '!f() { echo "username=${GH_USER}"; echo "password=${GH_PAT}"; }; f'
           swift test \
             --filter GekoAcceptanceTests \
             --filter GekoSupportTests \
@@ -80,3 +77,28 @@ jobs:
             --filter GekoKitTests \
             --filter ProjectDescriptionTests \
             --filter PubGrubTests \
+
+  build_and_test_gekodesktop:
+    name: Build and Test GekoDesktop
+    runs-on: macos-26
+    env:
+      OUTPUT_DIR: "GekoDesktop/test_output"
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Build Release Binary
+        run: |
+          (cd GekoDesktop && xcodegen generate)
+          fastlane scan \
+            --project "GekoDesktop/GekoDesktop.xcodeproj" \
+            --destination "platform=macOS" \
+            --scheme GekoDesktop \
+            --output_directory "$OUTPUT_DIR" \
+            --skip_slack true \
+            --buildlog_path "$OUTPUT_DIR" \
+            --result_bundle true \
+            --xcargs "-skipPackagePluginValidation" \
+            --xcodebuild_formatter xcbeautify

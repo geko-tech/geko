@@ -15,9 +15,9 @@ enum Constants {
     static let targetsPath = "xcodegen/generated/"
     static let targetModificationsPath = "xcodegen/modification/modifications.yml"
     static let issuesURL = "https://github.com/geko-tech/geko/issues/new"
-    // TODO: Github add urls after setup
-    static let mbdesktopDocUrl = ""
-    static let gekoDocUrl = ""
+
+    static let gekoDesktopDocUrl = "https://geko-tech.github.io/geko/guides/features/desktop/"
+    static let gekoDocUrl = "https://geko-tech.github.io/geko"
     static let gitLogsPath = ".git/logs/HEAD"
 
     static let developerModeEnabled = true
@@ -33,14 +33,13 @@ enum Constants {
     static let gekoTitle = "GekoDesktop"
 
     // TODO: Github fix commands and urls after setup releases
-    static let versionCommand = ""
-    static let versionCommand2 = ""
-    static let s3Storage = ""
-    
+    static let versionCommand = ##"git ls-remote --tags --sort=v:refname https://github.com/geko-tech/geko.git | grep 'GekoDesktop@[0-9\.]*$' | tail -1 | sed -ne 's|.*GekoDesktop@\(.*\)|\1|p'"##
+    static let versionCommand2 = ##"git ls-remote --tags --sort=v:refname https://github.com/geko-tech/geko.git | grep 'GekoDesktop@[0-9\.]*$' | sed -ne 's/.*GekoDesktop@\(.*\)/\1/p'"##
+
     static let gekoDirectoryName: String = "Geko"
     static let projectProfilesFileName = "project_profiles.yml"
     static let gekoVersionFile = ".geko-version"
-    
+
     // MARK: - Payload
     static let commandPayload: String = "command"
     static let runShortcutPayload: String = "runShortcutId"

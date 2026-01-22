@@ -19,8 +19,7 @@ packages:
 settings:
   configs:
     Debug:
-      # TODO: Github fix code sign
-      PRODUCT_BUNDLE_IDENTIFIER: ""
+      PRODUCT_BUNDLE_IDENTIFIER: io.geko.gekodesktop
       ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
       MACOSX_DEPLOYMENT_TARGET: 14.0
       ENABLE_USER_SCRIPT_SANDBOXING: YES
@@ -30,11 +29,10 @@ settings:
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
     Release:
-      CODE_SIGN_STYLE: "Manual"
-      DEVELOPMENT_TEAM: ""
-      CODE_SIGN_IDENTITY: "Developer ID Application"
-      PROVISIONING_PROFILE_SPECIFIER: ""
-      PRODUCT_BUNDLE_IDENTIFIER: ""
+      CODE_SIGN_IDENTITY: ""
+      CODE_SIGNING_REQUIRED: NO
+      CODE_SIGNING_ALLOWED: NO
+      PRODUCT_BUNDLE_IDENTIFIER: io.geko.gekodesktop
       ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
       MACOSX_DEPLOYMENT_TARGET: 14.0
       ENABLE_USER_SCRIPT_SANDBOXING: YES
@@ -53,7 +51,7 @@ schemes:
       config: Debug
     test:
       config: Debug
-      targets: 
+      targets:
         - GekoDesktopTests
     profile:
       config: Release
@@ -68,7 +66,7 @@ targets:
     type: application
     platform: macOS
     deploymentTarget: 14.0
-    dependencies: 
+    dependencies:
       - package: SwiftShell
       - package: Yams
       - package: geko
@@ -92,6 +90,5 @@ targets:
     sources:
       - GekoDesktopTests
     settings:
-    # TODO: Github fix me
-      PRODUCT_BUNDLE_IDENTIFIER: 
+      PRODUCT_BUNDLE_IDENTIFIER: io.geko.gekodesktop-tests
       TEST_HOST: $(BUILT_PRODUCTS_DIR)/GekoDesktop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GekoDesktop

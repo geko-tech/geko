@@ -4,9 +4,9 @@ enum WelcomeItem: Identifiable {
     case selectProject
     case setupEnvironment
     case generateProject
-    case mbdesktopDocumentation
+    case gekoDesktopDocumentation
     case gekoDocumentation
-    
+
     var title: String {
         switch self {
         case .selectProject:
@@ -15,7 +15,7 @@ enum WelcomeItem: Identifiable {
             "Check Environment"
         case .generateProject:
             "Generate Project"
-        case .mbdesktopDocumentation:
+        case .gekoDesktopDocumentation:
             "\(Constants.gekoTitle) Documentation"
         case .gekoDocumentation:
             "Geko Documentation"
@@ -30,7 +30,7 @@ enum WelcomeItem: Identifiable {
             "Go to Setup Environment and fix dependencies"
         case .generateProject:
             "Setup project settings"
-        case .mbdesktopDocumentation:
+        case .gekoDesktopDocumentation:
             nil
         case .gekoDocumentation:
             nil
@@ -45,7 +45,7 @@ enum WelcomeItem: Identifiable {
             "Go"
         case .generateProject:
             "Go"
-        case .mbdesktopDocumentation:
+        case .gekoDesktopDocumentation:
             "Check"
         case .gekoDocumentation:
             "Check"

@@ -4,14 +4,14 @@ import TSCBasic
 
 enum WrongURLError: FatalError {
     case wrongURL(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .wrongURL(let string):
             "Invalid url: \(string)"
         }
     }
-    
+
     var type: FatalErrorType {
         .abort
     }
@@ -24,15 +24,15 @@ protocol IWelcomePresenter {
 
 final class WelcomePresenter: IWelcomePresenter {
     // MARK: - Attributes
-    
+
     weak var view: IWelcomeViewStateInput? = nil
-    
+
     private let applicationStateHolder: IApplicationStateHolder
     private let projectPathProvider: IProjectPathProvider
     private let applicationStateHandler: IApplicationStateHandler
     private let projectSetupAnalytics: IProjectSetupAnalytics
     private let applicationErrorHandler: IApplicationErrorHandler
-    
+
     init(
         applicationStateHolder: IApplicationStateHolder,
         projectPathProvider: IProjectPathProvider,
@@ -45,14 +45,14 @@ final class WelcomePresenter: IWelcomePresenter {
         self.applicationStateHandler = applicationStateHandler
         self.projectSetupAnalytics = projectSetupAnalytics
         self.applicationErrorHandler = applicationErrorHandler
-        
+
         applicationStateHolder.addSubscription(self)
     }
-    
+
     func prepareItems() {
         updateItems(applicationStateHolder.executionState)
     }
-    
+
     func itemTapped(_ item: WelcomeItem) {
         switch item {
         case .selectProject:
@@ -61,8 +61,8 @@ final class WelcomePresenter: IWelcomePresenter {
             changeSelectedSideBar(.config)
         case .generateProject:
             changeSelectedSideBar(.projectGeneration)
-        case .mbdesktopDocumentation:
-            tryOpen(Constants.mbdesktopDocUrl)
+        case .gekoDesktopDocumentation:
+            tryOpen(Constants.gekoDesktopDocUrl)
 
         case .gekoDocumentation:
             tryOpen(Constants.gekoDocUrl)
@@ -77,7 +77,7 @@ extension WelcomePresenter: IApplicationStateHolderDelegate {
         updateItems(state)
         updateLoadingState(state)
     }
-    
+
     func didChangeSideBarItem(_ value: SideBarItem, payload: [String: String]?) {}
 }
 
@@ -85,16 +85,16 @@ private extension WelcomePresenter {
     func updateItems(_ state: AppState) {
         switch state {
         case .empty:
-            view?.didUpdateItems([.mbdesktopDocumentation, .gekoDocumentation])
+            view?.didUpdateItems([.gekoDesktopDocumentation, .gekoDocumentation])
         case .prepare, .appOutdated:
             break
         case .wrongEnvironment:
-            view?.didUpdateItems([.mbdesktopDocumentation, .gekoDocumentation])
+            view?.didUpdateItems([.gekoDesktopDocumentation, .gekoDocumentation])
         case .idle, .executing:
-            view?.didUpdateItems([.mbdesktopDocumentation, .gekoDocumentation])
+            view?.didUpdateItems([.gekoDesktopDocumentation, .gekoDocumentation])
         }
     }
-    
+
     func updateLoadingState(_ state: AppState) {
         switch state {
         case .empty, .wrongEnvironment, .idle, .executing, .appOutdated:
@@ -103,7 +103,7 @@ private extension WelcomePresenter {
             view?.updateLoadingState(true)
         }
     }
-    
+
     func selectProject() {
         Task {
             do {
@@ -123,18 +123,18 @@ private extension WelcomePresenter {
             await applicationErrorHandler.handle(error)
         }
     }
-    
+
     func changeSelectedSideBar(_ command: SideBarItem) {
         Task {
             await applicationStateHolder.changeSelectedSideBar(command)
         }
     }
-    
+
     func tryOpen(_ stringUrl: String) {
         if let url = URL(string: stringUrl) {
             NSWorkspace.shared.open(url)
         } else {
-            handle(WrongURLError.wrongURL(Constants.mbdesktopDocUrl))
+            handle(WrongURLError.wrongURL(Constants.gekoDesktopDocUrl))
         }
     }
 }

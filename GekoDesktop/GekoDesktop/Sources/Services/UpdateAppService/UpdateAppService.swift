@@ -21,7 +21,7 @@ enum UpdateAppError: FatalError {
     case unzipError(error: Error)
     case noBundleForNameError(name: String)
     case executableFileNotFound(bundlePath: String)
-    
+
     var errorDescription: String? {
         switch self {
         case .createDirError(let error):
@@ -38,7 +38,7 @@ enum UpdateAppError: FatalError {
             "Exutable file not found \(bundlePath)"
         }
     }
-    
+
     var type: FatalErrorType {
         .abort
     }
@@ -47,7 +47,7 @@ enum UpdateAppError: FatalError {
 enum CompareVersionError: FatalError {
     case noAvailableVersion(Version)
     case invalidVersion(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .noAvailableVersion(let version):
@@ -56,7 +56,7 @@ enum CompareVersionError: FatalError {
             "Version \(version) invalid"
         }
     }
-    
+
     var type: FatalErrorType {
         .abort
     }
@@ -64,13 +64,13 @@ enum CompareVersionError: FatalError {
 
 final class UpdateAppService: IUpdateAppService {
     // MARK: - Attributes
-    
+
     private let sessionService: ISessionService
     private var projectPathProvider: IProjectPathProvider
     private let projectsProvider: IProjectsProvider
-    
+
     // MARK: - Initialization
-    
+
     init(
         sessionService: ISessionService,
         projectPathProvider: IProjectPathProvider,
@@ -80,11 +80,11 @@ final class UpdateAppService: IUpdateAppService {
         self.projectPathProvider = projectPathProvider
         self.projectsProvider = projectsProvider
     }
-    
+
     func needUpdate() throws -> NeedUpdateStatus {
         guard let path = projectsProvider.selectedProject()?.clearPath() else {
             throw GlobalError.projectNotSelected
-        } 
+        }
         let gekoVersionFilePath = path
             .appending(component: Constants.gekoVersionFile)
         if FileManager.default.fileExists(atPath: gekoVersionFilePath.pathString) {
@@ -100,7 +100,7 @@ final class UpdateAppService: IUpdateAppService {
             return try compareVersion(globalVersion)
         }
     }
-    
+
     private func parseVersion(_ string: String) throws -> Version {
         if string.hasPrefix("geko_stage") {
             var version = string.replacingOccurrences(of: "geko_stage/geko_", with: "").split(separator: "-").first ?? ""
@@ -117,16 +117,17 @@ final class UpdateAppService: IUpdateAppService {
             }
         }
     }
-    
+
     private func compareVersion(_ projectVersion: Version) throws -> NeedUpdateStatus {
         guard let appVersion = Version(string: Constants.appVersion) else {
             throw CompareVersionError.invalidVersion(Constants.appVersion)
         }
-        /// backward compatibility
-        if projectVersion.major == 0, projectVersion.minor < 29 {
+
+        if projectVersion.major == appVersion.major, projectVersion.major > 0 {
             return .updateNotRequired
         }
-        guard projectVersion.major != appVersion.major || projectVersion.minor != appVersion.minor else {
+
+        guard projectVersion.major != appVersion.major || projectVersion.major == appVersion.major && projectVersion.major == 0 else {
             return .updateNotRequired
         }
         guard let lastAvailableVersion = try latestAvailableVersion(for: projectVersion) else {
@@ -134,7 +135,7 @@ final class UpdateAppService: IUpdateAppService {
         }
         return .updateRequired(lastAvailableVersion)
     }
-    
+
     private func latestAvailableVersion(for version: Version) throws -> Version? {
         let allVersions = try allVersions().compactMap { Version(string: $0) }
         return allVersions
@@ -143,9 +144,9 @@ final class UpdateAppService: IUpdateAppService {
             .sorted(by: { $0.patch > $1.patch })
             .first
     }
-    
+
     // MARK: - Shell
-    
+
     func lastAvailableVersion() throws -> String {
         switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand])) {
         case .collected(let data):
@@ -158,7 +159,7 @@ final class UpdateAppService: IUpdateAppService {
             throw ResponseTypeError.wrongType
         }
     }
-    
+
     func allVersions() throws -> [String] {
         switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand2])) {
         case .collected(let data):
@@ -171,7 +172,7 @@ final class UpdateAppService: IUpdateAppService {
             throw ResponseTypeError.wrongType
         }
     }
-    
+
     func updateApp(version: String) throws {
         let tmpdir: URL
         do {
@@ -182,34 +183,43 @@ final class UpdateAppService: IUpdateAppService {
 
         try download(for: version, path: tmpdir.path())
         try unzip(for: version, path: tmpdir.path())
-        
+
         guard let downloadedAppBundle = Bundle(url: tmpdir.appendingPathComponent("GekoDesktop.app")) else {
             throw UpdateAppError.noBundleForNameError(name: "GekoDesktop.app")
         }
-        
+
         let installedAppBundle = Bundle.main
-        
+
         let installed = AbsolutePath(url: installedAppBundle.bundleURL)
         let downloaded = AbsolutePath(url: downloadedAppBundle.bundleURL)
-        
+
         try FileManager.default.removeItem(at: installed.asURL)
         try FileManager.default.moveItem(at: downloaded.asURL, to: installed.asURL)
         try FileManager.default.removeItem(at: tmpdir)
-        
+
         guard let executable = installedAppBundle.executableURL else {
             throw UpdateAppError.noBundleForNameError(name: installedAppBundle.bundlePath)
         }
         let proc = Process()
         proc.executableURL = executable
         proc.launch()
-        
+
         NSRunningApplication.current.forceTerminate()
     }
-    
+
     private func download(for version: String, path: String) throws {
+        let url = Bundle.main.url(forResource: "source", withExtension: "json")!
+        let json = try JSON(string: String(contentsOf: url, encoding: .utf8))
+
+        guard case let .dictionary(dict) = json,
+              case var .string(downloadUrl) = dict["utilityUrl"]
+        else { throw UpdateAppError.s3DownloadError(error: URLError(.badURL), version: version) }
+
+        downloadUrl = downloadUrl.replacingOccurrences(of: "{version}", with: version)
+
         var commands: [String] = []
         commands.append("cd \(path)")
-        commands.append("curl -o \(path)GekoDesktop.app_\(version).zip \(Constants.s3Storage)GekoDesktop.app_\(version).zip")
+        commands.append("curl -L -o \(path)GekoDesktop.app_\(version).zip \(downloadUrl)")
 
         do {
             try sessionService.exec(ShellCommand(arguments: [commands.joined(separator: " && ")]))
@@ -217,7 +227,7 @@ final class UpdateAppService: IUpdateAppService {
             throw UpdateAppError.s3DownloadError(error: error, version: version)
         }
     }
-    
+
     private func unzip(for version: String, path: String) throws {
         var commands: [String] = []
         commands.append("cd \(path)")
