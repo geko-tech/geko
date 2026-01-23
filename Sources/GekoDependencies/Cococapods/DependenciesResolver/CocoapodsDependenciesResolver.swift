@@ -341,10 +341,18 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
                 case let .cdn(name, requirement, _), let .gitRepo(name, requirement, _):
                     switch requirement {
                     case let .exact(version):
-                        let version = CocoapodsVersion(from: version)
+                        guard let version = CocoapodsVersion.parse(from: version) else {
+                            throw CocoapodsVersionError.invalidVersion(
+                                version, specName: name, context: "while loading Dependencies.swift"
+                            )
+                        }
                         constraints[name] = .exact(version: version)
                     case let .atLeast(version):
-                        let minVersion = CocoapodsVersion(from: version)
+                        guard let minVersion = CocoapodsVersion.parse(from: version) else {
+                            throw CocoapodsVersionError.invalidVersion(
+                                version, specName: name, context: "while loading Dependencies.swift"
+                            )
+                        }
                         if minVersion.isPreRelease {
                             constraints[name] = .init(
                                 release: .higherThan(version: minVersion.asReleaseVersion()),
@@ -357,7 +365,11 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
                             )
                         }
                     case let .upToNextMinor(version):
-                        let version = CocoapodsVersion(from: version)
+                        guard let version = CocoapodsVersion.parse(from: version) else {
+                            throw CocoapodsVersionError.invalidVersion(
+                                version, specName: name, context: "while loading Dependencies.swift"
+                            )
+                        }
                         let minVersion = version.asReleaseVersion()
                         let maxVersion = minVersion.bumpMinor()
                         constraints[name] = .init(
@@ -365,7 +377,11 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
                             preRelease: version.isPreRelease ? .exact(version: version) : .none()
                         )
                     case let .upToNextMajor(version):
-                        let version = CocoapodsVersion(from: version)
+                        guard let version = CocoapodsVersion.parse(from: version) else {
+                            throw CocoapodsVersionError.invalidVersion(
+                                version, specName: name, context: "while loading Dependencies.swift"
+                            )
+                        }
                         let minVersion = version.asReleaseVersion()
                         let maxVersion = minVersion.bumpMajor()
                         constraints[name] = .init(

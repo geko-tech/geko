@@ -148,7 +148,9 @@ extension CocoapodsVersionRange {
         switch components.count {
         case 1:
             // exact version
-            let exactVersion = CocoapodsVersion(from: components[0])
+            guard let exactVersion = CocoapodsVersion.parse(from: components[0]) else {
+                throw CocoapodsVersionRangeError.invalidVersionRangeString(string)
+            }
             return (.exact, exactVersion, nil)
         case 2:
             let clearVersion = components[1].split(separator: "-")[0]

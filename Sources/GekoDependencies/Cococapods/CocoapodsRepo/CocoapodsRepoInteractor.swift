@@ -78,7 +78,30 @@ final class CocoapodsRepoInteractor {
             return Array(result)
         }
 
-        return result.filter { $0.satisfies(requirement) }
+        switch requirement {
+        case let .exact(req):
+            guard let exactVersion = CocoapodsVersion.parse(from: req) else {
+                throw CocoapodsVersionError.invalidVersion(req, specName: name)
+            }
+            return result.filter { $0 == exactVersion }
+        case let .atLeast(req):
+            guard let minVersion = CocoapodsVersion.parse(from: req) else {
+                throw CocoapodsVersionError.invalidVersion(req, specName: name)
+            }
+            return result.filter { $0 >= minVersion }
+        case let .upToNextMajor(req):
+            guard let minVersion = CocoapodsVersion.parse(from: req) else {
+                throw CocoapodsVersionError.invalidVersion(req, specName: name)
+            }
+            let maxVersion = minVersion.bumpMajor()
+            return result.filter { $0 >= minVersion && $0 < maxVersion }
+        case let .upToNextMinor(req):
+            guard let minVersion = CocoapodsVersion.parse(from: req) else {
+                throw CocoapodsVersionError.invalidVersion(req, specName: name)
+            }
+            let maxVersion = minVersion.bumpMinor()
+            return result.filter { $0 >= minVersion && $0 < maxVersion }
+        }
     }
 
     func dependencies(
@@ -127,26 +150,5 @@ final class CocoapodsRepoInteractor {
         let spec = try await repo.spec(dependency: specName, version: version)
 
         return (spec, sourceFactory(resolvedSource))
-    }
-}
-
-extension CocoapodsVersion {
-    fileprivate func satisfies(_ requirement: CocoapodsDependencies.Requirement) -> Bool {
-        switch requirement {
-        case let .exact(req):
-            let exactVersion = CocoapodsVersion(from: req)
-            return self == exactVersion
-        case let .atLeast(req):
-            let minVersion = CocoapodsVersion(from: req)
-            return self >= minVersion
-        case let .upToNextMajor(req):
-            let minVersion = CocoapodsVersion(from: req)
-            let maxVersion = minVersion.bumpMajor()
-            return self >= minVersion && self < maxVersion
-        case let .upToNextMinor(req):
-            let minVersion = CocoapodsVersion(from: req)
-            let maxVersion = minVersion.bumpMinor()
-            return self >= minVersion && self < maxVersion
-        }
     }
 }

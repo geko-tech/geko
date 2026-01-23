@@ -25,6 +25,7 @@ public protocol CocoapodsPodspecLoading {
 enum CocoapodsPodspecLoaderError: FatalError {
     case notFoundTargetDependencies([String: [String]])
     case duplicatePodspec(AbsolutePath, AbsolutePath)
+    case specNameDiffers(fileName: String, specName: String)
 
     var type: GekoSupport.ErrorType { .abort }
 
@@ -34,6 +35,8 @@ enum CocoapodsPodspecLoaderError: FatalError {
             return "Could not find dependencies for targets: \(targets)"
         case let .duplicatePodspec(first, second):
             return "Found duplicate podspecs\n\(first)\n\(second)"
+        case let .specNameDiffers(fileName, specName):
+            return "Spec name \"\(specName)\" differs from file name \"\(fileName)\". Both names should be the same."
         }
     }
 }
@@ -176,6 +179,13 @@ extension CocoapodsPodspecLoader {
         for (podspecPath, data) in rawTuples {
             let podspecAbsolutePath = try AbsolutePath(validatingAbsolutePath: podspecPath)
             let podspec: CocoapodsSpec = try parseJson(data, context: .podspec(path: podspecAbsolutePath))
+
+            let podspecNameFromFile = podspecAbsolutePath.basename.split(separator: ".", maxSplits: 1)[0]
+
+            if podspecNameFromFile != podspec.name {
+                throw CocoapodsPodspecLoaderError.specNameDiffers(fileName: podspecAbsolutePath.pathString, specName: podspec.name)
+            }
+
             pathPodspecsTriples.append((paths[podspecAbsolutePath]!, podspecAbsolutePath, podspec))
         }
 

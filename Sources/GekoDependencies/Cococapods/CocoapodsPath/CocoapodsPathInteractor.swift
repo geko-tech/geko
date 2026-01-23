@@ -9,11 +9,14 @@ import ProjectDescription
 
 enum CocoapodsPathInteractorError: FatalError {
     case specNotFound(name: String, path: AbsolutePath)
+    case specNameDiffers(fileName: String, specName: String)
 
     var description: String {
         switch self {
         case let .specNotFound(name, path):
             return "Could not find podspec '\(name)' at \(path)"
+        case let .specNameDiffers(fileName, specName):
+            return "Spec name \"\(specName)\" differs from file name \"\(fileName)\". Both names should be the same."
         }
     }
 
@@ -83,6 +86,11 @@ final class CocoapodsPathInteractor {
             let podspecAbsolutePath = try AbsolutePath(validatingAbsolutePath: podspecPath)
             let contentsDir = try generatorPaths.resolve(path: config.path)
             let spec: CocoapodsSpec = try parseJson(data, context: .podspec(path: podspecAbsolutePath))
+
+            guard config.name == spec.name else {
+                throw CocoapodsPathInteractorError.specNameDiffers(fileName: podspecPath, specName: spec.name)
+            }
+
             specs[config.name] = (spec, contentsDir, .path(path: contentsDir.relative(to: path).pathString))
         }
     }
