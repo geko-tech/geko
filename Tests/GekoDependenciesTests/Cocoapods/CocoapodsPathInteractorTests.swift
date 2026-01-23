@@ -14,6 +14,10 @@ extension CocoapodsPathInteractorError: @retroactive Equatable {
         switch (lhs, rhs) {
         case let (.specNotFound(lName, lPath), .specNotFound(rName, rPath)):
             return lName == rName && lPath == rPath
+        case let (.specNameDiffers(lFileName, lSpecName), .specNameDiffers(rFileName, rSpecName)):
+            return lFileName == rFileName && lSpecName == rSpecName
+        default:
+            return false
         }
     }
 }
