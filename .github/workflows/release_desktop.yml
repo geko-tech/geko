@@ -45,7 +45,6 @@ jobs:
         id: commit_bump_version
         run: |
           echo "base=$(git branch --show-current)" >> $GITHUB_OUTPUT
-          echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           branch="automation/bump_version_gekodesktop"
           git branch -D "$branch" || true
           git checkout -b "$branch"
@@ -56,9 +55,11 @@ jobs:
       - name: Create draft release
         env:
           BASE: ${{ steps.commit_bump_version.outputs.base }}
-          COMMIT_SHA: ${{ steps.commit_bump_version.outputs.commit_sha }}
         run: |
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh pr create --fill -B "$BASE"
-          gh pr merge --auto --merge --delete-branch
+          gh pr merge --auto --squash --delete-branch --admin
+          git checkout "$BASE"
+          git pull
+          COMMIT_SHA=$(git rev-parse HEAD)
           gh release create "GekoDesktop@$VERSION" -d --generate-notes --target $COMMIT_SHA GekoDesktop.app.zip
