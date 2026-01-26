@@ -19,6 +19,7 @@ runs:
         checked=(
           '^docs/' 
           '^.github/workflows/docs.yml$'
+          '^scripts/generate_project_description_docs.bash$'
         )
         re="$(printf '%s|' "${checked[@]}")"
         re="${re%|}"
