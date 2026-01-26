@@ -8,7 +8,7 @@ enum Constants {
     static let gitShortcutsName = "GitShortcuts.json"
     static let gitShortcutsConfigurationName = "GitShortcutsConfiguration.json"
     static let gitShortcutsFolderName = "GitShortcuts"
-    static let appVersion = "0.35.1"
+    static let appVersion = "0.35.2"
     static let configFileName = "scripts/install/environment.yml"
     static let zshrcPath = "/scripts/install/update_zshrc.sh"
     static let rbenvSuffix = ".rbenv/shims/ruby"
