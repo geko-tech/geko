@@ -36,7 +36,7 @@ jobs:
           # Clone ProjectDescription with current version
           PROJECT_DESCRIPTION_VERSION=$(sed -n 's/.*branch: *"\([^"]*\)".*/\1/p' Package.swift)
           git clone --depth 1 --branch $PROJECT_DESCRIPTION_VERSION "https://github.com/geko-tech/project-description.git"
-          cd ProjectDescription
+          cd project-description
           swift build
 
           # Download forked build of SourceDocs
