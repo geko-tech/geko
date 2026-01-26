@@ -94,4 +94,4 @@ jobs:
           git push -u origin "$branch"
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh pr create --fill
-          # gh pr merge --auto --merge --delete-branch || echo "Automerge is disabled in private repos, manual merge needed"
+          # gh pr merge --auto --squash --delete-branch || echo "Automerge is disabled in private repos, manual merge needed"
