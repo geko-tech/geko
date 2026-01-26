@@ -64,7 +64,6 @@ jobs:
       pull-requests: write
     env:
       TAG: ${{ needs.build_for_all_platforms.outputs.tag }}
-      COMMIT_SHA: ${{ github.sha }}
       BUMP_TYPE: ${{ github.event.inputs.bump_type }}
     steps:
       - uses: actions/checkout@v6.0.1
@@ -75,14 +74,10 @@ jobs:
           path: build_artifacts
           merge-multiple: true
 
-      - name: Create draft release
-        run: |
-          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          gh release create $TAG -d --generate-notes --target $COMMIT_SHA build_artifacts/*
-
       - name: Bump version
         run: |
           NEW_VERSION=$(scripts/linux/new_version_number.sh -n Geko -b $BUMP_TYPE)
+          BASE=$(git branch --show-current)
           branch="automation/bump_version_geko"
           git branch -D $branch || true
           git checkout -b $branch
@@ -94,4 +89,8 @@ jobs:
           git push -u origin "$branch"
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh pr create --fill
-          # gh pr merge --auto --squash --delete-branch || echo "Automerge is disabled in private repos, manual merge needed"
+          gh pr merge --admin --squash --delete-branch
+          git checkout "$BASE"
+          git pull
+          COMMIT_SHA=$(git rev-parse HEAD)
+          gh release create $TAG -d --generate-notes --target $COMMIT_SHA build_artifacts/*
