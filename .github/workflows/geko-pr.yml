@@ -51,7 +51,7 @@ jobs:
         run: |
           git fetch origin $DIFF_BASE
         
-          mapfile -t changedFiles < <(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
+          changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
 
           echo "CHANGED_FILES=$changedFiles"
 
