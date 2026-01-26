@@ -26,7 +26,7 @@ let package = Package(
         .target(
             name: "ProjectDescriptionHelpers",
             dependencies: [
-                .product(name: "ProjectDescription", package: "ProjectDescription")
+                .product(name: "ProjectDescription", package: "project-description")
             ],
             path: "ProjectDescriptionHelpers"
         )
