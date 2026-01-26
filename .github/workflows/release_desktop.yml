@@ -13,6 +13,7 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: write
+      pull-requests: write
     env:
       BUILD_DIR: "GekoDesktop/build_output"
       VERSION: ${{ github.event.inputs.version }}
@@ -41,13 +42,23 @@ jobs:
           (cd $BUILD_DIR && zip -r ../../GekoDesktop.app.zip GekoDesktop.app)
 
       - name: Commit version change
+        id: commit_bump_version
         run: |
+          echo "base=$(git branch --show-current)" >> $GITHUB_OUTPUT
+          echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          branch="automation/bump_version_gekodesktop"
+          git branch -D "$branch" || true
+          git checkout -b "$branch"
           git add $VERSION_FILE
           git commit -m "Bump GekoDesktop app version to $VERSION"
-          git push
+          git push -u origin "$branch"
 
       - name: Create draft release
+        env:
+          BASE: ${{ steps.commit_bump_version.outputs.base }}
+          COMMIT_SHA: ${{ steps.commit_bump_version.outputs.commit_sha }}
         run: |
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA=$(git rev-parse HEAD)
+          gh pr create --fill -B "$BASE"
+          gh pr merge --auto --merge --delete-branch
           gh release create "GekoDesktop@$VERSION" -d --generate-notes --target $COMMIT_SHA GekoDesktop.app.zip
