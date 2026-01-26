@@ -57,6 +57,7 @@ jobs:
       - uses: ./.github/actions/xcode-select
         if: steps.changes.outputs.run == 'true'
       - uses: actions/cache@v4
+        if: steps.changes.outputs.run == 'true'
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
@@ -64,6 +65,7 @@ jobs:
             ${{ runner.os }}-spm-
 
       - name: build_and_test
+        if: steps.changes.outputs.run == 'true'
         run: |
           set -o pipefail && xcrun swift test | xcbeautify --renderer github-actions --is-ci
 
