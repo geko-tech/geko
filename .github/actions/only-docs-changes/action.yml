@@ -1,4 +1,8 @@
 name: 'Detect only docs changes'
+outputs:
+  run:
+    description: "Run"
+    value: ${{ steps.only_docs_changes.outputs.run }}
 runs:
   using: 'composite'
   steps:
