@@ -1,29 +1,34 @@
-- name: Detect only docs changes
-  id: only_docs_changes
-  env:
-    DIFF_BASE: ${{ github.base_ref }}
-  run: |
-    git fetch origin $DIFF_BASE
-  
-    changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
+name: 'Detect only docs changes'
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect only docs changes
+      id: only_docs_changes
+      shell: bash
+      env:
+        DIFF_BASE: ${{ github.base_ref }}
+      run: |
+        git fetch origin $DIFF_BASE
+      
+        changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
 
-    echo "CHANGED_FILES=$changedFiles"
+        echo "CHANGED_FILES=$changedFiles"
 
-    checked=(
-      '^docs/' 
-      '^.github/workflows/docs.yml$'
-      # TODO
-      '^.github/workflows/geko-pr.yml$'
-      '^.github/actions/'
-    )
+        checked=(
+          '^docs/' 
+          '^.github/workflows/docs.yml$'
+          # TODO
+          '^.github/workflows/geko-pr.yml$'
+          '^.github/actions/'
+        )
 
-    re="$(printf '%s|' "${checked[@]}")"
-    re="${re%|}"
+        re="$(printf '%s|' "${checked[@]}")"
+        re="${re%|}"
 
-    if grep -qvE $re <<< "$changedFiles"; then
-      echo "run=true"
-      echo "run=true" >> $GITHUB_OUTPUT
-    else
-      echo "run=false"
-      echo "run=false" >> $GITHUB_OUTPUT
-    fi
+        if grep -qvE $re <<< "$changedFiles"; then
+          echo "run=true"
+          echo "run=true" >> $GITHUB_OUTPUT
+        else
+          echo "run=false"
+          echo "run=false" >> $GITHUB_OUTPUT
+        fi
