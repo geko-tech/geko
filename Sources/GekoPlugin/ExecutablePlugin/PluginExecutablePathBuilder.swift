@@ -2,7 +2,6 @@ import Foundation
 import ProjectDescription
 import GekoCore
 import GekoLoader
-import GekoPlugin
 import GekoSupport
 
 public enum GekoPluginExecutablePathBuilderError: FatalError, Equatable {

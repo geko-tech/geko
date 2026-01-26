@@ -8,6 +8,7 @@ import ProjectDescription
 
 enum CocoapodsGitDownloaderError: FatalError {
     case invalidUtf8Json(AbsolutePath)
+    case specNameDiffers(fileName: String, specName: String)
 
     var type: ErrorType { .abort }
 
@@ -15,6 +16,8 @@ enum CocoapodsGitDownloaderError: FatalError {
         switch self {
         case let .invalidUtf8Json(path):
             return "Json produced by podspec at path \(path) does not have utf8 encoding."
+        case let .specNameDiffers(fileName, specName):
+            return "Spec name \"\(specName)\" differs from file name \"\(fileName)\". Both names should be the same."
         }
     }
 }
@@ -84,6 +87,9 @@ final class CocoapodsGitDownloader {
                 throw CocoapodsGitDownloaderError.invalidUtf8Json(podspecPath)
             }
             let spec: CocoapodsSpec = try parseJson(jsonPodspecData, context: .podspec(path: podspecPath))
+            guard spec.name == name else {
+                throw CocoapodsGitDownloaderError.specNameDiffers(fileName: podspecPath.basename, specName: spec.name)
+            }
 
             // copying spec contents to cache
             let specContentDir = pathProvider.cacheGitSpecContentDir(name: name, hash: hash)

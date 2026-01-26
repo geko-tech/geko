@@ -1,6 +1,7 @@
 import TSCBasic
 import XCTest
 import GekoGraph
+import ProjectDescription
 
 import GekoGraphTesting
 import GekoSupportTesting
@@ -60,15 +61,17 @@ final class WorkspaceMapperTests: GekoTestCase {
         configsProvider.cachedConfigs = [testUserProject: [testUserConfig]]
         configsProvider.selectedConfigsNames = [testUserProject: testUserConfig.name]
         
+        let userFocusedTargetsMapper = UserFocusedTargetsMapper(focusedTargets: Set(testUserConfig.focusModules))
+        
         focusedTargetsResolverGraphMapper = FocusedTargetsResolverGraphMapper(
-            sources: Set(testUserConfig.focusModules),
             focusTests: testUserConfig.options["--focus-tests"] ?? false,
             schemeName: nil
         )
         
         /// map graph & workspace
         let newWorkspace = try workspaceMapper.focusedTargetsResolverGraphMapper(workspace)
-        _ = try await focusedTargetsResolverGraphMapper.map(graph: &gekoGraph, sideTable: &sideTable)        
+        _ = try await userFocusedTargetsMapper.map(graph: &gekoGraph, sideTable: &sideTable)
+        _ = try await focusedTargetsResolverGraphMapper.map(graph: &gekoGraph, sideTable: &sideTable)
         
         /// focused targets comparison
         XCTAssertEqual(

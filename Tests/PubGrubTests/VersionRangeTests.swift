@@ -6,7 +6,7 @@ import XCTest
 
 @testable import PubGrub
 
-extension Int: Version {
+extension Int: @retroactive Version {
     public var value: String {
         return String(self)
     }

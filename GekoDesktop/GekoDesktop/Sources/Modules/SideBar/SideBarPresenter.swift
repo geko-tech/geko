@@ -12,7 +12,7 @@ enum UpdatingError: FatalError {
             """
 The update failed, but you can update manually
 1) download last version from \(Constants.issuesURL)
-2) or download and unzip other version (an example of the version you need 0.0.24) \(Constants.s3Storage)GekoDesktop.app_0.0.24.zip
+2) or download and unzip other version
 """
         }
     }

@@ -243,14 +243,3 @@ final class CocoapodsProjectGenerator {
         return target
     }
 }
-
-extension ProjectDescription.Target: @retroactive Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(name)
-        hasher.combine(destinations)
-        hasher.combine(product)
-        hasher.combine(bundleId)
-        hasher.combine(productName)
-        hasher.combine(environmentVariables)
-    }
-}

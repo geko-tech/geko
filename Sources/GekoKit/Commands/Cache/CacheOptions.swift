@@ -8,7 +8,7 @@ struct CacheOptions: ParsableArguments {
     Other targets will be warmed and linked as binaries if possible. \
     If no target is specified, all the project cacheable targets will be replaced. \
     You can use regular expressions to get the expected set of modules using quotes: 'Test.*'.\
-    
+
     If flag `--cache` wasn't passed, command will safely focus on the modules passed in the `sources` without replacing other with binary counterparts.\
     Optionally works with `--focus-tests` and `scheme`.
     """)
@@ -37,12 +37,12 @@ struct CacheOptions: ParsableArguments {
         help: "If passed, the command doesn't cache direct internal target dependencies passed in the `--sources`, but will do it safely"
     )
     var focusDirectDependencies: Bool = false
-    
+
     @Flag(
         help: "If passed, the command will additionaly focus on tests and apphost for passed sources targets"
     )
     var focusTests: Bool = false
-    
+
     @Flag(
         help: "If passed, the command will generate the cache unsafe."
     )
@@ -65,7 +65,7 @@ struct CacheOptions: ParsableArguments {
         completion: .list(["device", "simulator"])
     )
     var destination: CacheFrameworkDestination = .simulator
-    
+
     @Option(
         name: .shortAndLong,
         help: "Name of the scheme to focus on."
@@ -73,7 +73,7 @@ struct CacheOptions: ParsableArguments {
     var scheme: String?
 }
 
-extension CacheFrameworkDestination: ExpressibleByArgument {
+extension CacheFrameworkDestination: @retroactive ExpressibleByArgument {
     public init?(argument: String) {
         switch argument {
         case "device":

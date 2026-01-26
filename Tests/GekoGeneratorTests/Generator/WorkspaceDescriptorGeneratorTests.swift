@@ -198,7 +198,7 @@ final class WorkspaceDescriptorGeneratorTests: GekoUnitTestCase {
     }
 }
 
-extension XCWorkspaceDataElement: CustomDebugStringConvertible {
+extension XCWorkspaceDataElement: @retroactive CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
         case let .file(file):
@@ -209,7 +209,7 @@ extension XCWorkspaceDataElement: CustomDebugStringConvertible {
     }
 }
 
-extension XCWorkspaceDataGroup: CustomDebugStringConvertible {
+extension XCWorkspaceDataGroup: @retroactive CustomDebugStringConvertible {
     public var debugDescription: String {
         children.debugDescription
     }

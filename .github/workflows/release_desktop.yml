@@ -1,0 +1,53 @@
+name: Release GekoDesktop
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+        type: string
+
+jobs:
+  build_desktop:
+    name: Build GekoDesktop
+    runs-on: macos-26
+    permissions:
+      contents: write
+    env:
+      BUILD_DIR: "GekoDesktop/build_output"
+      VERSION: ${{ github.event.inputs.version }}
+      VERSION_FILE: GekoDesktop/GekoDesktop/Sources/Support/Constants/Constants.swift
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Install Xcodegen
+        run: brew install xcodegen
+
+      - name: Build Release Binary
+        run: |
+          sed -i '' -E 's|let appVersion = "[0-9.]*"|let appVersion = \"'"$VERSION"'\"|' $VERSION_FILE
+
+          (cd GekoDesktop && xcodegen generate)
+          fastlane gym \
+            --project "GekoDesktop/GekoDesktop.xcodeproj" \
+            --scheme GekoDesktop \
+            --export_method mac-application \
+            --output_directory "$BUILD_DIR" \
+            --destination "platform=macOS" \
+            --xcargs "-skipPackagePluginValidation" \
+            --clean true \
+            --xcodebuild_formatter xcbeautify
+
+          (cd $BUILD_DIR && zip -r ../../GekoDesktop.app.zip GekoDesktop.app)
+
+      - name: Commit version change
+        run: |
+          git add $VERSION_FILE
+          git commit -m "Bump GekoDesktop app version to $VERSION"
+          git push
+
+      - name: Create draft release
+        run: |
+          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA=$(git rev-parse HEAD)
+          gh release create "GekoDesktop@$VERSION" -d --generate-notes --target $COMMIT_SHA GekoDesktop.app.zip

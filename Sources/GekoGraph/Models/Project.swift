@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-extension Project: @retroactive CustomStringConvertible, CustomDebugStringConvertible {
+extension Project: @retroactive CustomStringConvertible, @retroactive CustomDebugStringConvertible {
     /// Initializes the project with its attributes.
     ///
     /// - Parameters:

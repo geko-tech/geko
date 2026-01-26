@@ -6,10 +6,10 @@ import XCTest
 final class CommandLineExtensionsTests: XCTestCase {
     func test_filterTopLevelArguments_returnsCorrectArguments() {
         // Given
-        var args = ["geko", "--force", "--verbose", "fetch", "-r"]
+        let args = ["geko", "--force", "--verbose", "fetch", "-r"]
 
         // When
-        var result = CommandLine.filterTopLevelArguments(from: args)
+        let result = CommandLine.filterTopLevelArguments(from: args)
 
         // Then
         XCTAssertEqual(result, ["--force", "--verbose"])
@@ -17,10 +17,10 @@ final class CommandLineExtensionsTests: XCTestCase {
 
     func test_filterSubcommandArguments_returnsCorrectArguments() {
         // Given
-        var args = ["geko", "--force", "--verbose", "fetch", "-r"]
+        let args = ["geko", "--force", "--verbose", "fetch", "-r"]
 
         // When
-        var result = CommandLine.filterSubcommandArguments(from: args)
+        let result = CommandLine.filterSubcommandArguments(from: args)
 
         // Then
         XCTAssertEqual(result, ["fetch", "-r"])
@@ -28,10 +28,10 @@ final class CommandLineExtensionsTests: XCTestCase {
 
     func test_filterSubcommandArguments_returnsEmptyArguments() {
         // Given
-        var args = ["geko", "--help"]
+        let args = ["geko", "--help"]
 
         // When
-        var result = CommandLine.filterSubcommandArguments(from: args)
+        let result = CommandLine.filterSubcommandArguments(from: args)
 
         // Then
         XCTAssertEqual(result, [])
