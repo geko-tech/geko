@@ -74,14 +74,30 @@ async function buildItems(
 
   const mdNonIndex = mdFiles.filter((f) => f.name.toLowerCase() !== "index.md");
 
-  const fileItems: SidebarItem[] = mdNonIndex.map((f) => {
+  const fileItems: SidebarItem[] = await Promise.all(mdNonIndex.map(async (f) => {
     const relFile = relDir ? `${relDir}/${f.name}` : f.name;
     const text = stripMd(f.name);
+
+    if (text.includes("[") && text.includes("]")) {
+      const renamed = f.name.replace("[", "_5B").replace("]", "_5D");
+      const renamedRelFile = relFile.replace("[", "_5B").replace("]", "_5D");
+
+      const oldPath = path.join(f.path, f.name);
+      const newPath = path.join(f.path, renamed);
+
+      await fs.rename(oldPath, newPath);
+
+      return {
+        text: text,
+        link: mdRelToRoute(renamedRelFile, baseUrl),
+      }
+    }
+
     return {
       text,
       link: mdRelToRoute(relFile, baseUrl),
     };
-  });
+  }));
 
   const dirItems: SidebarItem[] = [];
   for (const d of dirs) {
