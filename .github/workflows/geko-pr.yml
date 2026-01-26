@@ -67,10 +67,16 @@ jobs:
       GH_USER: ${{ secrets.GH_USER }}
     steps:
       - uses: actions/checkout@v6.0.1
-
+        with:
+          persist-credentials: false
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: ./.github/actions/only-docs-changes
       - uses: ./.github/actions/show-swift-version
+        if: steps.only_docs_changes.outputs.run == 'true'
 
       - name: build_and_test
+        if: steps.only_docs_changes.outputs.run == 'true'
         run: |
           swift test \
             --filter GekoAcceptanceTests \
@@ -91,11 +97,18 @@ jobs:
       OUTPUT_DIR: "GekoDesktop/test_output"
     steps:
       - uses: actions/checkout@v6.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: ./.github/actions/only-docs-changes
 
       - name: Install Xcodegen
+        if: steps.only_docs_changes.outputs.run == 'true'
         run: brew install xcodegen
 
       - name: Build Release Binary
+        if: steps.only_docs_changes.outputs.run == 'true'
         run: |
           (cd GekoDesktop && xcodegen generate)
           fastlane scan \
