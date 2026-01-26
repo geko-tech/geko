@@ -134,3 +134,4 @@ fixtures/**/graph.json
 # VitePress
 docs/.vitepress/dist
 docs/.vitepress/cache
+docs/projectdescription

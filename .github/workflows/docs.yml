@@ -36,25 +36,8 @@ jobs:
         uses: actions/configure-pages@v4
       - name: Prepare ProjectDescription Docs
         run: |
-          # Clone ProjectDescription with current version
-          PROJECT_DESCRIPTION_VERSION=$(sed -n 's/.*branch: *"\([^"]*\)".*/\1/p' Package.swift)
-          git clone --depth 1 --branch $PROJECT_DESCRIPTION_VERSION "https://github.com/geko-tech/project-description.git"
-          cd project-description
-          swift build
-
-          # Download forked build of SourceDocs
-          DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-          TMP_DIR=$(mktemp -d)
-          curl -L https://github.com/geko-tech/SourceDocs/releases/download/2.0.2/sourcedocs.macos.zip -o $TMP_DIR/sourcedocs.zip
-          unzip -o "$TMP_DIR/sourcedocs.zip" -d "$TMP_DIR"
-          SOURCEDOCS=$(find $TMP_DIR -type f -name "sourcedocs")
-
-          # Generate markdown public api
-          "$SOURCEDOCS" generate --spm-module ProjectDescription -o "$GITHUB_WORKSPACE"/docs/projectdescription --table-of-contents --clean
-
-          # Cleanup
-          rm -rf "$TEMP_DIR"
-          rm "$GITHUB_WORKSPACE"/docs/projectdescription/README.md
+          chmod +x ./scripts/generate_project_description_docs.bash
+          ./scripts/generate_project_description_docs.bash
       - name: Install dependencies
         run: npm ci
       - name: Build with VitePress
