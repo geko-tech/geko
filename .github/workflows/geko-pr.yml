@@ -55,19 +55,19 @@ jobs:
 
           echo "CHANGED_FILES=$changedFiles"
 
-          checked=("docs/**" ".github/workflows/docs.yml")
+          checked=(
+            '^docs/' 
+            '^.github/workflows/docs.yml$' 
+          )
 
-          shopt -s globstar
+          re="$(printf '%s|' "${checked[@]}")"
+          re="${re%|}"
 
-          matched=false
-          for f in "${changedFiles[@]}"; do
-            for p in "${checked[@]}"; do
-              if [[ "$f" == $p ]]; then
-                echo "Matched $f with $p"
-                matched=true
-              fi
-            done
-          done
+          if grep -qE $re <<< "$changedFiles"; then
+            matched="matched"
+          else
+            matched="not matched"
+          fi
 
           echo "matched=$matched"
 
