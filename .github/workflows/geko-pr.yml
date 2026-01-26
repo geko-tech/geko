@@ -63,15 +63,13 @@ jobs:
           re="$(printf '%s|' "${checked[@]}")"
           re="${re%|}"
 
-          if grep -qE $re <<< "$changedFiles"; then
-            matched="matched"
+          if grep -qvE $re <<< "$changedFiles"; then
+            echo "run=true"
+            echo "run=true" >> $GITHUB_OUTPUT
           else
-            matched="not matched"
+            echo "run=false"
+            echo "run=false" >> $GITHUB_OUTPUT
           fi
-
-          echo "matched=$matched"
-
-          echo "run=false" >> $GITHUB_OUTPUT
 
       - uses: ./.github/actions/xcode-select
         if: steps.changes.outputs.run == 'true'
