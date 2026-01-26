@@ -14,7 +14,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/geko-tech/ProjectDescription.git", branch: "<branch_version>")
+        .package(url: "https://github.com/geko-tech/project-description.git", branch: "<branch_version>")
     ],
     targets: [
         .target(

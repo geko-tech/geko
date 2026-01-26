@@ -17,7 +17,7 @@ geko generate App Auth --cache --profile MyCustomProfile # Geko will use MyCusto
 
 ### Profiles 
 
-You can create multiple ``Cache/Profile`` so that Geko knows which configurations and targets to use for cache warmup. To do this, you need to define all the parameters required for your build in the `Config.swift` manifest.
+You can create multiple [Cache.Profile](../../../projectdescription/structs/Cache.Profile) so that Geko knows which configurations and targets to use for cache warmup. To do this, you need to define all the parameters required for your build in the `Config.swift` manifest.
 
 ```swift
 let config = Config(
@@ -46,9 +46,7 @@ let config = Config(
 
 Geko makes it very easy to set up your own remote cache. To do this, you need to set up your own S3 server using AWS or use any other S3 API-compatible service.
 
-TODO: Auth for download not ready now. 
-
-Once you have configured your S3, you need to specify information about it in your `Config.swift` file with ``Config/cloud``.
+Once you have configured your S3, you need to specify information about it in your `Config.swift` file with [Config.cloud](../../../projectdescription/structs/Config#cloud).
 
 ```swift 
 let confisg = Config(
@@ -61,7 +59,20 @@ let confisg = Config(
 
 After this, Geko will start accessing your S3 server to download the pre-built modules when generating a project. If a module isn't found in S3, Geko will warm it up and save it only in the local cache.
 
-To upload locally built modules to the remote cache, use the command:
+If you require authentication to access your S3 server, you can declare access keys in your local ENV variables or in private variables within your repository. If your S3 server is only accessible within your private network, you can configure S3 to allow access to artifacts without authentication.
+
+To provide Geko with authorization keys, you can use these ENV variables: 
+
+```bash
+export GEKO_CLOUD_ACCESS_KEY="your_access_key"
+export GEKO_CLOUD_SECRET_KEY="your_secret_key"
+```
+
+### Upload cache artifacts
+
+To save time during the project generation phase, Geko doesn't immediately upload completed artifacts to your cloud storage. They are first saved locally on your machine, and then you can decide whether to upload them.
+
+To upload to cloud storage, use the following command: 
 
 ```bash 
 geko cache upload 
@@ -69,9 +80,5 @@ geko cache upload
 
 Before upload you should declare ENV variables to access your s3 storage:
 
-```bash
-export GEKO_CLOUD_ACCESS_KEY="your_access_key"
-export GEKO_CLOUD_SECRET_KEY="your_secret_key"
-```
 
 After each `geko generate --cache` command, the `.geko/Cache/BuildCache/latest_build` file is created, which contains information about the last warmup of the local cache. Using this file, the `upload` command determines which modules need to be loaded into the remote cache. This file is overwritten after each warmup.

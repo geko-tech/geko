@@ -9,7 +9,7 @@ This plugin allows you to access [workspaces](../../../projectdescription/struct
 
 ## Creating a plugin
 
-In the ``Plugin`` manifest, you must define a name in the [workspaceMapper](../../../projectdescription/structs/Plugin#workspacemapper) parameter, for example `WorkspaceMapperExample`.
+In the [Plugin](../../../projectdescription/structs/Plugin) manifest, you must define a name in the [workspaceMapper](../../../projectdescription/structs/Plugin#workspacemapper) parameter, for example `WorkspaceMapperExample`.
 
 **Plugin.swift**
 
@@ -46,7 +46,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/geko-tech/ProjectDescription", branch: "release/1.0.0")
+        .package(url: "https://github.com/geko-tech/project-description", branch: "release/1.0.0")
     ],
     targets: [
         .target(
@@ -59,7 +59,7 @@ let package = Package(
 )
 ```
 
-Next, you need to create a plugin loading function, **func loadGekoPlugin() -> UnsafeMutableRawPointer**, with the **@_cdecl("loadGekoPlugin")** attribute. This attribute is necessary so that Geko can find and call this function. This function is the entry point for Geko, and it returns a pointer to the ``GekoPlugin`` instance.
+Next, you need to create a plugin loading function, **func loadGekoPlugin() -> UnsafeMutableRawPointer**, with the **@_cdecl("loadGekoPlugin")** attribute. This attribute is necessary so that Geko can find and call this function. This function is the entry point for Geko, and it returns a pointer to the [GekoPlugin](../../../projectdescription/classes/GekoPlugin) instance.
 
 ```swift
 import ProjectDescription
@@ -96,7 +96,7 @@ let workspace = Workspace(
 )
 ```
 
-[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/WorkspaceMapperPluginExample).
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/geko-plugins/tree/main/WorkspaceMapperPluginExample).
 
 ## Local development
 

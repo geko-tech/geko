@@ -7,7 +7,7 @@ order: 6
 
 ## Add plugins to a project
 
-Plugins are connected in the project's Config.swift manifest with ``Config/plugins`` property.
+Plugins are connected in the project's Config.swift manifest with [Config.plugins](../../../projectdescription/structs/Config#plugins) property.
 
 ### Adding a local plugin
 

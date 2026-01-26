@@ -17,7 +17,7 @@ EOF
 }
 
 bump_version_in_sources() {
-	PROJECT_DESCRIPTION_VERSION=$(grep 'url: "https://github.com/geko-tech/ProjectDescription.git", branch: "' Package.swift | sed -n 's/.*branch: "\([^"]*\)".*/\1/p')
+	PROJECT_DESCRIPTION_VERSION=$(grep 'url: "https://github.com/geko-tech/project-description.git", branch: "' Package.swift | sed -n 's/.*branch: "\([^"]*\)".*/\1/p')
 
 	[[ "$(uname)" == "Darwin" ]] && sed_cmd=(sed -i '' -E) || sed_cmd=(sed -Ei)
 
