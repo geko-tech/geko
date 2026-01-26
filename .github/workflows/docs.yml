@@ -1,8 +1,11 @@
-name: deploy_docs
+name: docs
 
 on:
   push:
     branches: [main]
+  pull_request:
+    paths:
+      - 'docs/**'
 
   workflow_dispatch:
 
@@ -67,6 +70,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     name: Deploy
     steps:
