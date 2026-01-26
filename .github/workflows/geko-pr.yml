@@ -45,7 +45,8 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - uses: ./.github/actions/only-docs-changes
+      - id: only_docs_changes
+        uses: ./.github/actions/only-docs-changes
 
       - uses: ./.github/actions/xcode-select
         if: steps.only_docs_changes.outputs.run == 'true'
@@ -74,7 +75,9 @@ jobs:
           persist-credentials: false
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-      - uses: ./.github/actions/only-docs-changes
+      
+      - id: only_docs_changes
+        uses: ./.github/actions/only-docs-changes
 
       - uses: ./.github/actions/show-swift-version
         if: steps.only_docs_changes.outputs.run == 'true'
@@ -105,7 +108,9 @@ jobs:
             persist-credentials: false
             ref: ${{ github.head_ref }}
             fetch-depth: 0
-      - uses: ./.github/actions/only-docs-changes
+
+      - id: only_docs_changes
+        uses: ./.github/actions/only-docs-changes
 
       - name: Install Xcodegen
         if: steps.only_docs_changes.outputs.run == 'true'
