@@ -11,20 +11,15 @@ runs:
         git fetch origin $DIFF_BASE
       
         changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
-        echo "CHANGED_FILES=$changedFiles"
+
         checked=(
           '^docs/' 
           '^.github/workflows/docs.yml$'
-          # TODO
-          '^.github/workflows/geko-pr.yml$'
-          '^.github/actions/'
         )
         re="$(printf '%s|' "${checked[@]}")"
         re="${re%|}"
         if grep -qvE $re <<< "$changedFiles"; then
-          echo "run=true"
           echo "run=true" >> $GITHUB_OUTPUT
         else
-          echo "run=false"
           echo "run=false" >> $GITHUB_OUTPUT
         fi
