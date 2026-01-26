@@ -57,7 +57,9 @@ jobs:
 
           checked=(
             '^docs/' 
-            '^.github/workflows/docs.yml$' 
+            '^.github/workflows/docs.yml$'
+            # TODO test
+            '^.github/workflows/geko-pr.yml$'
           )
 
           re="$(printf '%s|' "${checked[@]}")"
