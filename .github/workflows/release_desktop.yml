@@ -58,7 +58,7 @@ jobs:
         run: |
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           gh pr create --fill -B "$BASE"
-          gh pr merge --auto --squash --delete-branch --admin
+          gh pr merge --admin --squash --delete-branch
           git checkout "$BASE"
           git pull
           COMMIT_SHA=$(git rev-parse HEAD)
