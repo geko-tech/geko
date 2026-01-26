@@ -50,8 +50,27 @@ jobs:
           DIFF_BASE: ${{ github.base_ref }}
         run: |
           git fetch origin $DIFF_BASE
-          changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
+        
+          mapfile -t changedFiles < <(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD)
+
           echo "CHANGED_FILES=$changedFiles"
+
+          checked=("docs/**" ".github/workflows/docs.yml")
+
+          shopt -s globstar
+
+          matched=false
+          for f in "${changedFiles[@]}"; do
+            for p in "${checked[@]}"; do
+              if [[ "$f" == $p ]]; then
+                echo "Matched $f with $p"
+                matched=true
+              fi
+            done
+          done
+
+          echo "matched=$matched"
+
           echo "run=false" >> $GITHUB_OUTPUT
 
       - uses: ./.github/actions/xcode-select
