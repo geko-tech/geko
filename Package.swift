@@ -5,7 +5,7 @@ import PackageDescription
 let loggingDependency: Target.Dependency = .product(name: "Logging", package: "swift-log")
 let argumentParserDependency: Target.Dependency = .product(name: "ArgumentParser", package: "swift-argument-parser")
 let yamsDependency: Target.Dependency = .product(name: "Yams", package: "Yams")
-let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "ProjectDescription")
+let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "project-description")
 let zipFoundationDependency: Target.Dependency = .product(name: "ZIPFoundation", package: "ZIPFoundation")
 
 var targets: [Target] = [
@@ -795,7 +795,7 @@ let package = Package(
         .package(url: "https://github.com/kylef/PathKit.git", .upToNextMinor(from: "1.0.1")),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.4.3"),
         .package(url: "https://github.com/jpsim/Yams", exact: "5.0.6"),
-        .package(url: "https://github.com/geko-tech/ProjectDescription.git", branch: "release/1.0.0")
+        .package(url: "https://github.com/geko-tech/project-description.git", branch: "release/1.0.0")
     ],
     targets: targets
 )

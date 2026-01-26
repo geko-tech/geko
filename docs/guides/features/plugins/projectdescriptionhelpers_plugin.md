@@ -64,7 +64,7 @@ extension Project {
 }
 ```
 
-[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/ProjectDescriptionHelpersPluginExample).
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/geko-plugins/tree/main/ProjectDescriptionHelpersPluginExample).
 
 ## Usage
 

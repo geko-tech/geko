@@ -21,7 +21,7 @@ Geko, as part of the project generation command, does everything necessary to en
 
 To distinguish modules built from different commits, Geko hashes module information, including their source files, dependencies, and many other parameters. It is very important that all modules are up-to-date when the project is generated. This means that if your modules have any build phase scripts that affect the final project state, they must be executed before calculating the hashes. For example, suppose you use swiftgen to generate access to your static resources. If you don't generate the files before modules hahsing, it may affect the cache hit.
 
-Geko allows you to list the names of build phase scripts that must be run before calculating the hashes. To do this, define the ``Cache/Profile/scripts`` array when declaring the ``Cache/Profile``. Geko will then execute these scripts before calculating the hashes.
+Geko allows you to list the names of build phase scripts that must be run before calculating the hashes. To do this, define the [Cache.Profile.scripts](../../../projectdescription/structs/Cache.Profile#scripts) array when declaring the [Cache.Profile](../../../projectdescription/structs/Cache.Profile#scripts). Geko will then execute these scripts before calculating the hashes.
 
 ### Supported products 
 

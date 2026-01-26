@@ -11,7 +11,7 @@ In projects with an established architecture, developers might want to bootstrap
 
 ## Creating a plugin
 
-To define ``Template``, you can run `geko edit` and then create a directory called `name_of_template` under `Templates` that represents your template. Templates need a manifest file, `name_of_template.swift` that describes the template. So if you are creating a template called `platform`, you should create a new directory `platform` at `Templates` with a manifest file called `platform.swift` that could look like this:
+To define [Template](../../../projectdescription/structs/Template), you can run `geko edit` and then create a directory called `name_of_template` under `Templates` that represents your template. Templates need a manifest file, `name_of_template.swift` that describes the template. So if you are creating a template called `platform`, you should create a new directory `platform` at `Templates` with a manifest file called `platform.swift` that could look like this:
 
 ```
 .
@@ -55,7 +55,7 @@ let template = Template(
 // Generated file with platform: {{ platform }} and name: {{ name }}
 ```
 
-[Link to the source code of the plugin from the example above](https://github.com/geko-tech/GekoPlugins/tree/main/TemplatesPluginExample).
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/geko-plugins/tree/main/TemplatesPluginExample).
 
 ## Usage
 

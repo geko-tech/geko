@@ -11,9 +11,9 @@ The plugin consists of several parts:
 1. SharedTarget generation: a SharedTarget includes all tests matching the regular expression specified when configuring the plugin. This technique allows to run all tests within a single process instead of multiple processes corresponding to each module. It can also help with DerivedData size when static linking is used throughout project. Since each static module is "baked in" into final executable, duplication occurs across multiple test bundles.
 2. ImpactAnalysis: Files from each target in workspace are compaired against git diff to determine if target was affected by changes. After that, simple tree search is used to find every test bundle that is linked to affected targets (including transitive dependencies). Every test bundle that is not affected by changes is removed from SharedTarget.
 
-[Source Code](https://github.com/geko-tech/GekoPlugins/tree/main/ImpactAnalysis)
+[Source Code](https://github.com/geko-tech/geko-plugins/tree/main/ImpactAnalysis)
 
-[Demo](https://github.com/geko-tech/ImpactAnalysisDemo)
+[Demo](https://github.com/geko-tech/impact-analysis-demo)
 
 ## Setup Plugin
 
@@ -24,8 +24,8 @@ import ProjectDescription
 
 let config = Config(
     plugins: [
-        // https://github.com/geko-tech/GekoPlugins/releases/download/ImpactAnalysis/1.0.0/ImpactAnalysis.macos.geko-plugin.zip
-        .remote(baseUrl: "https://github.com/geko-tech/GekoPlugins/releases/download", name: "ImpactAnalysis", version: "1.0.0")
+        // https://github.com/geko-tech/geko-plugins/releases/download/ImpactAnalysis/1.0.0/ImpactAnalysis.macos.geko-plugin.zip
+        .remote(baseUrl: "https://github.com/geko-tech/geko-plugins/releases/download", name: "ImpactAnalysis", version: "1.0.0")
     ]
 )
 ```
@@ -43,7 +43,7 @@ Follow these steps to enable and configure the `ImpactAnalysis` plugin in your `
      - `targets` - List of shared targets.
          - `name` - The name of the shared target.
          - `testsPattern` - regular expression pattern for test target names.
-5. Convert the `GenerateSharedTestTarget` instance to a JSON string with its ``WorkspaceMapperParameter.toJSONString()`` method and use that string as the parameter value.
+5. Convert the `GenerateSharedTestTarget` instance to a JSON string with its [WorkspaceMapperParameter.toJSONString()](../../../../projectdescription/extensions/WorkspaceMapperParameter#tojsonstring) method and use that string as the parameter value.
 6. Add the configured `WorkspaceMapper` to `Workspace.workspaceMappers`.
 
 ```swift
