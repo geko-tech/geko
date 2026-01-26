@@ -50,10 +50,10 @@ public final class ProjectDescriptionBranchVersionParser {
         let packageResolved: PackageResolved = try parseJson(data, context: .file(path: packageResolvedPath))
 
         guard
-            let projectDesciptionPin = packageResolved.pins.first(where: { $0.identity == "projectdescription" }),
+            let projectDesciptionPin = packageResolved.pins.first(where: { $0.identity == "project-description" }),
             case let .branch(branch, _) = projectDesciptionPin.state
         else {
-            logger.error("projectdescription not found in Package.resolved: \(packageResolvedPath)")
+            logger.error("project-description not found in Package.resolved: \(packageResolvedPath)")
             return nil
         }
 
