@@ -1,6 +1,6 @@
 ---
-title: Cocoapods Multiplatform
-order: 6
+title: Podspec Supported Keys
+order: 2
 ---
 
 # Cocoapods podspec supported keys and multiplatform
@@ -9,7 +9,7 @@ Geko supports the use of multi-platform podspec files. However, the implementati
 
 Cocoapods creates separate Frameworks for each platform, while Geko leverages Xcode's multi-platform capabilities and regulates the use of various dependencies, files, and resources through platform filters.
 
-## Supported fields in Podspec
+## Supported keys in Podspec
 
 
 | Field         | Geko support | Cocoapods Multiplatform Support | Geko multiplatform support | Comments |

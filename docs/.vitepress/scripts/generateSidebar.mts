@@ -257,36 +257,31 @@ async function buildItemsOrdered(
     (e) => e.isFile() && e.name.toLowerCase().endsWith(".md")
   );
 
-  // Files
   const fileRows: Array<{
     item: SidebarItem;
     order?: number;
     text: string;
-    isIndex?: boolean;
   }> = [];
 
   for (const f of mdFiles) {
     const isIndex = f.name.toLowerCase() === "index.md";
+    if (isIndex) continue;
 
     const absFile = path.join(absDir, f.name);
     const relFile = relDir ? `${relDir}/${f.name}` : f.name;
 
     const meta = await getMdMeta(absFile, opts.useTitleFromFileHeading);
-
-    const fallbackName = isIndex ? "Index" : stripMd(f.name);
+    const fallbackName = stripMd(f.name);
     const text = meta.title ?? meta.h1 ?? fallbackName;
 
     fileRows.push({
       item: { text, link: mdRelToRoute(relFile, baseUrl) },
       order: meta.order,
       text,
-      isIndex,
     });
   }
 
-  fileRows.sort((a, b) => {
-    return compareByOrderThenText(a, b);
-  });
+  fileRows.sort((a, b) => compareByOrderThenText(a, b));
 
   // Directories
   const dirRows: Array<{ item: SidebarItem; order?: number; text: string }> = [];
@@ -317,7 +312,7 @@ async function buildItemsOrdered(
       text: folderTitle,
       collapsed: opts.collapsedFolders,
       items: children.length ? children : undefined,
-      link: undefined,
+      link: hasIndex ? mdRelToRoute(`${relSub}/index.md`, baseUrl) : undefined,
     };
 
     dirRows.push({ item, order: folderOrder, text: folderTitle });
@@ -325,7 +320,6 @@ async function buildItemsOrdered(
 
   dirRows.sort(compareByOrderThenText);
 
-  // folders first, then files
   return [...fileRows.map((r) => r.item), ...dirRows.map((r) => r.item)];
 }
 
@@ -350,16 +344,18 @@ export async function generateSidebarOrdered(
 export type SidebarSectionOptions = {
   sectionText: string;
   collapsed?: boolean;
+  link?: string;
 };
 
 export function wrapSidebarSection(
   items: SidebarItem[],
   opts: SidebarSectionOptions
 ): SidebarItem {
-  const some = {
+  const item = {
     text: opts.sectionText,
     collapsed: opts.collapsed ?? undefined,
     items: items,
+    link: opts.link
   };
-  return some;
+  return item;
 }

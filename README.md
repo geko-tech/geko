@@ -12,6 +12,12 @@ Key features
 - 🧠 **Advanced plugin system** that covers even most complex cases that your project requires
 - 🐧 **Linux support** for subset of features
 
+## Available repositories 
+
+* [Main repository](https://github.com/geko-tech/geko) of Geko CLI and Geko Desktop
+* [Project description repository](https://github.com/geko-tech/project-description) contains a public interface for describing Xcode projects using Geko
+* [Plugins repository](https://github.com/geko-tech/geko-plugins) contains official Geko plugins and examples of Geko plugins
+
 ## Installation
 
 ### Manual

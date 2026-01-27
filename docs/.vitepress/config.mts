@@ -50,7 +50,20 @@ export default defineConfig(async () => {
                   }),
                   {
                     sectionText: "Project Generation",
-                    collapsed: true
+                    collapsed: true,
+                    link: "/guides/features/project-generation/"
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/dependencies",
+                    baseUrl: "/guides/features/dependencies/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Dependencies",
+                    collapsed: true,
+                    link: "/guides/features/dependencies/"
                   }
                 ),
                 wrapSidebarSection(
@@ -61,7 +74,8 @@ export default defineConfig(async () => {
                   }),
                   {
                     sectionText: "Build Cache",
-                    collapsed: true
+                    collapsed: true,
+                    link: "/guides/features/cache/"
                   }
                 ),
                 wrapSidebarSection(
@@ -72,7 +86,8 @@ export default defineConfig(async () => {
                   }),
                   {
                     sectionText: "Plugins",
-                    collapsed: true
+                    collapsed: true,
+                    link: "/guides/features/plugins/"
                   }
                 ),
                 wrapSidebarSection(
@@ -83,7 +98,8 @@ export default defineConfig(async () => {
                   }),
                   {
                     sectionText: "Linux",
-                    collapsed: true
+                    collapsed: true,
+                    link: "/guides/features/linux/"
                   }
                 ),
                 wrapSidebarSection(
@@ -94,7 +110,8 @@ export default defineConfig(async () => {
                   }),
                   {
                     sectionText: "Desktop App",
-                    collapsed: true
+                    collapsed: true,
+                    link: "/guides/features/desktop/"
                   }
                 )
               ]

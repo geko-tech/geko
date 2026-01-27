@@ -3,7 +3,7 @@ title: Overview
 order: 1
 ---
 
-# Geko Desktop
+# Geko Desktop <Badge type="warning" text="beta" />
 
 A companion application for working with a project via a GUI
 
