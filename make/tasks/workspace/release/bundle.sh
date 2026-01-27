@@ -25,9 +25,9 @@ mkdir -p $BUILD_DIRECTORY
 
 build_fat_release_project_description() {
     (
-    cd $CLONED_SOURCE_PACKAGES/checkouts/ProjectDescription
+    cd $CLONED_SOURCE_PACKAGES/checkouts/project-description
 
-    PROJECT_DESCRIPTION="project-description"
+    PROJECT_DESCRIPTION="ProjectDescription"
     PROJ_DESC_BUILD_DIR=$TMP_DIR/$PROJECT_DESCRIPTION
 
     xcrun xcodebuild -scheme $PROJECT_DESCRIPTION -configuration Release -destination "generic/platform=macOS" BUILD_LIBRARY_FOR_DISTRIBUTION=YES ARCHS='arm64 x86_64' BUILD_DIR=$PROJ_DESC_BUILD_DIR clean build
@@ -58,7 +58,7 @@ xcrun xcodebuild -resolvePackageDependencies -clonedSourcePackagesDirPath $CLONE
 
 echo "$(format_section "Building")"
 
-echo "$(format_subsection "Building project-description framework")"
+echo "$(format_subsection "Building ProjectDescription framework")"
 build_fat_release_project_description
 
 echo "$(format_subsection "Building geko executable")"
