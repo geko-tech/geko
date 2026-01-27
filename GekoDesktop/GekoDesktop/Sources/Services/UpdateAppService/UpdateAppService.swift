@@ -155,9 +155,9 @@ final class UpdateAppService: IUpdateAppService {
         let json = try JSON(string: String(contentsOf: url, encoding: .utf8))
 
         guard case let .dictionary(dict) = json,
-              case var .string(downloadUrl) = dict["utilityUrl"]
+              case var .string(downloadUrl) = dict["repoUrl"]
         else {
-            throw UpdateAppError.urlNotFoud(key: "utilityUrl")
+            throw UpdateAppError.urlNotFoud(key: "repoUrl")
         }
         switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand(url: downloadUrl)])) {
         case .collected(let data):
@@ -176,9 +176,9 @@ final class UpdateAppService: IUpdateAppService {
         let json = try JSON(string: String(contentsOf: url, encoding: .utf8))
 
         guard case let .dictionary(dict) = json,
-              case var .string(downloadUrl) = dict["utilityUrl"]
+              case var .string(downloadUrl) = dict["repoUrl"]
         else {
-            throw UpdateAppError.urlNotFoud(key: "utilityUrl")
+            throw UpdateAppError.urlNotFoud(key: "repoUrl")
         }
         switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand2(url: downloadUrl)])) {
         case .collected(let data):
