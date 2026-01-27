@@ -1,16 +1,6 @@
 name: release
 on:
   workflow_dispatch:
-    inputs:
-      bump_type:
-        description: 'Bump type'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - major
-          - minor
-          - patch
 
 jobs:
   build_for_all_platforms:
@@ -22,19 +12,53 @@ jobs:
     runs-on: ${{ matrix.os }}
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
+      bump_type: ${{ steps.bump_type.outputs.bump_type }}
+      last_tag: ${{ steps.last_tag.outputs.last_tag }}
     env:
       COMMIT_SHA: ${{ github.sha }}
       GEKO_LINUX_AUTOUPDATE_SOURCE: ${{ vars.GEKO_LINUX_AUTOUPDATE_SOURCE }}
       GEKO_MACOS_AUTOUPDATE_SOURCE: ${{ vars.GEKO_MACOS_AUTOUPDATE_SOURCE }}
-      BUMP_TYPE: ${{ github.event.inputs.bump_type }}
     steps:
       - uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 0
+      - name: Fetch last tag
+        id: last_tag
+        run: |
+          git fetch --tags
 
+          LATEST_TAG=$(git tag -l "Geko@*" --sort=-version:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "Latest tag not found" >&2; exit 1;
+          fi
+          echo $LATEST_TAG
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "last_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+      - name: Calculate new version
+        id: bump_type
+        run: |
+          LATEST_TAG="${{ env.LATEST_TAG }}"
+
+          all_messages=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "\[(patch|minor|major)\] (feat|fix|refactor): .*")
+          echo $all_messages
+
+          NEW_BUMP_TYPE=""
+          if [[ "$all_messages" == *"[major]"* ]]; then
+          NEW_BUMP_TYPE="major"
+          elif [[ "$all_messages" == *"[minor]"* ]]; then
+          NEW_BUMP_TYPE="minor"
+          else
+          NEW_BUMP_TYPE="patch"
+          fi
+          echo "bump_type is $NEW_BUMP_TYPE"
+          echo "NEW_BUMP_TYPE=$NEW_BUMP_TYPE" >> $GITHUB_ENV
+          echo "bump_type=$NEW_BUMP_TYPE" >> $GITHUB_OUTPUT
       - name: Build
         id: build
         run: |
+          NEW_BUMP_TYPE="${{ env.NEW_BUMP_TYPE }}"
           export CI_COMMIT_SHORT_SHA=${COMMIT_SHA:0:8}
-          scripts/linux/build.sh -n Geko -b ${BUMP_TYPE:-"minor"}
+          scripts/linux/build.sh -n Geko -b ${BUMP_TYPE:-"$NEW_BUMP_TYPE"}
           echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
 
       - name: Remember version
@@ -64,33 +88,71 @@ jobs:
       pull-requests: write
     env:
       TAG: ${{ needs.build_for_all_platforms.outputs.tag }}
-      BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+      COMMIT_SHA: ${{ github.sha }}
+      BUMP_TYPE: ${{ needs.build_for_all_platforms.outputs.bump_type }}
+      LATEST_TAG: ${{ needs.build_for_all_platforms.outputs.last_tag }}
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: actions/checkout@v6.0.1
-
+        with:
+          fetch-depth: 0
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
           path: build_artifacts
           merge-multiple: true
-
-      - name: Bump version
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: Setup committer
         run: |
+          git config user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+      - name: Bump version and update changelog
+        run: |
+          git fetch --tags
           NEW_VERSION=$(scripts/linux/new_version_number.sh -n Geko -b $BUMP_TYPE)
-          BASE=$(git branch --show-current)
-          branch="automation/bump_version_geko"
-          git branch -D $branch || true
-          git checkout -b $branch
+
+          ALL_MESSAGES=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "\[(patch|minor|major)\] (feat|fix|refactor): .*")
+          echo "$ALL_MESSAGES"
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$ALL_MESSAGES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+          FILE="Geko_Changelog.md"
+          TEMP_FILE="temp.md"
+          NEW_CONTENT="## Geko $NEW_VERSION
+          $ALL_MESSAGES
+          "
+          if grep -q "Geko $NEW_VERSION" "$FILE"; then
+            echo "The file '$FILE' contains new changes"
+          else
+            echo "$NEW_CONTENT" > "$TEMP_FILE"
+            cat "$FILE" >> "$TEMP_FILE"
+            mv "$TEMP_FILE" "$FILE"
+          fi
+          if git ls-remote --exit-code --tags origin "$TAG"; then
+            echo "Tag $TAG found."
+          else
+            echo "Tag $TAG not found. Creating..."
+            git tag $TAG
+            git push origin $TAG
+          fi
           git add Sources/GekoSupport/Constants.swift
+          git add $FILE
           if ! git commit -m "Update app version to $NEW_VERSION"; then
               echo "Nothing to commit. Sources/GekoSupport/Constants.swift has already correct version $NEW_VERSION"
               exit 0
           fi
-          git push -u origin "$branch"
-          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          gh pr create --fill
-          gh pr merge --admin --squash --delete-branch
-          git checkout "$BASE"
-          git pull
-          COMMIT_SHA=$(git rev-parse HEAD)
-          gh release create $TAG -d --generate-notes --target $COMMIT_SHA build_artifacts/*
+          git push
+      - name: Create draft release
+        run: |
+          gh release create $TAG -d --title $TAG --notes "${{ env.CHANGELOG }}" --target $COMMIT_SHA build_artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
