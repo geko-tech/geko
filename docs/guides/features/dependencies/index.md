@@ -34,6 +34,7 @@ More details are available on the Swift Packages page.
 ### Cocoapods 
 
 We continue to support CocoaPods, even though its maintainers have marked it as deprecated and are no longer actively developing the project.
+
 Geko was originally created to address the challenges we encountered in our day-to-day work on large enterprise projects.
 
 We considered fully abandoning CocoaPods and migrating to SPM, but SPM does not cover the full set of requirements we need. At the same time, we could not ignore the well-known limitations of CocoaPods, including its poor performance in large-scale projects.
