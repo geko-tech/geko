@@ -21,6 +21,7 @@ enum UpdateAppError: FatalError {
     case unzipError(error: Error)
     case noBundleForNameError(name: String)
     case executableFileNotFound(bundlePath: String)
+    case urlNotFoud(key: String)
 
     var errorDescription: String? {
         switch self {
@@ -36,6 +37,8 @@ enum UpdateAppError: FatalError {
             "No bundle with name \(name) found"
         case .executableFileNotFound(let bundlePath):
             "Exutable file not found \(bundlePath)"
+        case .urlNotFoud(let key):
+            "url for key \(key) not found"
         }
     }
 
@@ -103,7 +106,7 @@ final class UpdateAppService: IUpdateAppService {
 
     private func parseVersion(_ string: String) throws -> Version {
         if string.hasPrefix("geko_stage") {
-            var version = string.replacingOccurrences(of: "geko_stage/geko_", with: "").split(separator: "-").first ?? ""
+            let version = string.replacingOccurrences(of: "geko_stage/geko_", with: "").split(separator: "-").first ?? ""
             if let parsedVersion = Version(string: String(version)) {
                 return parsedVersion
             } else {
@@ -148,7 +151,15 @@ final class UpdateAppService: IUpdateAppService {
     // MARK: - Shell
 
     func lastAvailableVersion() throws -> String {
-        switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand])) {
+        let url = Bundle.main.url(forResource: "source", withExtension: "json")!
+        let json = try JSON(string: String(contentsOf: url, encoding: .utf8))
+
+        guard case let .dictionary(dict) = json,
+              case var .string(downloadUrl) = dict["utilityUrl"]
+        else {
+            throw UpdateAppError.urlNotFoud(key: "utilityUrl")
+        }
+        switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand(url: downloadUrl)])) {
         case .collected(let data):
             if let str = String(data: data, encoding: .utf8) {
                 return str
@@ -161,7 +172,15 @@ final class UpdateAppService: IUpdateAppService {
     }
 
     func allVersions() throws -> [String] {
-        switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand2])) {
+        let url = Bundle.main.url(forResource: "source", withExtension: "json")!
+        let json = try JSON(string: String(contentsOf: url, encoding: .utf8))
+
+        guard case let .dictionary(dict) = json,
+              case var .string(downloadUrl) = dict["utilityUrl"]
+        else {
+            throw UpdateAppError.urlNotFoud(key: "utilityUrl")
+        }
+        switch try sessionService.exec(ShellCommand(arguments: [Constants.versionCommand2(url: downloadUrl)])) {
         case .collected(let data):
             if let str = String(data: data, encoding: .utf8) {
                 return str.split(separator: "\n").map { String($0) }

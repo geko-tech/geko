@@ -1,3 +1,4 @@
 {
-    "utilityUrl": "https://github.com/geko-tech/geko/releases/download/GekoDesktop@{version}/GekoDesktop.app.zip"
+    "utilityUrl": "https://github.com/geko-tech/geko/releases/download/Desktop@{version}/GekoDesktop.app.zip",
+    "repoUrl": "https://github.com/geko-tech/geko.git"
 }

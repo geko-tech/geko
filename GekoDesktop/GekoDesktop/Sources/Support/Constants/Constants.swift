@@ -32,9 +32,13 @@ enum Constants {
     /// Application name
     static let gekoTitle = "GekoDesktop"
 
-    // TODO: Github fix commands and urls after setup releases
-    static let versionCommand = ##"git ls-remote --tags --sort=v:refname https://github.com/geko-tech/geko.git | grep 'GekoDesktop@[0-9\.]*$' | tail -1 | sed -ne 's|.*GekoDesktop@\(.*\)|\1|p'"##
-    static let versionCommand2 = ##"git ls-remote --tags --sort=v:refname https://github.com/geko-tech/geko.git | grep 'GekoDesktop@[0-9\.]*$' | sed -ne 's/.*GekoDesktop@\(.*\)/\1/p'"##
+    static func versionCommand(url: String) -> String {
+        #"git ls-remote --tags --sort=v:refname \#(url) | grep 'Desktop@[0-9\.]*$' | tail -1 | sed -ne 's|.*Desktop@\(.*\)|\1|p'"#
+    }
+    static func versionCommand2(url: String) -> String {
+        #"git ls-remote --tags --sort=v:refname \#(url) | grep 'Desktop@[0-9\.]*$' | sed -ne 's/.*Desktop@\(.*\)/\1/p'"#
+    }
+    
 
     static let gekoDirectoryName: String = "Geko"
     static let projectProfilesFileName = "project_profiles.yml"

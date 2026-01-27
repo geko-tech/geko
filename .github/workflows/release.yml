@@ -39,7 +39,7 @@ jobs:
         run: |
           LATEST_TAG="${{ env.LATEST_TAG }}"
 
-          all_messages=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "\[(patch|minor|major)\] (feat|fix|refactor): .*")
+          all_messages=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "geko \[(patch|minor|major)\] .*")
           echo $all_messages
 
           NEW_BUMP_TYPE=""
@@ -117,9 +117,10 @@ jobs:
       - name: Bump version and update changelog
         run: |
           git fetch --tags
+          git pull
           NEW_VERSION=$(scripts/linux/new_version_number.sh -n Geko -b $BUMP_TYPE)
 
-          ALL_MESSAGES=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "\[(patch|minor|major)\] (feat|fix|refactor): .*")
+          ALL_MESSAGES=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "geko \[(patch|minor|major)\] .*")
           echo "$ALL_MESSAGES"
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$ALL_MESSAGES" >> $GITHUB_ENV
