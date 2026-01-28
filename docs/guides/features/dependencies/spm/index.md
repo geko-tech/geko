@@ -36,7 +36,7 @@ Once the dependencies are declared, you can run the following command to fetch a
 geko fetch
 ```
 
-Or insted of simple fetch, update external content when available:
+Or instead of simple fetch, update external content when available:
 
 ```bash
 geko fetch -u
@@ -48,7 +48,7 @@ We provide the ability to separate operations related to fetching external depen
 geko generate
 ```
 
-To integrate the selected dependency into your project, you need to add it to your target’s dependency list using [TargetDependency.external](../../../../projectdescription/enums/TargetDependency#external-name-condition): 
+To integrate selected dependency into your project, you need to add it to your target’s dependency list using [TargetDependency.external](../../../../projectdescription/enums/TargetDependency#external-name-condition): 
 
 ::: code-group 
 ```swift [Project.swift]
