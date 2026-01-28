@@ -70,14 +70,14 @@ jobs:
         with:
           name: geko_macos.zip
           path: build/geko_macos.zip
-        if: matrix.os == 'macOS'
+        if: runner.os == 'macOS'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
           name: geko_linux_${{ steps.build.outputs.arch }}.tgz
           path: "build/geko_linux_${{ steps.build.outputs.arch }}.tgz"
-        if: matrix.os == 'Linux'
+        if: runner.os == 'Linux'
 
   draft_release:
     name: Make GitHub Release
