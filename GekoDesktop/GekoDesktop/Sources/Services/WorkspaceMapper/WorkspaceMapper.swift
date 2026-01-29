@@ -104,22 +104,23 @@ final class WorkspaceMapper: IWorkspaceMapper {
     }
     
     func focusedTargetsExpanderGraphMapper(_ workspace: Workspace) throws -> Workspace {
-        var focusedTargets = Set(workspace.focusedTargets)
+        var focusedTargets = workspace.focusedTargets
         guard !focusedTargets.isEmpty else {
             return workspace
         }
         let allTargets = workspace.allTargets(excludingExternalTargets: false)
+        let targetsDict = Dictionary(uniqueKeysWithValues: allTargets.map { ($0.name, $0) })
         let allInternalTargets = workspace.allTargets(excludingExternalTargets: true)
 
         if dependenciesOnly {
-            focusedTargets = Set(allInternalTargets.map { $0.name })
+            focusedTargets = allInternalTargets.map { $0.name }
         } else {
             if focusDirectDependencies {
                 let nonRunnableSourceTargets = allInternalTargets
                     .filter { focusedTargets.contains($0.name) }
                     .filter { !$0.product.runnable }
                 for target in nonRunnableSourceTargets {
-                    focusedTargets.formUnion(target.dependencies.map { $0.name })
+                    focusedTargets.append(contentsOf: target.dependencies.map { $0.name })
                 }
             }
             
@@ -133,21 +134,20 @@ final class WorkspaceMapper: IWorkspaceMapper {
                         }
                     }
                 }
-                focusedTargets.formUnion(dependencyTargets)
+                focusedTargets.append(contentsOf: dependencyTargets)
             }
             
             let nonReplaceableTargets = allTargets
                 .filter { focusedTargets.contains($0.name) }
                 .filter { $0.product == .bundle }
                 .map { $0.name }
-            focusedTargets.formUnion(nonReplaceableTargets)
+            focusedTargets.append(contentsOf: nonReplaceableTargets)
             
             let nonReplaceableTargetDependencies = allTargets
-                .filter { focusedTargets.contains($0.name) }
                 .flatMap { $0.dependencies }
-                .filter { $0.isBundle }
+                .filter { targetsDict[$0.name]?.product == .bundle }
                 .map { $0.name }
-            focusedTargets.formUnion(nonReplaceableTargetDependencies)
+            focusedTargets.append(contentsOf: nonReplaceableTargetDependencies)
         }
         
         workspace.focusedTargets = Array(focusedTargets)

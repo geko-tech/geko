@@ -93,15 +93,6 @@ enum GraphTargetDependencyDump: Equatable, Hashable, Codable {
             "xctest"
         }
     }
-    
-    var isBundle: Bool {
-        switch self {
-        case .bundle:
-            return true
-        default:
-            return false
-        }
-    }
 }
 
 public enum LinkingStatus: String, Codable {
