@@ -104,7 +104,7 @@ final class WorkspaceMapper: IWorkspaceMapper {
     }
     
     func focusedTargetsExpanderGraphMapper(_ workspace: Workspace) throws -> Workspace {
-        var focusedTargets = workspace.focusedTargets
+        var focusedTargets = Set(workspace.focusedTargets)
         guard !focusedTargets.isEmpty else {
             return workspace
         }
@@ -112,14 +112,14 @@ final class WorkspaceMapper: IWorkspaceMapper {
         let allInternalTargets = workspace.allTargets(excludingExternalTargets: true)
 
         if dependenciesOnly {
-            focusedTargets = allInternalTargets.map { $0.name }
+            focusedTargets = Set(allInternalTargets.map { $0.name })
         } else {
             if focusDirectDependencies {
                 let nonRunnableSourceTargets = allInternalTargets
                     .filter { focusedTargets.contains($0.name) }
                     .filter { !$0.product.runnable }
                 for target in nonRunnableSourceTargets {
-                    focusedTargets.append(contentsOf: target.dependencies.map { $0.name })
+                    focusedTargets.formUnion(target.dependencies.map { $0.name })
                 }
             }
             
@@ -133,30 +133,24 @@ final class WorkspaceMapper: IWorkspaceMapper {
                         }
                     }
                 }
-                focusedTargets.append(contentsOf: dependencyTargets)
+                focusedTargets.formUnion(dependencyTargets)
             }
             
             let nonReplaceableTargets = allTargets
                 .filter { focusedTargets.contains($0.name) }
                 .filter { $0.product == .bundle }
                 .map { $0.name }
-            focusedTargets.append(contentsOf: nonReplaceableTargets)
+            focusedTargets.formUnion(nonReplaceableTargets)
             
             let nonReplaceableTargetDependencies = allTargets
+                .filter { focusedTargets.contains($0.name) }
                 .flatMap { $0.dependencies }
-                .filter { isBundle(allTargets, dependency: $0) }
+                .filter { $0.isBundle }
                 .map { $0.name }
-            focusedTargets.append(contentsOf: nonReplaceableTargetDependencies)
+            focusedTargets.formUnion(nonReplaceableTargetDependencies)
         }
         
         workspace.focusedTargets = Array(focusedTargets)
         return workspace
-    }
-    
-    private func isBundle(_ allTarget: Set<GraphTarget>, dependency: GraphTargetDependencyDump) -> Bool {
-        guard let target = allTarget.first(where: { $0.name == dependency.name }) else {
-            return false
-        }
-        return target.product == .bundle
     }
 }
