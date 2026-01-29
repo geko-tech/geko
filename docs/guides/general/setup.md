@@ -1,6 +1,6 @@
 ---
 title: Install Geko
-order: 1
+order: 2
 ---
 
 # Install Geko

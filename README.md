@@ -12,6 +12,10 @@ Key features
 - 🧠 **Advanced plugin system** that covers even most complex cases that your project requires
 - 🐧 **Linux support** for subset of features
 
+## Documentation
+
+Documentation is available at [geko-tech.github.io/geko/](https://geko-tech.github.io/geko/)
+
 ## Available repositories 
 
 * [Main repository](https://github.com/geko-tech/geko) of Geko CLI and Geko Desktop
@@ -44,7 +48,3 @@ Make sure you are using zsh or manually add the path to executable into your she
 ```bash
 export PATH=/Users/my.user/.local/bin:$PATH
 ```
-
-## Documentation
-
-Documentation is available at [geko-tech.github.io/geko/](https://geko-tech.github.io/geko/)

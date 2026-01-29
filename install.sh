@@ -57,7 +57,7 @@ unzip "geko.zip"
 
 # Copy into dir
 mkdir -p "$GEKO_DESTINATION_DIR"
-cp -R geko ProjectDescription.framework geko_source.json "$GEKO_DESTINATION_DIR"
+cp -R geko ProjectDescription.framework geko_source.json Templates "$GEKO_DESTINATION_DIR"
 
 cd "$DIR"
 
