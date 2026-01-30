@@ -875,6 +875,31 @@ final class GenerateAcceptanceTestAppWithDynamicFramework: GekoAcceptanceTestCas
     }
 }
 
+final class GenerateAcceptanceTestCocoapodsWorkspaceWithFolderReferences: GekoAcceptanceTestCase {
+    func test_app_with_dynamic_target_and_framework() async throws {
+        try setUpFixture(.iosAppWorkspaceWithCocoapods)
+        try await run(FetchCommand.self)
+        try await run(GenerateCommand.self)
+
+        let xcodeProjePath = fixturePath.appending(components: ["LocalPods", "Feature", "FeaturePodA", "FeaturePodA", "FeaturePodA", "FeaturePodA.xcodeproj"])
+
+        let xcodeproj = try XcodeProj(pathString: xcodeProjePath.pathString)
+
+        let target = try XCTUnwrap(xcodeproj.pbxproj.targets(named: "FeaturePodA-Unit-Tests").first)
+
+        let resourcesBuildPhase = try XCTUnwrap(target.buildPhases.first(where: { $0 is PBXResourcesBuildPhase}) as? PBXResourcesBuildPhase)
+
+        let phaseFiles = resourcesBuildPhase.files?.compactMap { $0.file?.nameOrPath } ?? []
+
+        XCTAssertEqual(phaseFiles.sorted(), [
+            "config.json",
+            "folder1",
+            "folder2",
+            "FeaturePodAResources.bundle"
+        ].sorted())
+    }
+}
+
 extension GekoAcceptanceTestCase {
     private func resourcePath(
         for productName: String,

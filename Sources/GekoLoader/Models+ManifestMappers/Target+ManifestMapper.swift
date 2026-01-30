@@ -119,7 +119,7 @@ extension Target {
                 isExternal: isExternal,
                 checkFilesExist: checkFilesExist,
                 projectType: projectType,
-                includeFiles: Target.isResource
+                includeFiles: projectType == .cocoapods ? { _ in true } : Target.isResource
             )
         }
 
