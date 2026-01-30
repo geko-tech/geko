@@ -5,7 +5,7 @@ order: 1
 
 # Project Generation
 
-One of Geko’s key responsibilities is generating an Xcode project using Swift-based DSL. This approach helps reduce costs, lower overall complexity, and minimize the number of conflicts that typically arise when working with large projects. The primary benefit lies in the flexibility gained through a declarative way of describing the project structure. Geko, in turn, aims to maximize this benefit by providing a wide range of features and capabilities.
+One of Geko’s key responsibilities is generating an Xcode project using Swift-based DSL. This approach helps reduce costs, lowers overall complexity, and minimizes the number of conflicts that typically arise when working with large projects. The primary benefit lies in the flexibility gained through a declarative way of describing the project structure. Geko, in turn, aims to maximize this benefit by providing a wide range of features and capabilities.
 
 As you work with Xcode projects and your codebase grows uncontrollably, you often start facing challenges that are difficult to address without a deep understanding of how Xcode and xcodebuild work internally. As projects scale, various issues tend to emerge, including long Xcode startup times, slow compilation, frequent merge conflicts, and unreliable behavior of Derived Data. Geko was designed from the ground up to address these problems and to make working with large codebases more manageable.
 
@@ -21,7 +21,7 @@ geko generate
 
 If we take a closer look at the generation process, it can be broken down into the following stages:
 
-* Geko find and reads all available manifests: `Project.swift`, `Workspace.swift`, `Config.swift` and etc
+* Geko searches all available manifests: `Project.swift`, `Workspace.swift`, `Config.swift`, etc.
 * Decodes them into the corresponding project description objects
 * Resolves and downloads external dependencies
 * Builds the project graph and validates its correctness
