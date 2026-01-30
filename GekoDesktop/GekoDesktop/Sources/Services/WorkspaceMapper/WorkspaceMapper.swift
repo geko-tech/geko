@@ -109,6 +109,7 @@ final class WorkspaceMapper: IWorkspaceMapper {
             return workspace
         }
         let allTargets = workspace.allTargets(excludingExternalTargets: false)
+        let targetsDict = Dictionary(uniqueKeysWithValues: allTargets.map { ($0.name, $0) })
         let allInternalTargets = workspace.allTargets(excludingExternalTargets: true)
 
         if dependenciesOnly {
@@ -144,19 +145,12 @@ final class WorkspaceMapper: IWorkspaceMapper {
             
             let nonReplaceableTargetDependencies = allTargets
                 .flatMap { $0.dependencies }
-                .filter { isBundle(allTargets, dependency: $0) }
+                .filter { targetsDict[$0.name]?.product == .bundle }
                 .map { $0.name }
             focusedTargets.append(contentsOf: nonReplaceableTargetDependencies)
         }
         
         workspace.focusedTargets = Array(focusedTargets)
         return workspace
-    }
-    
-    private func isBundle(_ allTarget: Set<GraphTarget>, dependency: GraphTargetDependencyDump) -> Bool {
-        guard let target = allTarget.first(where: { $0.name == dependency.name }) else {
-            return false
-        }
-        return target.product == .bundle
     }
 }
