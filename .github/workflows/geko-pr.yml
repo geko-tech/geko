@@ -41,7 +41,6 @@ jobs:
       - uses: actions/checkout@v6.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - id: only_docs_changes
@@ -72,7 +71,6 @@ jobs:
       - uses: actions/checkout@v6.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
       
       - id: only_docs_changes
@@ -105,7 +103,6 @@ jobs:
       - uses: actions/checkout@v6.0.1
         with:
             persist-credentials: false
-            ref: ${{ github.head_ref }}
             fetch-depth: 0
 
       - id: only_docs_changes
