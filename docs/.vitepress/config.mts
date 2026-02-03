@@ -113,6 +113,18 @@ export default defineConfig(async () => {
                     collapsed: true,
                     link: "/guides/features/desktop/"
                   }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
+                    scanDir: "docs/guides/contributing",
+                    baseUrl: "/guides/contributing/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Contributing",
+                    collapsed: true,
+                    link: "/guides/contributing/"
+                  }
                 )
               ]
             },
