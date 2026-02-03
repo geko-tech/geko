@@ -6,7 +6,7 @@ order: 3
 # Geko
 
 1. Clone the Geko repo: https://github.com/geko-tech/geko
-2. Open the project (it is recommended to open it via terminal using the `.xed` command to ensure environment variables are loaded correctly).
+2. Open the project (it is recommended to open it via terminal using the `xed .` command to ensure environment variables are loaded correctly).
 3. Select the Geko target.
 4. In the Scheme settings, under Options > Working Directory, set the path to the project you will be generating with Geko.
 
@@ -39,7 +39,7 @@ To debug using a specific fixture, go to Scheme > Options > Working Directory an
 # ProjectDescription
 
 1. Clone ProjectDescription repo https://github.com/geko-tech/project-description
-2. Open the project (it is recommended to open it via terminal using the `.xed` command to ensure environment variables are loaded correctly).
+2. Open the project (it is recommended to open it via terminal using the `xed .` command to ensure environment variables are loaded correctly).
 
 # GekoPlugins
 
