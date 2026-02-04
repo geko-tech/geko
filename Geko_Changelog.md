@@ -1,3 +1,6 @@
+## Geko 1.0.2
+geko [patch] replace String(describing:) with _typeName call (#68)
+
 ## Geko 1.0.1
 geko [patch] fix: missing directories in resource build phase when using podspec (#66)
 
