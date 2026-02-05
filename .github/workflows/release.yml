@@ -121,7 +121,7 @@ jobs:
           git pull
           NEW_VERSION=$(scripts/linux/new_version_number.sh -n Geko -b $BUMP_TYPE)
 
-          ALL_MESSAGES=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "geko \[(patch|minor|major)\] .*")
+          ALL_MESSAGES=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "geko \[(patch|minor|major)\] .*" | sed 's/geko/•/g')
           echo "$ALL_MESSAGES"
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$ALL_MESSAGES" >> $GITHUB_ENV

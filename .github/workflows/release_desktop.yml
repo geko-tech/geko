@@ -45,7 +45,7 @@ jobs:
             echo "Failed to extract version from tag: $LATEST_TAG" >&2; exit 1;
           fi
 
-          all_messages=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "desktop \[(patch|minor|major)\] .*")
+          all_messages=$(git log "$LATEST_TAG"..HEAD --format=%B | grep -E "desktop \[(patch|minor|major)\] .*" | sed 's/desktop/•/g')
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$all_messages" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
