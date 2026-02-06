@@ -134,18 +134,21 @@ final class GraphImportsLinter: GraphImportsLinting {
             var observedImports: Set<String>
             switch inspectType {
             case .redundant:
-                let directDependencies = Set(graphTraverser.directTargetDependencies(
-                    path: target.project.path,
-                    name: target.target.name
-                ).filter {
-                    switch $0.graphTarget.target.product {
-                    case .staticLibrary, .staticFramework, .dynamicLibrary, .framework:
-                        return true
+                let directDeps: Set<String> = Set((graphTraverser.dependencies[GraphDependency.target(name: target.target.name, path: target.path)] ?? []).compactMap { graphDep in
+                    switch graphDep {
+                    case let .target(name, path, _):
+                        guard let graphTarget = graphTraverser.target(path: path, name: name) else { return nil }
+                        switch graphTarget.target.product {
+                        case .staticLibrary, .staticFramework, .dynamicLibrary, .framework:
+                            return graphTarget.target.productName
+                        default:
+                            return nil
+                        }
                     default:
-                        return false
+                        return graphDep.nameWithoutExtension
                     }
-                }.map { $0.target.productName })
-                observedImports = directDependencies.subtracting(sourceDependencies)
+                })
+                observedImports = directDeps.subtracting(sourceDependencies)
             case .implicit:
                 let explicitTargetDependencies = Set(dependencies.map { $0.nameWithoutExtension })
                 observedImports = sourceDependencies
