@@ -17,7 +17,13 @@ struct GekoDesktopApp: App {
             AnyView(dependencyAssembly.mainViewAssembly
                 .build())
                 .environment(dependencyAssembly)
-                .frame(width: 1500, height: 700)
+                .modify { content in
+                    if #available(macOS 26, *) {
+                        content.frame(width: 1500, height: 700)
+                    } else {
+                        content.frame(minWidth: 1400, minHeight: 700)
+                    }
+                }
         }
         .windowResizability(.contentSize)
         .commands(content: { CommandGroup(after: .appInfo) {
