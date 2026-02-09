@@ -71,8 +71,11 @@ open class GekoAcceptanceTestCase: XCTestCase {
             .appending(component: "fixtures")
 
         fixturePath = fixtureTemporaryDirectory.path.appending(component: fixture.path)
-        
-        setenv(Constants.EnvironmentVariables.forceConfigCacheDirectory, fixturePath.appending(component: ".geko").pathString, 1)
+
+        setenv(
+            Constants.EnvironmentVariables.forceConfigCacheDirectory.rawValue,
+            fixturePath.appending(component: ".geko").pathString, 1
+        )
         GekoPluginStorage.shared.register(gekoPlugins: [])
         CacheDirectoriesProvider.resetCachedEnvironments()
         ProjectDescriptionVersionProvider.shared.override(projectDescriptionVersion: Constants.projectDescriptionVersion)

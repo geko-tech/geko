@@ -14,12 +14,12 @@ public final class CacheDirectoriesProvider: CacheDirectoriesProviding {
     private static let defaultDirectory = try! AbsolutePath(validatingAbsolutePath: URL(fileURLWithPath: NSHomeDirectory()).path)
         .appending(component: ".geko")
     private static var forcedCacheDirectory: AbsolutePath? {
-        directoryFromEnv(variable: Constants.EnvironmentVariables.forceConfigCacheDirectory)
+        directoryFromEnv(variable: .forceConfigCacheDirectory)
     }
     private static var forcedBuildCacheDirectory: AbsolutePath? {
-        directoryFromEnv(variable: Constants.EnvironmentVariables.forceBuildCacheDirectory)
+        directoryFromEnv(variable: .forceBuildCacheDirectory)
     }
-    private static func directoryFromEnv(variable: String) -> AbsolutePath? {
+    private static func directoryFromEnv(variable: Constants.EnvironmentVariables) -> AbsolutePath? {
         if let value = Self.cachedEnvs.wrappedValue[variable] {
             return value
         }
@@ -31,7 +31,7 @@ public final class CacheDirectoriesProvider: CacheDirectoriesProviding {
         })
     }
     private static var cachedEnvs: Atomic<[String: AbsolutePath?]> = .init(wrappedValue: [:])
-    
+
     internal static func resetCachedEnvironments() {
         cachedEnvs.wrappedValue = [:]
     }
@@ -51,7 +51,7 @@ public final class CacheDirectoriesProvider: CacheDirectoriesProviding {
             (Self.forcedCacheDirectory ?? cacheDirectory).appending(component: category.directoryName)
         }
     }
-    
+
     private func forcedCacheDirectory(for category: CacheCategory) -> AbsolutePath? {
         switch category {
         case .plugins, .tests, .generatedAutomationProjects, .projectDescriptionHelpers, .manifests:
