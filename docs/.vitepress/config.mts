@@ -92,6 +92,18 @@ export default defineConfig(async () => {
                 ),
                 wrapSidebarSection(
                   await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/autoupdate",
+                    baseUrl: "/guides/features/autoupdate/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Autoupdate",
+                    collapsed: true,
+                    link: "/guides/features/autoupdate/"
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
                     scanDir: "docs/guides/features/linux",
                     baseUrl: "/guides/features/linux/",
                     useTitleFromFileHeading: true
