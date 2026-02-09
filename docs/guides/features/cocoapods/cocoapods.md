@@ -164,7 +164,7 @@ Because geko uses command `pod ipc spec repl` to convert podspec files to json, 
 
 ### Specifying paths for projects generated from local podspecs
 
-Cocoapods spec requires that every public podspec must be located at the root of repository. That can be underirable when working on such modules, since every generated prioject will be located at the root group in Xcode. Geko provides capability to specify directories for generated projects.
+Cocoapods spec requires that every public podspec must be located at the root of repository. That can be undesirable when working on such modules, since every generated prioject will be located at the root group in Xcode. Geko provides capability to specify directories for generated projects.
 
 To collect all generated projects for podspecs in a single direcctory, use `.automatic(["**/*.podspec"], "CustomDir")`.
 
