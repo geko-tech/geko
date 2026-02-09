@@ -12,18 +12,19 @@ struct MainView<T: IMainViewStateOutput>: View {
         NavigationSplitView() {
             AnyView(dependencies.sideBarAssembly
                 .build())
-                .frame(minWidth: 200)
+            .navigationSplitViewColumnWidth(250)
         } detail: {
             VSplitView {
                 container
                 if viewState.showTerminal {
                     AnyView(terminalView)
-                }
-            }
+                }   
+            }.navigationSplitViewColumnWidth(988) // 1500 global width - 500 toolbars, - 12 padding
         }
         .inspector(isPresented: $viewState.isInspectorPresented) {
             AnyView(dependencies.workspaceInspectorAssembly
                 .build())
+            .frame(width: 250)
         }
         .errorAlert(error: $viewState.alertError)
         .alert($viewState.appOutdatedError.wrappedValue ?? "", isPresented: .constant($viewState.appOutdatedError.wrappedValue != nil)) { 
@@ -34,7 +35,7 @@ struct MainView<T: IMainViewStateOutput>: View {
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 HStack {
-                    AnyView(dependencies.toolbarAssembly.buildIfNeeded())
+                    EmptyView()
                 }
             }
             ToolbarItem(placement: .automatic) {
@@ -44,12 +45,12 @@ struct MainView<T: IMainViewStateOutput>: View {
                         EmptyView()
                     case .running(let info):
                         HStack(spacing: 8) {
-                            Text(info)
+                            Text(info).padding(.leading)
                             ProgressView().foregroundStyle(.blue).controlSize(.small)
                         }
                     case .error(let info):
                         HStack {
-                            Text(info)
+                            Text(info).padding(.leading)
                             Image.danger.foregroundStyle(.red)
                         }
                     }
@@ -96,7 +97,6 @@ struct MainView<T: IMainViewStateOutput>: View {
                     .build())
             }
         }
-        .frame(minWidth: 500, maxWidth: .infinity, maxHeight: .infinity)
         .background(.containerBackground)
         .layoutPriority(1)
     }
