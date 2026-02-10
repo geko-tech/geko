@@ -33,7 +33,7 @@ For PR style details can be found in the [Editing](../contributing/release.md) s
 1. Clone the Geko repo: https://github.com/geko-tech/geko
 2. Open the project (it is recommended to open it via terminal using the `xed .` command to ensure environment variables are loaded correctly).
 3. Select the Geko target.
-4. In the Scheme settings, under Options > Working Directory, set the path to the project you will be generating with Geko.
+4. In the Scheme settings, in Run action, under Options find Working Directory field, set the path to the project you will be generating with Geko.
 
 #### Debug
 
@@ -41,7 +41,7 @@ To debug, you can use your own projects or the ready-made fixtures located in th
 
 Fixtures are pre-configured demo projects in various setups used for debugging and testing.
 
-To debug using a specific fixture, go to Scheme > Options > Working Directory and set the path to that fixture.
+To debug using a specific fixture, go to Scheme > Run Action > Options > Working Directory and set the path to that fixture.
 
 #### FAQ
 
