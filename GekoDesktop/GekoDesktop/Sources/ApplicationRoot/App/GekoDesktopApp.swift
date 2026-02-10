@@ -17,8 +17,15 @@ struct GekoDesktopApp: App {
             AnyView(dependencyAssembly.mainViewAssembly
                 .build())
                 .environment(dependencyAssembly)
-                .frame(minWidth: 1400, minHeight: 700)
+                .modify { content in
+                    if #available(macOS 26, *) {
+                        content.frame(width: 1500, height: 700)
+                    } else {
+                        content.frame(minWidth: 1400, minHeight: 700)
+                    }
+                }
         }
+        .windowResizability(.contentSize)
         .commands(content: { CommandGroup(after: .appInfo) {
             if shortcutsAppState.isLoaded {
                 ForEach(shortcutsAppState.shortcuts.filter { $0.keyboardKey != nil }, id: \.self) { shortcut in

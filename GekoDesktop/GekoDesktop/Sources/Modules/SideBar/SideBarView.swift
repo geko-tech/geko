@@ -28,12 +28,19 @@ struct SideBarView<T: ISideBarViewStateOutput>: View {
             Spacer()
             appVersionView
             .padding()
-            .background(.cellBackground)
-            .cornerRadius(5)
-            .overlay(
-                RoundedRectangle(cornerRadius: 5)
-                    .stroke(.cellBorder, lineWidth: 1)
-            )
+            .modify { content in
+                if #available(macOS 26, *) {
+                    content.padding()
+                } else {
+                    content.padding()
+                        .background(.cellBackground)
+                        .cornerRadius(5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(.cellBorder, lineWidth: 1)
+                        )
+                }
+            }
         }
         .toolbar(content: {
             if viewState.sideBarCommand.isExecutingCommandAvailable {

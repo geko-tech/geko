@@ -12,18 +12,34 @@ struct MainView<T: IMainViewStateOutput>: View {
         NavigationSplitView() {
             AnyView(dependencies.sideBarAssembly
                 .build())
-                .frame(minWidth: 200)
+            .modify { content in
+                if #available(macOS 26, *) {
+                    content.navigationSplitViewColumnWidth(250)
+                } else {
+                    content.frame(minWidth: 200)
+                }
+            }
         } detail: {
             VSplitView {
                 container
                 if viewState.showTerminal {
                     AnyView(terminalView)
+                }   
+            }
+            .modify { content in
+                if #available(macOS 26, *) {
+                    content.navigationSplitViewColumnWidth(988) // 1500 global width - 500 toolbars, - 12 padding
                 }
             }
         }
         .inspector(isPresented: $viewState.isInspectorPresented) {
             AnyView(dependencies.workspaceInspectorAssembly
                 .build())
+            .modify { content in
+                if #available(macOS 26, *) {
+                    content.frame(width: 250)
+                }
+            }
         }
         .errorAlert(error: $viewState.alertError)
         .alert($viewState.appOutdatedError.wrappedValue ?? "", isPresented: .constant($viewState.appOutdatedError.wrappedValue != nil)) { 
@@ -34,7 +50,11 @@ struct MainView<T: IMainViewStateOutput>: View {
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 HStack {
-                    AnyView(dependencies.toolbarAssembly.buildIfNeeded())
+                    if #available(macOS 26, *) {
+                        EmptyView()
+                    } else {
+                        AnyView(dependencies.toolbarAssembly.buildIfNeeded())
+                    }
                 }
             }
             ToolbarItem(placement: .automatic) {
@@ -45,11 +65,21 @@ struct MainView<T: IMainViewStateOutput>: View {
                     case .running(let info):
                         HStack(spacing: 8) {
                             Text(info)
+                                .modify { content in
+                                    if #available(macOS 26, *) {
+                                        content.padding(.leading)
+                                    }
+                                }
                             ProgressView().foregroundStyle(.blue).controlSize(.small)
                         }
                     case .error(let info):
                         HStack {
                             Text(info)
+                                .modify { content in
+                                    if #available(macOS 26, *) {
+                                        content.padding(.leading)
+                                    }
+                                }
                             Image.danger.foregroundStyle(.red)
                         }
                     }
@@ -96,8 +126,15 @@ struct MainView<T: IMainViewStateOutput>: View {
                     .build())
             }
         }
-        .frame(minWidth: 500, maxWidth: .infinity, maxHeight: .infinity)
-        .background(.containerBackground)
+        .modify { content in
+            if #available(macOS 26, *) {
+                content.background(.containerBackground)
+            } else {
+                content
+                    .background(.containerBackground)
+                    .frame(minWidth: 500, maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
         .layoutPriority(1)
     }
     
