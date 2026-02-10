@@ -43,6 +43,14 @@ Fixtures are pre-configured demo projects in various setups used for debugging a
 
 To debug using a specific fixture, go to Scheme > Run Action > Options > Working Directory and set the path to that fixture.
 
+#### Debug commands
+
+To debug a certain function you need to set an argument. A list of all arguments is available when running without arguments. For assistance and help, use the option -h.
+
+To set an argument go to Scheme > Run Action > Arguments > Arguments Passed on launch.
+
+For example: `build `
+
 #### FAQ
 
 1. __Q:__ How do I run commands from Xcode?
