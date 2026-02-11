@@ -116,8 +116,9 @@ extension ProjectAutomation.Graph {
             .reduce(into: [String: ProjectAutomation.Project]()) {
                 $0[$1.path.pathString] = ProjectAutomation.Project.from($1)
             }
+        let workspace = ProjectAutomation.Workspace.from(graph.workspace)
 
-        return ProjectAutomation.Graph(name: graph.name, path: graph.path.pathString, projects: projects)
+        return ProjectAutomation.Graph(name: graph.name, path: graph.path.pathString, workspace: workspace, projects: projects)
     }
 
     fileprivate func export(to filePath: AbsolutePath) throws {
@@ -230,5 +231,16 @@ extension ProjectAutomation.Scheme {
         }
 
         return ProjectAutomation.Scheme(name: scheme.name, testActionTargets: testTargets)
+    }
+}
+
+extension ProjectAutomation.Workspace {
+    fileprivate static func from(_ workspace: ProjectDescription.Workspace) -> ProjectAutomation.Workspace {
+        let schemes = workspace.schemes.reduce(into: [ProjectAutomation.Scheme]()) { $0.append(ProjectAutomation.Scheme.from($1)) }
+        return ProjectAutomation.Workspace(
+            name: workspace.name,
+            path: workspace.path.pathString,
+            schemes: schemes
+        )
     }
 }
