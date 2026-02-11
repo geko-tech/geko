@@ -96,7 +96,7 @@ let workspace = Workspace(
 )
 ```
 
-[Link to the source code of the plugin from the example above](https://github.com/geko-tech/geko-plugins/tree/main/WorkspaceMapperPluginExample).
+[Link to the source code of the plugin from the example above](https://github.com/geko-tech/geko-plugins/tree/main/WorkspaceMapperExample).
 
 ## Local development
 
