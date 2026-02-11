@@ -480,13 +480,13 @@ class ProjectFileElements {
 
         var lastGroup: PBXGroup! = firstElement.element as? PBXGroup
         var lastPath: AbsolutePath = firstElement.path
-        let components = fileElement.path.relative(to: lastPath).components
-        for component in components.enumerated() {
+        let components = fileElement.path.relative(to: lastPath).optimizedComponents
+        for component in components {
             if lastGroup == nil { return }
             guard
                 let element = addElement(
-                    relativePath: try RelativePath(validating: component.element),
-                    isLeaf: component.offset == components.count - 1,
+                    relativePath: try RelativePath(validating: component.0),
+                    isLeaf: component.1,
                     from: lastPath,
                     toGroup: lastGroup!,
                     pbxproj: pbxproj
@@ -544,13 +544,13 @@ class ProjectFileElements {
 
         var lastGroup: PBXGroup! = firstElement.element as? PBXGroup
         var lastPath: AbsolutePath = firstElement.path
-        let components = fileElement.path.relative(to: lastPath).components
-        for component in components.enumerated() {
+        let components = fileElement.path.relative(to: lastPath).optimizedComponents
+        for component in components {
             if lastGroup == nil { return }
             guard
                 let element = addElement(
-                    relativePath: try RelativePath(validating: component.element),
-                    isLeaf: component.offset == components.count - 1,
+                    relativePath: try RelativePath(validating: component.0),
+                    isLeaf: component.1,
                     isBuildableFolder: true,
                     from: lastPath,
                     toGroup: lastGroup!,
@@ -585,11 +585,7 @@ class ProjectFileElements {
 
         // If the path is ../../xx we specify the name
         // to prevent Xcode from using that as a name.
-        var name: String?
-        let components = relativePath.components
-        if components.count != 1 {
-            name = components.last!
-        }
+        let name = relativePath.lastPathComponentFast
 
         // Add the file element
         if isLocalized(path: absolutePath) {
@@ -908,14 +904,18 @@ class ProjectFileElements {
     /// If source root path is /a/b/c/project/ and file path is /a/d/myfile.swift
     /// this method will return ../../../d/
     func closestRelativeElementPath(pathRelativeToSourceRoot: RelativePath) throws -> RelativePath {
-        let relativePathComponents = pathRelativeToSourceRoot.components
+        let relativePathComponents = pathRelativeToSourceRoot.optimizedComponents
+        var firstComponent: String?
         let firstElementComponents = relativePathComponents.reduce(into: [String]()) { components, component in
             let isLastRelative = components.last == ".." || components.last == "."
             if components.last != nil, !isLastRelative { return }
-            components.append(component)
+            if firstComponent == nil {
+                firstComponent = component.0
+            }
+            components.append(component.0)
         }
-        if firstElementComponents.isEmpty, !relativePathComponents.isEmpty {
-            return try RelativePath(validating: relativePathComponents.first!)
+        if firstElementComponents.isEmpty, let firstComponent {
+            return try RelativePath(validating: firstComponent)
         } else {
             return try RelativePath(validating: firstElementComponents.joined(separator: "/"))
         }
