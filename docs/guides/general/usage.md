@@ -3,7 +3,7 @@ title: How to use Geko
 order: 3
 ---
 
-# Ho to use geko
+# How to use geko
 
 To get started with Geko, you’ll need a few basic commands.
 
