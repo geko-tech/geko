@@ -585,7 +585,7 @@ class ProjectFileElements {
 
         // If the path is ../../xx we specify the name
         // to prevent Xcode from using that as a name.
-        let name = relativePath.lastPathComponentFast
+        let name = relativePath.lastPathComponentIfNotSingle
 
         // Add the file element
         if isLocalized(path: absolutePath) {

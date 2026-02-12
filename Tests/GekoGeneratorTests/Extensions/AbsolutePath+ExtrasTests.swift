@@ -4,57 +4,57 @@ import ProjectDescription
 
 final class AbsolutePathOptimizedTests: XCTestCase {
 
-    // MARK: - lastPathComponentFast
+    // MARK: - lastPathComponentIfNotSingle
 
     func testLastPathComponent_singleRelative() {
         let path = AbsolutePath("/tmp").appending(component: "file")
-        XCTAssertEqual(path.lastPathComponentFast, "file")
+        XCTAssertEqual(path.lastPathComponentIfNotSingle, "file")
     }
 
     func testLastPathComponent_singleComponentRelative() {
         let path = AbsolutePath("/tmp").appending(component: "file")
         let relative = AbsolutePath(path.pathString)
-        XCTAssertEqual(relative.lastPathComponentFast, "file")
+        XCTAssertEqual(relative.lastPathComponentIfNotSingle, "file")
     }
 
     func testLastPathComponent_onlyOneComponent_shouldReturnNil() {
         let path = AbsolutePath("/file")
-        XCTAssertEqual(path.lastPathComponentFast, "file")
+        XCTAssertEqual(path.lastPathComponentIfNotSingle, "file")
     }
 
     func testLastPathComponent_plainSingle_shouldReturnNil() {
         let single = AbsolutePath("only")
-        XCTAssertNil(single.lastPathComponentFast)
+        XCTAssertNil(single.lastPathComponentIfNotSingle)
     }
 
     func testLastPathComponent_nestedPath() {
         let path = AbsolutePath("/usr/local/bin")
-        XCTAssertEqual(path.lastPathComponentFast, "bin")
+        XCTAssertEqual(path.lastPathComponentIfNotSingle, "bin")
     }
 
     func testLastPathComponent_trailingSlash() {
         let path = AbsolutePath("/usr/local/bin/")
-        XCTAssertEqual(path.lastPathComponentFast, "bin")
+        XCTAssertEqual(path.lastPathComponentIfNotSingle, "bin")
     }
 
     func testLastPathComponent_rootOnly() {
         let path = AbsolutePath("/")
-        XCTAssertNil(path.lastPathComponentFast)
+        XCTAssertNil(path.lastPathComponentIfNotSingle)
     }
 
     func testLastPathComponent_multipleTrailingSlashes() {
         let path = AbsolutePath("/usr/local/bin////")
-        XCTAssertEqual(path.lastPathComponentFast, "bin")
+        XCTAssertEqual(path.lastPathComponentIfNotSingle, "bin")
     }
 
     func testLastPathComponent_multipleInternalSlashes() {
         let path = AbsolutePath("/usr//local///bin")
-        XCTAssertEqual(path.lastPathComponentFast, "bin")
+        XCTAssertEqual(path.lastPathComponentIfNotSingle, "bin")
     }
 
     func testLastPathComponent_onlySlashes() {
         let path = AbsolutePath("////")
-        XCTAssertNil(path.lastPathComponentFast)
+        XCTAssertNil(path.lastPathComponentIfNotSingle)
     }
 
     // MARK: - optimizedComponents

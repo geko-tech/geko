@@ -13,7 +13,13 @@ extension AbsolutePath {
         PathSplitSequence(pathString)
     }
 
-    var lastPathComponentFast: String? {
+    /// Return last path component if it is not the only component
+    /// Shortly, this code is optimized version of
+    /// ```
+    /// let components = relativePath.components
+    /// components.count != 1 ? components.last! : nil
+    /// ```
+    var lastPathComponentIfNotSingle: String? {
         var pathString = pathString
         return pathString.withUTF8 { buffer in
             let count = buffer.count
@@ -47,8 +53,8 @@ extension AbsolutePath {
                 i -= 1
             }
 
-            let hasPreviousComponent =
-            i > 0 || buffer[0] == slash
+            // root folder is treated as a separate component
+            let hasPreviousComponent = i > 0 || buffer[0] == slash
 
             guard hasPreviousComponent else {
                 return nil
