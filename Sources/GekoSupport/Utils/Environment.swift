@@ -1,6 +1,17 @@
 import Foundation
 import ProjectDescription
 
+public extension Dictionary where Key == String {
+    subscript(_ key: Constants.EnvironmentVariables) -> Value? {
+        get {
+            return self[key.rawValue]
+        }
+        set(newValue) {
+            self[key.rawValue] = newValue
+        }
+    }
+}
+
 /// Protocol that defines the interface of a local environment controller.
 /// It manages the local directory where gekoenv stores the geko versions and user settings.
 public protocol Environmenting: AnyObject {
@@ -13,10 +24,6 @@ public protocol Environmenting: AnyObject {
     /// Returns true if the output of Geko should be coloured.
     var shouldOutputBeColoured: Bool { get }
 
-    /// Returns automation path
-    /// Only to be used for acceptance tests
-    var automationPath: AbsolutePath? { get }
-
     /// Returns all the environment variables that are specific to Geko (prefixed with GEKO_)
     var gekoVariables: [String: String] { get }
 
@@ -28,9 +35,6 @@ public protocol Environmenting: AnyObject {
 
     /// Returns true if Geko is running with verbose mode enabled.
     var isVerbose: Bool { get }
-
-    /// Returns the path to the directory where the async queue events are persisted.
-    var queueDirectory: AbsolutePath { get }
 
     /// Enabled command analytics
     var isStatsEnabled: Bool { get }
@@ -172,19 +176,6 @@ public class Environment: Environmenting {
 
     public var inspectTargetRef: String? {
         ProcessInfo.processInfo.environment[Constants.EnvironmentVariables.inspectTargetRef]
-    }
-
-    public var automationPath: AbsolutePath? {
-        ProcessInfo.processInfo.environment[Constants.EnvironmentVariables.automationPath]
-            .map { try! AbsolutePath(validatingAbsolutePath: $0) }  // swiftlint:disable:this force_try
-    }
-
-    public var queueDirectory: AbsolutePath {
-        if let envVariable = ProcessInfo.processInfo.environment[Constants.EnvironmentVariables.queueDirectory] {
-            return try! AbsolutePath(validatingAbsolutePath: envVariable)  // swiftlint:disable:this force_try
-        } else {
-            return directory.appending(component: Constants.AsyncQueue.directoryName)
-        }
     }
 
     /// Returns all the environment variables that are specific to Geko (prefixed with GEKO_)
