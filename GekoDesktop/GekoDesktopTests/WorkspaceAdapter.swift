@@ -10,7 +10,8 @@ final class WorkspaceAdapter {
         let graphWorkspace = GraphWorkspace(
             name: graph.name,
             projects: try graph.projects.map { try map(project: $0.value, graph: graph) },
-            focusedTargets: []
+            focusedTargets: [],
+            schemes: []
         )
         let workspace = Workspace(
             graph: graphWorkspace,

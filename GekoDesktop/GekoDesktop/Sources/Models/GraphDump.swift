@@ -3,6 +3,7 @@ import TSCBasic
 final class GraphDump: Codable {
     let name: String
     let projects: [String: GraphProjectDump]
+    let workspace: GraphDumpWorkspace?
 } 
 
 final class GraphProjectDump: Codable {
@@ -10,6 +11,11 @@ final class GraphProjectDump: Codable {
     let isExternal: Bool
     let schemes: [GraphScheme]
     let targets: [GraphTargetDump]
+}
+
+final class GraphDumpWorkspace: Codable {
+    let name: String
+    let schemes: [GraphScheme]
 }
 
 final class GraphScheme: Codable {
