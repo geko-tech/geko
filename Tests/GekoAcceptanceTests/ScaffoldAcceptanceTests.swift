@@ -14,97 +14,92 @@ final class ScaffoldAcceptanceTests: GekoAcceptanceTestCase {
         super.tearDown()
     }
 
-// TODO: Uses swift package from github
-//    func test_ios_app_with_templates_custom() async throws {
-//        try setUpFixture(.iosAppWithTemplates)
-//        try await run(FetchCommand.self)
-//        try await ScaffoldCommand.preprocess([
-//            "scaffold",
-//            "custom",
-//            "--name",
-//            "TemplateProject",
-//            "--path",
-//            fixturePath.pathString,
-//        ])
-//        try await run(ScaffoldCommand.self, "custom", "--name", "TemplateProject")
-//        let templateProjectDirectory = fixturePath.appending(component: "TemplateProject")
-//        XCTAssertEqual(
-//            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "custom.swift")),
-//            "// this is test TemplateProject content"
-//        )
-//        XCTAssertEqual(
-//            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "generated.swift")),
-//            """
-//            // Generated file with platform: ios and name: TemplateProject
-//
-//            """
-//        )
-//    }
+    func test_ios_app_with_templates_custom() async throws {
+        try setUpFixture(.iosAppWithTemplates)
+        try await run(FetchCommand.self)
+        try await ScaffoldCommand.preprocess([
+            "scaffold",
+            "custom",
+            "--name",
+            "TemplateProject",
+            "--path",
+            fixturePath.pathString,
+        ])
+        try await run(ScaffoldCommand.self, "custom", "--name", "TemplateProject")
+        let templateProjectDirectory = fixturePath.appending(component: "TemplateProject")
+        XCTAssertEqual(
+            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "custom.swift")),
+            "// this is test TemplateProject content"
+        )
+        XCTAssertEqual(
+            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "generated.swift")),
+            """
+            // Generated file with platform: ios and name: TemplateProject
 
-// TODO: Uses swift package from github
-//    func test_ios_app_with_templates_custom_using_filters() async throws {
-//        try setUpFixture(.iosAppWithTemplates)
-//        try await run(FetchCommand.self)
-//        try await ScaffoldCommand.preprocess([
-//            "scaffold",
-//            "custom_using_filters",
-//            "--name",
-//            "TemplateProject",
-//            "--path",
-//            fixturePath.pathString,
-//        ])
-//        try await run(ScaffoldCommand.self, "custom_using_filters", "--name", "TemplateProject")
-//        let templateProjectDirectory = fixturePath.appending(component: "TemplateProject")
-//        XCTAssertEqual(
-//            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "custom.swift")),
-//            "// this is test TemplateProject content"
-//        )
-//    }
+            """
+        )
+    }
 
-// TODO: Uses swift package from github
-//    func test_ios_app_with_templates_custom_using_copy_folder() async throws {
-//        try setUpFixture(.iosAppWithTemplates)
-//        try await run(FetchCommand.self)
-//        try await ScaffoldCommand.preprocess([
-//            "scaffold",
-//            "custom_using_copy_folder",
-//            "--name",
-//            "TemplateProject",
-//            "--path",
-//            fixturePath.pathString,
-//        ])
-//        try await run(ScaffoldCommand.self, "custom_using_copy_folder", "--name", "TemplateProject")
-//        let templateProjectDirectory = fixturePath.appending(component: "TemplateProject")
-//        XCTAssertEqual(
-//            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "generated.swift")),
-//            """
-//            // Generated file with platform: ios and name: TemplateProject
-//
-//            """
-//        )
-//        XCTAssertEqual(
-//            try FileHandler.shared.readTextFile(
-//                templateProjectDirectory.appending(components: ["sourceFolder", "file1.txt"])
-//            ),
-//            """
-//            Content of file 1
-//
-//            """
-//        )
-//        XCTAssertEqual(
-//            try FileHandler.shared.readTextFile(
-//                templateProjectDirectory.appending(components: ["sourceFolder", "subFolder", "file2.txt"])
-//            ),
-//            """
-//            Content of file 2
-//
-//            """
-//        )
-//    }
+    func test_ios_app_with_templates_custom_using_filters() async throws {
+        try setUpFixture(.iosAppWithTemplates)
+        try await run(FetchCommand.self)
+        try await ScaffoldCommand.preprocess([
+            "scaffold",
+            "custom_using_filters",
+            "--name",
+            "TemplateProject",
+            "--path",
+            fixturePath.pathString,
+        ])
+        try await run(ScaffoldCommand.self, "custom_using_filters", "--name", "TemplateProject")
+        let templateProjectDirectory = fixturePath.appending(component: "TemplateProject")
+        XCTAssertEqual(
+            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "custom.swift")),
+            "// this is test TemplateProject content"
+        )
+    }
+
+    func test_ios_app_with_templates_custom_using_copy_folder() async throws {
+        try setUpFixture(.iosAppWithTemplates)
+        try await run(FetchCommand.self)
+        try await ScaffoldCommand.preprocess([
+            "scaffold",
+            "custom_using_copy_folder",
+            "--name",
+            "TemplateProject",
+            "--path",
+            fixturePath.pathString,
+        ])
+        try await run(ScaffoldCommand.self, "custom_using_copy_folder", "--name", "TemplateProject")
+        let templateProjectDirectory = fixturePath.appending(component: "TemplateProject")
+        XCTAssertEqual(
+            try FileHandler.shared.readTextFile(templateProjectDirectory.appending(component: "generated.swift")),
+            """
+            // Generated file with platform: ios and name: TemplateProject
+
+            """
+        )
+        XCTAssertEqual(
+            try FileHandler.shared.readTextFile(
+                templateProjectDirectory.appending(components: ["sourceFolder", "file1.txt"])
+            ),
+            """
+            Content of file 1
+
+            """
+        )
+        XCTAssertEqual(
+            try FileHandler.shared.readTextFile(
+                templateProjectDirectory.appending(components: ["sourceFolder", "subFolder", "file2.txt"])
+            ),
+            """
+            Content of file 2
+
+            """
+        )
+    }
 
     func test_app_with_plugins_local_plugin() async throws {
-        try XCTSkipIf(true, "// TODO: Github")
-
         try setUpFixture(.appWithPlugins)
         try await run(FetchCommand.self)
         try await ScaffoldCommand.preprocess(["scaffold", "custom", "--name", "PluginTemplate", "--path", fixturePath.pathString])
@@ -124,23 +119,20 @@ final class ScaffoldAcceptanceTests: GekoAcceptanceTestCase {
     }
 
     func test_app_with_plugins_remote_plugin() async throws {
-        // TODO: Github publish example later
-        try XCTSkipIf(true, "fixture appWithPlugins -> Config.swift git url")
-
         try setUpFixture(.appWithPlugins)
         try await run(FetchCommand.self)
         try await ScaffoldCommand.preprocess([
             "scaffold",
-            "custom_two",
+            "platform",
             "--name",
             "PluginTemplate",
             "--path",
             fixturePath.pathString,
         ])
-        try await run(ScaffoldCommand.self, "custom_two", "--name", "PluginTemplate")
+        try await run(ScaffoldCommand.self, "platform", "--name", "PluginTemplate")
         let pluginTemplateDirectory = fixturePath.appending(component: "PluginTemplate")
         XCTAssertEqual(
-            try FileHandler.shared.readTextFile(pluginTemplateDirectory.appending(component: "custom.swift")),
+            try FileHandler.shared.readTextFile(pluginTemplateDirectory.appending(component: "platform.swift")),
             "// this is test PluginTemplate content"
         )
         XCTAssertEqual(

@@ -1,7 +1,7 @@
 import ProjectDescription
 import ProjectDescriptionHelpers
 
-import ExampleGekoExecutablePlugin
+import ProjectDescriptionHelpersPluginExample
 import LocalPlugin
 
 // Test plugins are loaded
