@@ -4,19 +4,22 @@ import TSCBasic
 final class GraphWorkspace {
     let name: String
     let projects: [GraphProject]
+    let schemes: [GraphScheme]
     
     var focusedTargets: [GraphTarget]
     
-    init(name: String, projects: [GraphProject], focusedTargets: [GraphTarget]) {
+    init(name: String, projects: [GraphProject], focusedTargets: [GraphTarget], schemes: [GraphScheme]) {
         self.name = name
         self.projects = projects
         self.focusedTargets = focusedTargets
+        self.schemes = schemes
     }
     
     init(from graph: GraphDump) {
         self.name = graph.name
         self.projects = graph.projects.map { GraphProject(path: $0.key, project: $0.value) }
         self.focusedTargets = []
+        self.schemes = graph.workspace?.schemes ?? []
     }
 }
 
@@ -99,6 +102,8 @@ final class Workspace {
     }
     
     func schemes() -> [GraphScheme] {
-        graph.projects.map { $0.schemes }.reduce([], +)
+        var allSchemes = graph.projects.flatMap { $0.schemes }
+        allSchemes.append(contentsOf: graph.schemes)
+        return allSchemes
     }
 }
