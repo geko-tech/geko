@@ -1,3 +1,6 @@
+## Desktop 1.0.3
+• [patch] support workspace schemes (#88)
+
 ## Desktop 1.0.2
 desktop [patch] adopt for macos 26 (#78)
 
