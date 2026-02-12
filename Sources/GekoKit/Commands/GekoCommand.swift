@@ -7,6 +7,7 @@ public struct GekoCommand: AsyncParsableCommand {
 
     public static var configuration: CommandConfiguration {
         var subcommands: [ParsableCommand.Type] = [
+            HelpEnvCommand.self,
             FetchCommand.self,
             CleanCommand.self,
             DumpCommand.self,

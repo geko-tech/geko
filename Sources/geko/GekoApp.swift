@@ -9,7 +9,7 @@ import GekoSupport
 private enum GekoApp {
     static func main() async throws {
         if CommandLine.topLevelArguments.contains("--verbose") {
-            try? ProcessEnv.setVar(Constants.EnvironmentVariables.verbose, value: "true")
+            try? ProcessEnv.setVar(Constants.EnvironmentVariables.verbose.rawValue, value: "true")
         }
 
         // bootstrap must be called before everything else

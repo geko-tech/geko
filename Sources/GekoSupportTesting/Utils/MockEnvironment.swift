@@ -18,7 +18,6 @@ public class MockEnvironment: Environmenting {
     }
 
     public var isVerbose: Bool = false
-    public var queueDirectoryStub: AbsolutePath?
     public var shouldOutputBeColoured: Bool = false
     public var isStandardOutputInteractive: Bool = false
     public var gekoVariables: [String: String] = [:]
@@ -44,14 +43,6 @@ public class MockEnvironment: Environmenting {
 
     public var settingsPath: AbsolutePath {
         directory.path.appending(component: "settings.json")
-    }
-
-    public var automationPath: AbsolutePath? {
-        nil
-    }
-
-    public var queueDirectory: AbsolutePath {
-        queueDirectoryStub ?? directory.path.appending(component: Constants.AsyncQueue.directoryName)
     }
 
     public var requestTimeout: TimeInterval? {
