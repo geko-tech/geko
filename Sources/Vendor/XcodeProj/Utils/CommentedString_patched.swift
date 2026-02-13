@@ -21,6 +21,11 @@ private extension UInt8 {
     static let smallZ: UInt8 = 122 // 'z'
 }
 
+private extension ContiguousArray<CChar> {
+    static let slashesUTF8CString = "//".utf8CString
+    static let threeUnderscoresUTF8CString = "___".utf8CString
+}
+
 /// String that includes a comment
 struct CommentedString {
     /// Entity string value.
@@ -51,75 +56,62 @@ struct CommentedString {
 
         var str = string
         return str.withUTF8 { buf -> String in
-            var containsInvalidCharacters = false
-            for ch in buf {
-                // ch == '_' || ch <= '$'
-                if ch == .underscore || ch == .dollar {
-                    continue
-                }
-                // ch >= '.' && ch <= '9'
-                if ch >= .dot && ch <= .nine {
-                    continue
-                }
-                // ch >= 'A' && ch <= 'Z'
-                if ch >= .capitalA && ch <= .capitalZ {
-                    continue
-                }
-                // ch >= 'a' && ch <= 'z'
-                if ch >= .smallA && ch <= .smallZ {
-                    continue
-                }
-                containsInvalidCharacters = true
-                break
-            }
+            let containsInvalidCharacters = buf.containsInvalidCharacters
 
             if !containsInvalidCharacters {
-                var containsSpecialCheckCharacters = false
-                for ch in buf {
-                    // ch == '_' || ch == '/'
-                    if ch == .underscore || ch == .slash {
-                        containsSpecialCheckCharacters = true
-                        break
-                    }
-                }
+                let containsSpecialCheckCharacters = buf.containsSpecialCheckCharacters
 
                 if !containsSpecialCheckCharacters {
                     return string
-                } else if !string.contains("//"), !string.contains("___") {
+                } else if !buf.containsCString(ContiguousArray.slashesUTF8CString),
+                          !buf.containsCString(ContiguousArray.threeUnderscoresUTF8CString) {
                     return string
                 }
             }
 
-            var escaped: [UInt8] = []
-            escaped.reserveCapacity(buf.count + 10)
-            escaped.append(.doubleQuotes)
+            // calculate exact size
+            let escapedCapacity = buf.escapedCommentCapacity
 
-            for character in buf {
-                switch character {
-                case .backslash:
-                    // "\\"
-                    escaped.append(.backslash)
-                    escaped.append(.backslash)
-                case .doubleQuotes:
-                    // "\""
-                    escaped.append(.backslash)
-                    escaped.append(.doubleQuotes)
-                case .tab:
-                    // "\\t""
-                    escaped.append(.backslash)
-                    escaped.append(.smallT)
-                case .newline:
-                    // "\\n""
-                    escaped.append(.backslash)
-                    escaped.append(.smallN)
-                default:
-                    // no need to escape character
-                    escaped.append(character)
+            // write directly into String storage
+            return String(unsafeUninitializedCapacity: escapedCapacity) { dst in
+                var outIndex = 0
+
+                dst[outIndex] = .doubleQuotes
+                outIndex += 1
+
+                for ch in buf {
+                    switch ch {
+                    case .backslash:
+                        dst[outIndex] = .backslash
+                        dst[outIndex + 1] = .backslash
+                        outIndex += 2
+
+                    case .doubleQuotes:
+                        dst[outIndex] = .backslash
+                        dst[outIndex + 1] = .doubleQuotes
+                        outIndex += 2
+
+                    case .tab:
+                        dst[outIndex] = .backslash
+                        dst[outIndex + 1] = .smallT
+                        outIndex += 2
+
+                    case .newline:
+                        dst[outIndex] = .backslash
+                        dst[outIndex + 1] = .smallN
+                        outIndex += 2
+
+                    default:
+                        dst[outIndex] = ch
+                        outIndex += 1
+                    }
                 }
-            }
 
-            escaped.append(.doubleQuotes)
-            return String(bytes: escaped, encoding: .utf8)!
+                dst[outIndex] = .doubleQuotes
+                outIndex += 1
+
+                return outIndex
+            }
         }
     }
 }
@@ -149,5 +141,69 @@ extension CommentedString: ExpressibleByStringLiteral {
 
     public init(unicodeScalarLiteral value: String) {
         self.init(value)
+    }
+}
+
+// MARK: Private
+
+private extension UnsafeBufferPointer<UInt8> {
+    /// Valid characters are:
+    /// 1. `_` and `$`
+    /// 2. `.`...`9`
+    /// 3. `A`...`Z`
+    /// 4. `a`...`z`
+    var containsInvalidCharacters: Bool {
+        for ch in self {
+            // ch == '_' || ch == '$'
+            if ch == .underscore || ch == .dollar {
+                continue
+            }
+            // ch >= '.' && ch <= '9'
+            if ch >= .dot && ch <= .nine {
+                continue
+            }
+            // ch >= 'A' && ch <= 'Z'
+            if ch >= .capitalA && ch <= .capitalZ {
+                continue
+            }
+            // ch >= 'a' && ch <= 'z'
+            if ch >= .smallA && ch <= .smallZ {
+                continue
+            }
+
+            return true
+        }
+
+        return false
+    }
+
+    /// Special check characters are `_` and `/`
+    var containsSpecialCheckCharacters: Bool {
+        for ch in self {
+            if ch == .underscore || ch == .slash {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /// Calculates escaped string size
+    /// Basically, `count + count(where: { [.backslash, .doubleQuotes, .tab, .newline].contains($0) }`
+    var escapedCommentCapacity: Int {
+        var escapeCount = 0
+
+        for ch in self {
+            switch ch {
+            case .backslash, .doubleQuotes, .tab, .newline:
+                escapeCount += 1   // each adds one extra byte
+            default:
+                break
+            }
+        }
+
+        return count        // original bytes
+             + escapeCount  // extra escape bytes
+             + 2            // surrounding quotes
     }
 }
