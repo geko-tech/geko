@@ -594,7 +594,7 @@ final class BuildPhaseGenerator: BuildPhaseGenerating {
             let buildFilePath = resource.path
 
             let pathString = buildFilePath.pathString
-            let isLocalized = pathString.contains(".lproj/")
+            let isLocalized = pathString.contains(charArray: Constants.lprojCString)
             let isLproj = buildFilePath.extension == "lproj"
 
             var element: (element: PBXFileElement, path: AbsolutePath)?
