@@ -393,7 +393,7 @@ class ProjectFileElements {
         sourceRootPath: AbsolutePath
     ) throws {
         // Pre-compiled artifact from the cache
-        if path.pathString.contains(CacheCategory.builds.directoryName) {
+        if path.pathString.contains(charArray: CacheCategory.builds.directoryName.utf8CString) {
             guard compiled[path] == nil else {
                 return
             }
