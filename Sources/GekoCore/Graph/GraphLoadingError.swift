@@ -2,6 +2,11 @@ import Foundation
 import struct ProjectDescription.AbsolutePath
 import GekoSupport
 
+struct GraphCircularDetectorNode: Hashable {
+    let path: AbsolutePath
+    let name: String
+}
+
 enum GraphLoadingError: FatalError, Equatable {
     case missingFile(AbsolutePath)
     case targetNotFound(String, AbsolutePath)
@@ -27,8 +32,8 @@ enum GraphLoadingError: FatalError, Equatable {
         case let .unexpected(message):
             return message
         case let .circularDependency(nodes):
-            let nodeDescriptions = nodes.map { "\($0.path):\($0.name)" }
-            return "Found circular dependency between targets: \(nodeDescriptions.joined(separator: " -> "))"
+            let nodeDescriptions = nodes.map { "\($0.name): \($0.path)" }
+            return "Found circular dependency between targets: \(nodes.map { $0.name }.joined(separator: " -> "))\n\n\(nodeDescriptions.joined(separator: "\n"))"
         }
     }
 

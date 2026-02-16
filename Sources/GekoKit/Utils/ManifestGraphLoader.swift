@@ -168,7 +168,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         workspaceModels.projects += podspecProjects.map { $0.path }
 
         // Check circular dependencies
-        try graphLoaderLinter.lintWorkspace(workspace: workspaceModels, projects: projectsModels)
+        try graphLoaderLinter.lintWorkspace(workspace: workspaceModels, projects: projectsModels, externalDependencies: dependenciesGraph)
 
         // Apply any registered model mappers
         var updatedModels = WorkspaceWithProjects(
