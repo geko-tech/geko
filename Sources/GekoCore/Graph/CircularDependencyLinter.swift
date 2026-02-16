@@ -11,6 +11,29 @@ public protocol CircularDependencyLinting {
 
 // MARK: - CircularDependencyLinter
 
+enum CircularDependencyLinterError: FatalError {
+    case duplicateTargetName(
+        name: String, firstProject: AbsolutePath, secondProject: AbsolutePath
+    )
+
+    var type: ErrorType { .abort }
+
+    var description: String {
+        switch self {
+        case let .duplicateTargetName(name, firstProject, secondProject):
+            if firstProject == secondProject {
+                return "Found two targets with the same name '\(name)' at \(firstProject)"
+            }
+
+            return """
+                Found two targets with the same name '\(name)' at
+                \(firstProject)
+                \(secondProject)
+                """
+        }
+    }
+}
+
 public class CircularDependencyLinter: CircularDependencyLinting {
     private struct Node {
         var name: String
@@ -44,7 +67,7 @@ public class CircularDependencyLinter: CircularDependencyLinting {
     public init() {}
 
     public func lintWorkspace(workspace: Workspace, projects: [Project], externalDependencies: GekoGraph.DependenciesGraph) throws {
-        var (map, queue) = buildIndegreeMap(
+        var (map, queue) = try buildIndegreeMap(
             projects: projects,
             externalDependencies: externalDependencies
         )
@@ -86,7 +109,7 @@ public class CircularDependencyLinter: CircularDependencyLinting {
     private func buildIndegreeMap(
         projects: [Project],
         externalDependencies: GekoGraph.DependenciesGraph
-    ) -> ([String: Node], [String]) {
+    ) throws -> ([String: Node], [String]) {
         var resultMap: [String: Node] = [:]
 
         for projectIdx in 0 ..< projects.count {
@@ -108,7 +131,12 @@ public class CircularDependencyLinter: CircularDependencyLinting {
 
                     if otherProjectIdx >= 0 || otherTargetIdx >= 0 {
                         guard otherProjectIdx == projectIdx, otherTargetIdx == targetIdx else {
-                            fatalError("duplicate target names")
+                            // fatalError("duplicate target names")
+                            throw CircularDependencyLinterError.duplicateTargetName(
+                                name: targetName,
+                                firstProject: path,
+                                secondProject: resultMap[targetName]!.path
+                            )
                         }
                     }
 
