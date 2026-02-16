@@ -258,7 +258,7 @@ final class BuildPhaseGenerator: BuildPhaseGenerating {
         var pbxBuildFiles = [PBXBuildFile]()
         for buildFile in sourceFilesWithAttributes.keys.sorted(by: { $0.basename < $1.basename }) {
             let buildFilePath = buildFile
-            let isLocalized = buildFilePath.pathString.contains(".lproj/")
+            let isLocalized = buildFilePath.pathString.contains(charArray: Constants.lprojCString)
             let element: (element: PBXFileElement, path: AbsolutePath)
             if !isLocalized {
                 guard let fileReference = fileElements.file(path: buildFile) else {
@@ -594,7 +594,7 @@ final class BuildPhaseGenerator: BuildPhaseGenerating {
             let buildFilePath = resource.path
 
             let pathString = buildFilePath.pathString
-            let isLocalized = pathString.contains(".lproj/")
+            let isLocalized = pathString.contains(charArray: Constants.lprojCString)
             let isLproj = buildFilePath.extension == "lproj"
 
             var element: (element: PBXFileElement, path: AbsolutePath)?
@@ -881,4 +881,8 @@ final class BuildPhaseGenerator: BuildPhaseGenerating {
         pbxBuildFiles.forEach { pbxproj.add(object: $0) }
         extensionKitExtensionsBuildPhase.files = pbxBuildFiles
     }
+}
+
+private enum Constants {
+    static let lprojCString = ".lproj/".utf8CString
 }
