@@ -784,24 +784,7 @@ final class GenerateAcceptanceTestiOSAppWithImplicitDependencies: GekoAcceptance
 }
 
 final class GenerateAcceptanceTestAppWithGoogleMaps: GekoAcceptanceTestCase {
-    private var ciChecker: CIChecking!
-
-    override func setUp() {
-        super.setUp()
-
-        self.ciChecker = CIChecker()
-    }
-
-    override func tearDown() {
-        self.ciChecker = nil
-
-        super.tearDown()
-    }
-
     func test_app_with_google_maps() async throws {
-        // A temporary solution until we move to GitHub.
-        guard !ciChecker.isCI() else { return }
-
         try setUpFixture(.appWithGoogleMaps)
         try await run(FetchCommand.self)
         try await run(GenerateCommand.self)

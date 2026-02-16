@@ -1,4 +1,4 @@
-import ExampleGekoExecutablePlugin
+import ProjectDescriptionHelpersPluginExample
 import LocalPlugin
 import ProjectDescription
 
