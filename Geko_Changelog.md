@@ -1,3 +1,8 @@
+## Geko 1.0.4
+• [patch] fix: crash in CircularDependencyLinter due to stack overflow (#92)
+• [patch] perf: String contains optimizations and CommentedString.validString optimization (#91)
+• [patch] Restoring tests with plugins and Google Maps (#89)
+
 ## Geko 1.0.3
 • [patch] perf: optimized path components calculation (#86)
 • [patch] help-env command (#80)
