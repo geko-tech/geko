@@ -30,7 +30,8 @@ final class CircularDependencyLinterTests: GekoUnitTestCase {
                     projectA,
                     projectB,
                     projectC,
-                ]
+                ],
+                externalDependencies: .none
             ),
             GraphLoadingError.circularDependency([
                 .init(path: "/A", name: "A"),
@@ -61,7 +62,8 @@ final class CircularDependencyLinterTests: GekoUnitTestCase {
                     projectA,
                     projectB,
                     projectC,
-                ]
+                ],
+                externalDependencies: .none
             )
         )
     }
@@ -88,7 +90,8 @@ final class CircularDependencyLinterTests: GekoUnitTestCase {
                     projectA,
                     projectB,
                     projectC,
-                ]
+                ],
+                externalDependencies: .none
             )
         ) { error in
             // need to manually inspect the error as depending on traversal order may result in different nodes getting listed

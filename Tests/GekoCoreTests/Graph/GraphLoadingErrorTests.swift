@@ -34,7 +34,10 @@ final class GraphLoadingErrorTests: XCTestCase {
         let to = GraphCircularDetectorNode(path: try AbsolutePath(validating: "/to"), name: "ToTarget")
         let error = GraphLoadingError.circularDependency([from, to])
         XCTAssertEqual(error.description, """
-        Found circular dependency between targets: /from:FromTarget -> /to:ToTarget
+        Found circular dependency between targets: FromTarget -> ToTarget
+
+        FromTarget: /from
+        ToTarget: /to
         """)
     }
 }
