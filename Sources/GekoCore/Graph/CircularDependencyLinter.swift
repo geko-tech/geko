@@ -131,7 +131,6 @@ public class CircularDependencyLinter: CircularDependencyLinting {
 
                     if otherProjectIdx >= 0 || otherTargetIdx >= 0 {
                         guard otherProjectIdx == projectIdx, otherTargetIdx == targetIdx else {
-                            // fatalError("duplicate target names")
                             throw CircularDependencyLinterError.duplicateTargetName(
                                 name: targetName,
                                 firstProject: path,
@@ -183,11 +182,9 @@ public class CircularDependencyLinter: CircularDependencyLinting {
 
     private func findCycle(start: String, map: inout [String: Node]) -> [String] {
         var path: [String] = [start]
-        // var visited: Set<String> = [start]
 
         outer: while !path.isEmpty {
             let node = path[path.count - 1]
-            // visited.insert(node)
 
             for dep in map[node]!.dependencies {
                 if map[dep]!.indegree > 0 {
@@ -203,7 +200,6 @@ public class CircularDependencyLinter: CircularDependencyLinting {
             }
 
             path.removeLast()
-            // visited.remove(node)
             // this node does not form cycle
             map[node]!.indegree -= 1
         }
