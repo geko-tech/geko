@@ -21,7 +21,7 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         self.pluginsFacadeMock = MockPluginsFacade()
         self.gekoPluginLoaderMock = MockGekoPluginLoader()
 
-        gekoPluginLoaderMock.loadGekoPluginStubs = [{ _ in GekoPlugin()}]
+        gekoPluginLoaderMock.loadGekoPluginStubs = [{ _, _ in GekoPlugin()}]
     }
 
     override func tearDown() {
@@ -31,7 +31,7 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         super.tearDown()
     }
 
-    func test_plugin_not_found() throws {
+    func test_plugin_not_found() async throws {
         // given
         let gekoProjectDescriptionVersion = "release/0.10.2"
         let pluginProjectDescriptionVersion = "release/0.10.3"
@@ -44,13 +44,13 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertThrowsSpecific(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: "NonExistentWorkspaceMapperPlugin", params: [:])]),
+        await XCTAssertThrowsSpecific(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: "NonExistentWorkspaceMapperPlugin", params: [:])], generationOptions: .test()),
             WorkspaceMapperPluginLoaderError.pluginNotFound(pluginName: "NonExistentWorkspaceMapperPlugin")
         )
     }
 
-    func test_plugin_pd_version_greater_than_geko_pd_version() throws {
+    func test_plugin_pd_version_greater_than_geko_pd_version() async throws {
         let gekoProjectDescriptionVersion = "release/0.10.2"
         let pluginProjectDescriptionVersion = "release/0.10.3"
 
@@ -62,8 +62,8 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertThrowsSpecific(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])]),
+        await XCTAssertThrowsSpecific(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test()),
             WorkspaceMapperPluginLoaderError.pluginProjectDescriptionVersionGreaterThanGekoSupported(
                 pluginName: workspaceMapperName,
                 pluginProjectDescriptionVersion: pluginProjectDescriptionVersion,
@@ -72,7 +72,7 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
     }
 
-    func test_different_major_versions() throws {
+    func test_different_major_versions() async throws {
         let gekoProjectDescriptionVersion = "release/1.0.0"
         let pluginProjectDescriptionVersion = "release/2.0.0"
 
@@ -84,8 +84,8 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertThrowsSpecific(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])]),
+        await XCTAssertThrowsSpecific(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test()),
             WorkspaceMapperPluginLoaderError.pluginProjectDescriptionVersionMismatch(
                 pluginName: workspaceMapperName,
                 pluginProjectDescriptionVersion: pluginProjectDescriptionVersion,
@@ -95,7 +95,7 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
     }
 
-    func test_different_minor_versions() throws {
+    func test_different_minor_versions() async throws {
         let gekoProjectDescriptionVersion = "release/1.1.0"
         let pluginProjectDescriptionVersion = "release/1.2.0"
 
@@ -107,8 +107,8 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertThrowsSpecific(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])]),
+        await XCTAssertThrowsSpecific(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test()),
             WorkspaceMapperPluginLoaderError.pluginProjectDescriptionVersionMismatch(
                 pluginName: workspaceMapperName,
                 pluginProjectDescriptionVersion: pluginProjectDescriptionVersion,
@@ -118,7 +118,7 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
     }
 
-    func test_exact_versions() throws {
+    func test_exact_versions() async throws {
         let gekoProjectDescriptionVersion = "release/1.1.0"
         let pluginProjectDescriptionVersion = "release/1.1.0"
 
@@ -130,12 +130,12 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertNoThrow(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])])
+        await XCTAssertNoThrows(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test())
         )
     }
 
-    func test_geko_pd_version_greater_than_plugin_pd_version() throws {
+    func test_geko_pd_version_greater_than_plugin_pd_version() async throws {
         let gekoProjectDescriptionVersion = "release/1.1.3"
         let pluginProjectDescriptionVersion = "release/1.1.0"
 
@@ -147,12 +147,12 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertNoThrow(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])])
+        await XCTAssertNoThrows(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test())
         )
     }
 
-    func test_plugin_pd_version_parsing_error() throws {
+    func test_plugin_pd_version_parsing_error() async throws {
         let gekoProjectDescriptionVersion = "release/1.2.4"
         let pluginProjectDescriptionVersion = "not_release_branch/1.2.3"
 
@@ -164,8 +164,8 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertThrowsSpecific(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])]),
+        await XCTAssertThrowsSpecific(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test()),
             WorkspaceMapperPluginLoaderError.pluginProjectDescriptionError(
                 pluginName: workspaceMapperName,
                 pluginProjectDescriptionVersion: pluginProjectDescriptionVersion
@@ -173,7 +173,7 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
     }
 
-    func test_plugin_pd_version_parsing_error2() throws {
+    func test_plugin_pd_version_parsing_error2() async throws {
         let gekoProjectDescriptionVersion = "release/1.2.4"
         let pluginProjectDescriptionVersion = "not_release_branch/task-123"
 
@@ -185,8 +185,8 @@ final class WorkspaceMapperPluginLoaderTests: GekoUnitTestCase {
         )
 
         // when & then
-        XCTAssertThrowsSpecific(
-            try subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])]),
+        await XCTAssertThrowsSpecific(
+            try await subject.loadPlugins(using: .test(), workspaceMappers: [WorkspaceMapper(name: workspaceMapperName, params: [:])], generationOptions: .test()),
             WorkspaceMapperPluginLoaderError.pluginProjectDescriptionError(
                 pluginName: workspaceMapperName,
                 pluginProjectDescriptionVersion: pluginProjectDescriptionVersion
