@@ -7,7 +7,7 @@ order: 1
 
 Geko has built-in support of cocoapods dependencies, remote and local. This guide provides overview of these features.
 
-::: note
+::: tip
 When necessary, geko will use command `pod ipc spec` to convert `.podspec` file to a json representation, since `.podspec` files are a ruby code. Because of that, you still need to have installed cocoapods on you machine. Cocoapods can be installed globally using `gem install` or using bundler. By default geko uses global cocoapods installation, which needs to be added to `PATH` environment variable. To ask geko to use cocoapods from your bundler environment (Gemfile), use parameter `cocoapodsUseBundler: true` in `Config.swift`.
 :::
 
