@@ -170,7 +170,8 @@ final class DumpServiceTests: GekoTestCase {
                   "Release": "release"
                 },
                 "enableAutomaticXcodeSchemes": false,
-                "renderMarkdownReadme": false
+                "renderMarkdownReadme": false,
+                "suppressObjcDuplicateClassWarningsDuringPluginLoading": true
               },
               "name": "geko",
               "path": "@/.",

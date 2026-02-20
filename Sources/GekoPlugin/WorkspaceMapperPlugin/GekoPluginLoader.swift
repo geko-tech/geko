@@ -1,8 +1,10 @@
 import Foundation
 import ProjectDescription
+import GekoSupport
 
 private extension String {
     static let loadGekoPluginSymbol = "loadGekoPlugin"
+    static let objcClassWarningRegex = #"objc\[\d+\]: Class \S+ is implemented in both"#
 }
 
 private extension Int {
@@ -10,26 +12,27 @@ private extension Int {
 }
 
 public protocol GekoPluginLoading: AnyObject {
-    func loadGekoPlugin(mapperPath: WorkspaceMapperPluginPath) throws -> GekoPlugin
+    func loadGekoPlugin(
+        mapperPath: WorkspaceMapperPluginPath,
+        generationOptions: Workspace.GenerationOptions
+    ) async throws -> GekoPlugin
 }
 
 public final class GekoPluginLoader: GekoPluginLoading {
 
-    public init() {}
+    private let strErrFilter: StdErrFiltering
 
-    public func loadGekoPlugin(mapperPath: WorkspaceMapperPluginPath) throws -> GekoPlugin {
-        guard let pluginLib = dlopen(mapperPath.path.pathString, RTLD_NOW | RTLD_LOCAL) else {
-            let dlopenErrorText = if let errorCStr = dlerror() {
-                String(cString: errorCStr)
-            } else {
-                "Unknown error when loading dynamic library."
-            }
-            throw WorkspaceMapperPluginLoaderError.errorLoadingPlugin(
-                pluginName: mapperPath.name,
-                mapperPath: mapperPath.path.pathString,
-                dlopenErrorText: dlopenErrorText
-            )
-        }
+    public init(
+        strErrFilter: StdErrFiltering = StdErrFilter(),
+    ) {
+        self.strErrFilter = strErrFilter
+    }
+
+    public func loadGekoPlugin(
+        mapperPath: WorkspaceMapperPluginPath,
+        generationOptions: Workspace.GenerationOptions
+    ) async throws -> GekoPlugin {
+        let pluginLib = try await dlopenFilter(mapperPath: mapperPath, generationOptions: generationOptions)
 
         guard let symbol = dlsym(pluginLib, String.loadGekoPluginSymbol) else {
             throw WorkspaceMapperPluginLoaderError.errorLoadingSymbol(
@@ -53,5 +56,35 @@ public final class GekoPluginLoader: GekoPluginLoading {
         }
 
         return gekoPlugin
+    }
+
+    private func dlopenFilter(mapperPath: WorkspaceMapperPluginPath, generationOptions: Workspace.GenerationOptions) async throws -> UnsafeMutableRawPointer {
+        if generationOptions.suppressObjcDuplicateClassWarningsDuringPluginLoading {
+            let objcClassWarningRegex = try Regex(.objcClassWarningRegex)
+
+            return try await strErrFilter.filter(
+                isLineIncluded: { try objcClassWarningRegex.firstMatch(in: $0) == nil },
+                block: { try dlopenPlugin(mapperPath: mapperPath) },
+            )
+        } else {
+            return try dlopenPlugin(mapperPath: mapperPath)
+        }
+    }
+
+    private func dlopenPlugin(mapperPath: WorkspaceMapperPluginPath) throws -> UnsafeMutableRawPointer {
+        guard let pluginLib = dlopen(mapperPath.path.pathString, RTLD_NOW | RTLD_LOCAL) else {
+            let dlopenErrorText = if let errorCStr = dlerror() {
+                String(cString: errorCStr)
+            } else {
+                "Unknown error when loading dynamic library."
+            }
+            throw WorkspaceMapperPluginLoaderError.errorLoadingPlugin(
+                pluginName: mapperPath.name,
+                mapperPath: mapperPath.path.pathString,
+                dlopenErrorText: dlopenErrorText
+            )
+        }
+
+        return pluginLib
     }
 }

@@ -127,9 +127,10 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         var graphSideTable = GraphSideTable()
 
         // Load and register Plugin Mappers
-        let gekoPlugins = try workspaceMapperPluginLoader.loadPlugins(
+        let gekoPlugins = try await workspaceMapperPluginLoader.loadPlugins(
             using: config,
-            workspaceMappers: allManifests.workspace.workspaceMappers
+            workspaceMappers: allManifests.workspace.workspaceMappers,
+            generationOptions: allManifests.workspace.generationOptions,
         )
         gekoPluginStorage.register(gekoPlugins: gekoPlugins)
 

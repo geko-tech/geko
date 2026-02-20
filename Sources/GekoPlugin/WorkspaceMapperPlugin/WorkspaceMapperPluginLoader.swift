@@ -6,8 +6,9 @@ import GekoCore
 public protocol WorkspaceMapperPluginLoading: AnyObject {
     func loadPlugins(
         using config: Config,
-        workspaceMappers: [WorkspaceMapper]
-    ) throws -> [GekoPluginWithParams]
+        workspaceMappers: [WorkspaceMapper],
+        generationOptions: Workspace.GenerationOptions
+    ) async throws -> [GekoPluginWithParams]
 }
 
 public final class WorkspaceMapperPluginLoader: WorkspaceMapperPluginLoading {
@@ -36,18 +37,22 @@ public final class WorkspaceMapperPluginLoader: WorkspaceMapperPluginLoading {
 
     public func loadPlugins(
         using config: Config,
-        workspaceMappers: [WorkspaceMapper]
-    ) throws -> [GekoPluginWithParams] {
+        workspaceMappers: [WorkspaceMapper],
+        generationOptions: Workspace.GenerationOptions
+    ) async throws -> [GekoPluginWithParams] {
         let workspaceMappersPaths = try pluginsFacade.workspaceMapperPlugins(using: config)
 
-        return try workspaceMappers.map { plugin in
-            guard let mapperPath = workspaceMappersPaths.first(where: { $0.name == plugin.name }) else {
+        return try await workspaceMappers.concurrentMap { [weak self] plugin in
+            guard
+                let self,
+                let mapperPath = workspaceMappersPaths.first(where: { $0.name == plugin.name })
+            else {
                 throw WorkspaceMapperPluginLoaderError.pluginNotFound(pluginName: plugin.name)
             }
 
             try checkProjectDescriptionVersions(pluginName: mapperPath.name, pluginInfo: mapperPath.info)
 
-            let gekoPlugin = try gekoPluginLoader.loadGekoPlugin(mapperPath: mapperPath)
+            let gekoPlugin = try await gekoPluginLoader.loadGekoPlugin(mapperPath: mapperPath, generationOptions: generationOptions)
 
             return GekoPluginWithParams(
                 name: plugin.name,

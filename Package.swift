@@ -795,7 +795,7 @@ let package = Package(
         .package(url: "https://github.com/kylef/PathKit.git", .upToNextMinor(from: "1.0.1")),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.4.3"),
         .package(url: "https://github.com/jpsim/Yams", exact: "5.0.6"),
-        .package(url: "https://github.com/geko-tech/project-description.git", branch: "release/1.0.0")
+        .package(url: "https://github.com/geko-tech/project-description.git", branch: "release/1.1.0")
     ],
     targets: targets
 )
