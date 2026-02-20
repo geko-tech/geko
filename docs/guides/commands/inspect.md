@@ -28,7 +28,7 @@ For example, if module A explicitly defines a dependency in Podspec/Project.swif
 * Result file: .geko/Inspect/redundant_imports.json
 * Exclusion file: .geko/Inspect/exclude_redundant_imports.json
 
-## Running Inspect with Diff on MR
+## Running Inspect with Diff on pull requests
 
 To use `geko inspect` with `diff` mode you should define two ENV variables:
 * `GEKO_INSPECT_SOURCE_REF`
