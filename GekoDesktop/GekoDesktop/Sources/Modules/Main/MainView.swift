@@ -29,6 +29,8 @@ struct MainView<T: IMainViewStateOutput>: View {
             .modify { content in
                 if #available(macOS 26, *) {
                     content.navigationSplitViewColumnWidth(988) // 1500 global width - 500 toolbars, - 12 padding
+                } else {
+                    content
                 }
             }
         }
@@ -38,6 +40,8 @@ struct MainView<T: IMainViewStateOutput>: View {
             .modify { content in
                 if #available(macOS 26, *) {
                     content.frame(width: 250)
+                } else {
+                    content
                 }
             }
         }
@@ -68,6 +72,8 @@ struct MainView<T: IMainViewStateOutput>: View {
                                 .modify { content in
                                     if #available(macOS 26, *) {
                                         content.padding(.leading)
+                                    } else {
+                                        content
                                     }
                                 }
                             ProgressView().foregroundStyle(.blue).controlSize(.small)
@@ -78,6 +84,8 @@ struct MainView<T: IMainViewStateOutput>: View {
                                 .modify { content in
                                     if #available(macOS 26, *) {
                                         content.padding(.leading)
+                                    } else {
+                                        content
                                     }
                                 }
                             Image.danger.foregroundStyle(.red)
