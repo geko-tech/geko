@@ -1,3 +1,6 @@
+## Desktop 1.0.4
+• [patch] fixed empty screen on macos15 (#96)
+
 ## Desktop 1.0.3
 • [patch] support workspace schemes (#88)
 
