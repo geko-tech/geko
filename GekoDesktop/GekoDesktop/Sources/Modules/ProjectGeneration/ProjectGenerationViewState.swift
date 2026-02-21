@@ -167,7 +167,7 @@ final class ProjectGenerationViewState: IProjectGenerationViewStateInput & IProj
     }
     
     func settingDidChanged(_ setting: WorkspaceGenerationItem) {
-        presenter.updateWorkspaceSetting(setting.item, value: !setting.value)
+        presenter.updateWorkspaceSetting(setting.item, value: setting.value)
     }
     
     func openSettingsEditor() {
