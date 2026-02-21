@@ -53,7 +53,6 @@ final class SideBarViewState: ISideBarViewStateOutput & ISideBarViewStateInput {
     }
     
     func toggleExecutingState() {
-        isExecuting.toggle()
         presenter.changeExecutingState(isExecuting)
     }
     

@@ -69,7 +69,9 @@ struct ProjectGenerationView<T: IProjectGenerationViewStateOutput>: View {
         VStack {
             configView
             profileView
-            schemeView
+            if !viewState.schemes.isEmpty {
+                schemeView
+            }
             optionsView
             destinationView
             focusView

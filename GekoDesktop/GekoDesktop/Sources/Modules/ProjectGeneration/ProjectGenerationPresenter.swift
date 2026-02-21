@@ -62,6 +62,7 @@ final class ProjectGenerationPresenter: IProjectGenerationPresenter {
         
         workspaceSettingsProvider.addSubscription(self)
         configsProvider.addSubscription(self)
+        applicationStateHolder.addSubscription(self)
     }
     
     func onAppear() {
@@ -280,4 +281,17 @@ extension ProjectGenerationPresenter: IConfigsProviderDelegate {
     func allConfigsDidChanged(_ configs: [String]) {
         update()
     }
+}
+
+extension ProjectGenerationPresenter: IApplicationStateHolderDelegate {
+    func didChangeExecutionState(_ value: AppState) {
+        switch value {
+        case .executing:
+            view?.executionStateDidChanged(true)
+        default:
+            view?.executionStateDidChanged(false)
+        }
+    }
+    
+    func didChangeSideBarItem(_ value: SideBarItem, payload: [String: String]?) {}
 }

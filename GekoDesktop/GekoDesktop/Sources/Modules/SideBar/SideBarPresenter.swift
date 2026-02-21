@@ -75,7 +75,7 @@ final class SideBarPresenter: ISideBarPresenter {
     }
     
     func changeExecutingState(_ isExecuting: Bool) {
-        isExecuting ? startProjectGeneration() : cancelProjectGeneration()
+        isExecuting ? cancelProjectGeneration() : startProjectGeneration() 
     }
     
     func checkVersionUpdate() {

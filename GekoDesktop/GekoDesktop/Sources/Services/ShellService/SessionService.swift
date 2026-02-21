@@ -272,7 +272,11 @@ private extension SessionService {
         } else {
             tmpStr = tmpStr.replacingOccurrences(of: "\r", with: "")
             tmpStr = tmpStr.replacingOccurrences(of: "\n", with: "")
-            tmpStr.append("\r\n")
+            if tmpStr.contains("𓆌") || tmpStr.contains("𓆊") {
+                tmpStr.append("\r")
+            } else {
+                tmpStr.append("\r\n")
+            }
         }
         subscritpions.forEach { $0.output(tmpStr) }
     }
