@@ -26,7 +26,7 @@ protocol IProjectGenerationViewStateInput: AnyObject {
     func generateCommandDidChanged(_ command: String)
     func commandDidCopied()
     func projectCleanStopped()
-    func commandFinishedRunning()
+    func executionStateDidChanged(_ executing: Bool)
     func projectProfilesDidChanged(_ profilesState: ProjectProfilesState)
 }
 
@@ -167,7 +167,7 @@ final class ProjectGenerationViewState: IProjectGenerationViewStateInput & IProj
     }
     
     func settingDidChanged(_ setting: WorkspaceGenerationItem) {
-        presenter.updateWorkspaceSetting(setting.item, value: !setting.value)
+        presenter.updateWorkspaceSetting(setting.item, value: setting.value)
     }
     
     func openSettingsEditor() {
@@ -284,8 +284,8 @@ final class ProjectGenerationViewState: IProjectGenerationViewStateInput & IProj
         showCommandCopiedPopup.toggle()
     }
     
-    func commandFinishedRunning() {
-        commandLoading = false
+    func executionStateDidChanged(_ executing: Bool) {
+        commandLoading = executing
     }
     
     func projectCleanStopped() {
