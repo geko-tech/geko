@@ -31,7 +31,7 @@ let project = Project(
 )
 ```
 
-::: note
+::: tip
 Each flag internally is an environment variable with format `GEKO_MANIFETS_FLAG_<flag_name>`. 
 Subscript `Flag` is just a wrapper to get that environment variable.
 :::
