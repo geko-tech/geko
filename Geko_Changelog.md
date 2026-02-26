@@ -1,3 +1,6 @@
+## Geko 1.0.5
+• [patch] Suppress objc class duplication warnings when loading plugins (#95)
+
 ## Geko 1.0.4
 • [patch] fix: crash in CircularDependencyLinter due to stack overflow (#92)
 • [patch] perf: String contains optimizations and CommentedString.validString optimization (#91)
