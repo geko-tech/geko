@@ -78,7 +78,7 @@ let app = Target(
 
 let project = Project(
     name: "AwesomeApp",
-    targets: [app, library]
+    targets: [app, library] // [!code ++]
 )
 ```
 
@@ -90,7 +90,7 @@ Keep in mind that `.target(name:)` cannot specify dependency on an external modu
 
 ## `Dependencies.swift`
 
-File `Dependencies.swift` allows to add cocoapods dependencies to workspace. For more info see [Dependencies](/guides/features/dependencies) page.
+File `Dependencies.swift` allows to add cocoapods dependencies to workspace. For more info see [Dependencies](../dependencies) page.
 
 To add dependency on an external module use `.external(name:)`:
 
@@ -107,7 +107,7 @@ let app = Target(
     product: .app,
     sources: "Sources/**/*.swift",
     dependencies: [
-        .target(name: "AwesomeLibrary")
+        .target(name: "AwesomeLibrary"),
         .external(name: "ExternalLibrary") // [!code ++]
     ]
 )
