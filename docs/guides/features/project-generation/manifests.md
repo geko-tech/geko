@@ -90,7 +90,7 @@ Keep in mind that `.target(name:)` cannot specify dependency on an external modu
 
 ## `Dependencies.swift`
 
-File `Dependencies.swift` allows to add cocoapods dependencies to workspace. For more info see [Dependencies](../dependencies) page.
+File `Dependencies.swift` allows to add cocoapods dependencies to workspace. For more info see [Dependencies](../dependencies/index) page.
 
 To add dependency on an external module use `.external(name:)`:
 
