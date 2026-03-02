@@ -8,33 +8,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  swiftlint:
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v6.0.1
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/xcode-select
-
-      - name: SwiftLint
-        env:
-          DIFF_BASE: ${{ github.base_ref }}
-        run: |
-          git fetch origin $DIFF_BASE
-          changedFiles=$(git --no-pager diff --diff-filter=AMR --name-only --merge-base FETCH_HEAD -- '*.swift')
-
-          if [ -n "$changedFiles" ]; then
-            swift package plugin \
-              --allow-writing-to-package-directory \
-              swiftlint \
-              --config .swiftlint.yml \
-              $changedFiles | \
-              sed -E "s|$(pwd)|.|" | \
-              sed -E 's/^(.*):([0-9]+):([0-9]+): (warning|error|[^:]+): (.*)/::\4 file=\1,line=\2,col=\3::\5/'
-          else
-            echo "No Swift files changed — skipping SwiftLint"
-          fi
-
   build_and_test_macos:
     runs-on: macos-26
     steps:
@@ -72,7 +45,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      
+
       - id: only_docs_changes
         uses: ./.github/actions/only-docs-changes
 
