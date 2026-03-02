@@ -786,7 +786,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections", from: "1.1.4"),
         .package(url: "https://github.com/apple/swift-system", from: "1.6.3"),
         .package(url: "https://github.com/apple/swift-crypto", from: "3.15.1"),
-        .package(url: "https://github.com/SimplyDanny/SwiftLintPlugins", from: "0.62.2"),
         .package(url: "https://github.com/weichsel/ZIPFoundation", revision: "52cd8b5c5671265e239582df2259c14947113c00"),
         .package(url: "https://github.com/stencilproject/Stencil", exact: "0.15.1"),
         .package(url: "https://github.com/SwiftGen/StencilSwiftKit", exact: "2.10.1"),
