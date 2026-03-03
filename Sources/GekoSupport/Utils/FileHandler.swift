@@ -181,7 +181,7 @@ public class FileHandler: FileHandling {
 #if os(macOS)
         _ = try fileManager.replaceItemAt(to.url, withItemAt: tempUrl)
 #else
-        if isFolder(AbsolutePath(tempUrl.path())) {
+        if isFolder(AbsolutePath(tempUrl.path(percentEncoded: false))) {
             try? fileManager.createDirectory(at: to.url, withIntermediateDirectories: false)
         } else {
             _ = fileManager.createFile(atPath: to.pathString, contents: nil)
