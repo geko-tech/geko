@@ -1,3 +1,6 @@
+## Geko 1.0.6
+• [patch] fix percent encoded path (#99)
+
 ## Geko 1.0.5
 • [patch] Suppress objc class duplication warnings when loading plugins (#95)
 
