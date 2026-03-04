@@ -1,3 +1,7 @@
+## Geko 1.0.7
+• [patch] fix linux autoupdate crash on bundle init (#100)
+* • [patch] fix linux autoupdate crash on bundle init; fix FileHandler incorrect behaviour on linux
+
 ## Geko 1.0.6
 • [patch] fix percent encoded path (#99)
 
