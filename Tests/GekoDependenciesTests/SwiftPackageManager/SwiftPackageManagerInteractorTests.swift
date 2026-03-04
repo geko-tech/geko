@@ -543,7 +543,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(dependenciesFilePath)
         try fileHandler.touch(packageResolvedFile)
         try fileHandler.touch(workspaceStatePath)
-        fileHandler.stubExists = FileHandler().exists
 
 //        let dependencies = SwiftPackageManagerDependencies(
 //            .packages([
