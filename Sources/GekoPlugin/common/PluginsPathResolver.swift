@@ -117,6 +117,7 @@ final class PluginPathResolver {
         case .remote(_, let manifest):
             return try pluginCacheDirectory(name: manifest.name)
         case .remoteGekoArchive(let gekoArchive):
+            if gekoArchive.urls[.current] == nil { return nil }
             return try pluginCacheDirectory(name: gekoArchive.name)
         }
     }

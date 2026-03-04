@@ -94,8 +94,16 @@ private func downloadVersion(version: String, url: String, cacheDir: AbsolutePat
 }
 
 func loadGekoSourceUrl(version: String) throws -> String? {
+#if os(macOS)
+    let bundle = Bundle(for: FileHandler.self)
+#elseif os(Linux)
+    let bundle = Bundle.main
+#else
+    #error("Unsupported architecture")
+#endif
+
     guard
-        let bundleDir = Bundle(for: FileHandler.self).resourceURL,
+        let bundleDir = bundle.resourceURL,
         let bundlePath = try? AbsolutePath(validatingAbsolutePath: bundleDir.path(percentEncoded: false))
     else {
         fatalError("Cannot retrieve executable path")
