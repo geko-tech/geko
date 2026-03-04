@@ -181,12 +181,24 @@ public class FileHandler: FileHandling {
 #if os(macOS)
         _ = try fileManager.replaceItemAt(to.url, withItemAt: tempUrl)
 #else
-        if isFolder(AbsolutePath(tempUrl.path(percentEncoded: false))) {
-            try? fileManager.createDirectory(at: to.url, withIntermediateDirectories: false)
-        } else {
-            _ = fileManager.createFile(atPath: to.pathString, contents: nil)
+        let backupUrl = to.url.deletingLastPathComponent().appendingPathComponent(".backup-\(UUID().uuidString)")
+
+        if exists(to) {
+            try fileManager.moveItem(at: to.url, to: backupUrl)
         }
-        _ = try? fileManager.replaceItemAt(tempUrl, withItemAt: to.url)
+
+        let backupPath = AbsolutePath(backupUrl.path(percentEncoded: false))
+        do {
+            try fileManager.moveItem(at: tempUrl, to: to.url)
+            if exists(backupPath) {
+                try fileManager.removeItem(at: backupUrl)
+            }
+        } catch {
+            if exists(backupPath), !exists(to) {
+                try fileManager.moveItem(at: backupUrl, to: to.url)
+            }
+            throw error
+        }
 #endif
     }
 
