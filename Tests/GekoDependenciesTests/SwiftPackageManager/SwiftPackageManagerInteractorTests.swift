@@ -1,7 +1,7 @@
 import ProjectDescription
 import GekoCore
 import GekoGraph
-import GekoSupport
+@testable import GekoSupport
 import XCTest
 import Yams
 @testable import GekoDependencies
@@ -543,10 +543,8 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(dependenciesFilePath)
         try fileHandler.touch(packageResolvedFile)
         try fileHandler.touch(workspaceStatePath)
-        fileHandler.stubExists = { path in
-            return true
-        }
-//        
+        fileHandler.stubExists = FileHandler().exists
+
 //        let dependencies = SwiftPackageManagerDependencies(
 //            .packages([
 //                .remote(url: "https://github.com/Alamofire/Alamofire.git", requirement: .upToNextMajor(from: .init(5, 2, 0))),
