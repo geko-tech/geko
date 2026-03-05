@@ -56,7 +56,7 @@ public enum SimulatorControllerError: Equatable, FatalError {
     case simctlError(String)
     case deviceNotFound(Platform, Version?, String?, [SimulatorDeviceAndRuntime])
     case simulatorNotFound(udid: String)
-    case commandOutputDecodingError(NSError, String, Data)
+    case commandOutputDecodingError(NSError, String, Data, String)
     case decodingError(NSError, String, Data, String)
 
     public var type: ErrorType {
@@ -78,7 +78,7 @@ public enum SimulatorControllerError: Equatable, FatalError {
             return "Could not find a suitable device for \(platform.caseValue)\(version.map { " \($0)" } ?? "")\(deviceName.map { ", device name \($0)" } ?? ""). Did find \(devices.map { "\($0.device.name) (\($0.runtime.description))" }.joined(separator: ", "))"
         case let .simulatorNotFound(udid):
             return "Could not find simulator with UDID: \(udid)"
-        case let .commandOutputDecodingError(error, command, data):
+        case let .commandOutputDecodingError(error, command, data, stderr):
             let error = error as Error
 
             return """
@@ -89,6 +89,11 @@ public enum SimulatorControllerError: Equatable, FatalError {
                 Output of command:
                 ```
                 \(String.init(data: data, encoding: .utf8), default: data.base64EncodedString())
+                ```
+
+                stderr:
+                ```
+                \(stderr)
                 ```
                 """
         case let .decodingError(error, context, data, additionalContext):
@@ -124,7 +129,7 @@ public final class SimulatorController: SimulatorControlling {
         do {
             json = try JSONSerialization.jsonObject(with: data, options: [])
         } catch {
-            throw SimulatorControllerError.commandOutputDecodingError(error as NSError, command.joined(separator: " "), data)
+            throw SimulatorControllerError.commandOutputDecodingError(error as NSError, command.joined(separator: " "), data, output.standardError)
         }
 
         guard let dictionary = json as? [String: Any],
@@ -158,11 +163,12 @@ public final class SimulatorController: SimulatorControlling {
         let command = ["/usr/bin/xcrun", "simctl", "list", "runtimes", "--json"]
         let output = try await System.shared.runAndCollectOutput(command)
         let data = output.standardOutput.data(using: .utf8)!
+
         let json: Any
         do {
             json = try JSONSerialization.jsonObject(with: data, options: [])
         } catch {
-            throw SimulatorControllerError.commandOutputDecodingError(error as NSError, command.joined(separator: " "), data)
+            throw SimulatorControllerError.commandOutputDecodingError(error as NSError, command.joined(separator: " "), data, output.standardError)
         }
         guard let dictionary = json as? [String: Any],
               let runtimesJSON = dictionary["runtimes"] as? [Any]
