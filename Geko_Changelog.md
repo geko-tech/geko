@@ -1,3 +1,6 @@
+## Geko 1.0.8
+• [patch] improve error reporting in SimulatorController (#101)
+
 ## Geko 1.0.7
 • [patch] fix linux autoupdate crash on bundle init (#100)
 * • [patch] fix linux autoupdate crash on bundle init; fix FileHandler incorrect behaviour on linux
