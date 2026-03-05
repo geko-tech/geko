@@ -56,12 +56,16 @@ public enum SimulatorControllerError: Equatable, FatalError {
     case simctlError(String)
     case deviceNotFound(Platform, Version?, String?, [SimulatorDeviceAndRuntime])
     case simulatorNotFound(udid: String)
+    case commandOutputDecodingError(NSError, String, Data)
+    case decodingError(NSError, String, Data, String)
 
     public var type: ErrorType {
         switch self {
         case .simctlError,
              .deviceNotFound,
-             .simulatorNotFound:
+             .simulatorNotFound,
+             .commandOutputDecodingError,
+             .decodingError:
             return .abort
         }
     }
@@ -74,6 +78,34 @@ public enum SimulatorControllerError: Equatable, FatalError {
             return "Could not find a suitable device for \(platform.caseValue)\(version.map { " \($0)" } ?? "")\(deviceName.map { ", device name \($0)" } ?? ""). Did find \(devices.map { "\($0.device.name) (\($0.runtime.description))" }.joined(separator: ", "))"
         case let .simulatorNotFound(udid):
             return "Could not find simulator with UDID: \(udid)"
+        case let .commandOutputDecodingError(error, command, data):
+            let error = error as Error
+
+            return """
+                Error decoding output of '\(command)':
+                    - Localized description: \(error.localizedDescription)
+                    - Error: \(error)
+
+                Output of command:
+                ```
+                \(String.init(data: data, encoding: .utf8), default: data.base64EncodedString())
+                ```
+                """
+        case let .decodingError(error, context, data, additionalContext):
+            let error = error as Error
+
+            return """
+                Error while \(context):
+                    - Localized description: \(error.localizedDescription)
+                    - Error: \(error)
+
+                Trying to decode following:
+                ```
+                \(String.init(data: data, encoding: .utf8), default: data.base64EncodedString())
+                ```
+
+                \(additionalContext)
+                """
         }
     }
 }
@@ -85,9 +117,16 @@ public final class SimulatorController: SimulatorControlling {
 
     /// Returns the list of simulator devices that are available in the system.
     func devices() async throws -> [SimulatorDevice] {
-        let output = try await System.shared.runAndCollectOutput(["/usr/bin/xcrun", "simctl", "list", "devices", "--json"])
+       let command = ["/usr/bin/xcrun", "simctl", "list", "devices", "--json"]
+        let output = try await System.shared.runAndCollectOutput(command)
         let data = output.standardOutput.data(using: .utf8)!
-        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        let json: Any
+        do {
+            json = try JSONSerialization.jsonObject(with: data, options: [])
+        } catch {
+            throw SimulatorControllerError.commandOutputDecodingError(error as NSError, command.joined(separator: " "), data)
+        }
+
         guard let dictionary = json as? [String: Any],
               let devicesJSON = dictionary["devices"] as? [String: [[String: Any]]]
         else {
@@ -99,7 +138,16 @@ public final class SimulatorController: SimulatorControlling {
                 var deviceJSON = deviceJSON
                 deviceJSON["runtimeIdentifier"] = runtimeIdentifier
                 let deviceJSONData = try JSONSerialization.data(withJSONObject: deviceJSON, options: [])
-                return try self.jsonDecoder.decode(SimulatorDevice.self, from: deviceJSONData)
+                do {
+                    return try self.jsonDecoder.decode(SimulatorDevice.self, from: deviceJSONData)
+                } catch {
+                    throw SimulatorControllerError.decodingError(
+                        error as NSError,
+                        "decoding device from output of `\(command.joined(separator: " "))`",
+                        deviceJSONData,
+                        "Output of \(command.joined(separator: " ")): ```\n\(String.init(data: data, encoding: .utf8), default: data.base64EncodedString())\n```"
+                    )
+                }
             }
         }
         return devices
@@ -107,9 +155,15 @@ public final class SimulatorController: SimulatorControlling {
 
     /// Returns the list of simulator runtimes that are available in the system.
     func runtimes() async throws -> [SimulatorRuntime] {
-        let output = try await System.shared.runAndCollectOutput(["/usr/bin/xcrun", "simctl", "list", "runtimes", "--json"])
+        let command = ["/usr/bin/xcrun", "simctl", "list", "runtimes", "--json"]
+        let output = try await System.shared.runAndCollectOutput(command)
         let data = output.standardOutput.data(using: .utf8)!
-        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        let json: Any
+        do {
+            json = try JSONSerialization.jsonObject(with: data, options: [])
+        } catch {
+            throw SimulatorControllerError.commandOutputDecodingError(error as NSError, command.joined(separator: " "), data)
+        }
         guard let dictionary = json as? [String: Any],
               let runtimesJSON = dictionary["runtimes"] as? [Any]
         else {
@@ -117,8 +171,16 @@ public final class SimulatorController: SimulatorControlling {
         }
 
         let runtimesData = try JSONSerialization.data(withJSONObject: runtimesJSON, options: [])
-        let runtimes = try jsonDecoder.decode([SimulatorRuntime].self, from: runtimesData)
-        return runtimes
+        do {
+            return try jsonDecoder.decode([SimulatorRuntime].self, from: runtimesData)
+        } catch {
+            throw SimulatorControllerError.decodingError(
+                error as NSError,
+                "decoding device from output of `\(command.joined(separator: " "))`",
+                runtimesData,
+                "Output of \(command.joined(separator: " ")): ```\n\(String.init(data: data, encoding: .utf8), default: data.base64EncodedString())\n```"
+            )
+        }
     }
 
     /// - Parameters:
