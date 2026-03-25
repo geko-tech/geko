@@ -39,6 +39,9 @@ public final class StdErrFilter: StdErrFiltering {
             return try block()
         }
 
+        _ = fcntl(pipeFds[0], F_SETFD, FD_CLOEXEC)
+        _ = fcntl(pipeFds[1], F_SETFD, FD_CLOEXEC)
+
         let pipeRead = pipeFds[0]
         let pipeWrite = pipeFds[1]
 
