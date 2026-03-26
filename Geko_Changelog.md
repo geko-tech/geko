@@ -1,3 +1,6 @@
+## Geko 1.0.9
+• [patch] fix strErrorFilter hanging
+
 ## Geko 1.0.8
 • [patch] improve error reporting in SimulatorController (#101)
 
