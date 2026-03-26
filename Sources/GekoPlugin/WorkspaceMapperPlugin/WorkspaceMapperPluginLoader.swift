@@ -42,11 +42,10 @@ public final class WorkspaceMapperPluginLoader: WorkspaceMapperPluginLoading {
     ) async throws -> [GekoPluginWithParams] {
         let workspaceMappersPaths = try pluginsFacade.workspaceMapperPlugins(using: config)
 
-        return try await workspaceMappers.concurrentMap { [weak self] plugin in
-            guard
-                let self,
-                let mapperPath = workspaceMappersPaths.first(where: { $0.name == plugin.name })
-            else {
+        var result: [GekoPluginWithParams] = []
+
+        for plugin in workspaceMappers {
+            guard let mapperPath = workspaceMappersPaths.first(where: { $0.name == plugin.name }) else {
                 throw WorkspaceMapperPluginLoaderError.pluginNotFound(pluginName: plugin.name)
             }
 
@@ -54,12 +53,14 @@ public final class WorkspaceMapperPluginLoader: WorkspaceMapperPluginLoading {
 
             let gekoPlugin = try await gekoPluginLoader.loadGekoPlugin(mapperPath: mapperPath, generationOptions: generationOptions)
 
-            return GekoPluginWithParams(
+            result.append(GekoPluginWithParams(
                 name: plugin.name,
                 plugin: gekoPlugin,
                 params: plugin.params
-            )
+            ))
         }
+
+        return result
     }
 
     // MARK: - Private
