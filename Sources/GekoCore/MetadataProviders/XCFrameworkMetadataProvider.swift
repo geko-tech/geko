@@ -54,6 +54,10 @@ public protocol XCFrameworkMetadataProviding: PrecompiledMetadataProviding {
     /// - Parameter xcframeworkPath: Path to the .xcframework
     /// - Parameter libraries: Framework available libraries
     func binaryPath(xcframeworkPath: AbsolutePath, libraries: [XCFrameworkInfoPlist.Library]) throws -> AbsolutePath
+
+    /// Returns true if xcframework contains `_CodeSignature` folder
+    /// - Parameter xcframeworkPath: Path to the .xcframework
+    func containsCodeSignature(xcframeworkPath: AbsolutePath) -> Bool
 }
 
 // MARK: - Default Implementation
@@ -116,6 +120,10 @@ public final class XCFrameworkMetadataProvider: PrecompiledMetadataProvider, XCF
         ])
         guard fileHandler.exists(swiftModuleFolderPath) else { return nil }
         return swiftModuleFolderPath
+    }
+
+    public func containsCodeSignature(xcframeworkPath: AbsolutePath) -> Bool {
+        return fileHandler.exists(xcframeworkPath.appending(component: "_CodeSignature"))
     }
 
     public func binaryPath(xcframeworkPath: AbsolutePath, libraries: [XCFrameworkInfoPlist.Library]) throws -> AbsolutePath {

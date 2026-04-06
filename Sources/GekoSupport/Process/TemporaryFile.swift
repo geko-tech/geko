@@ -235,39 +235,39 @@ public func withTemporaryFile<Result>(
 /// Contains the error which can be thrown while creating a directory using POSIX's mkdir.
 public enum MakeDirectoryError: Error {
     /// The given path already exists as a directory, file or symbolic link.
-    case pathExists
+    case pathExists(String)
     /// The path provided was too long.
-    case pathTooLong
+    case pathTooLong(String)
     /// Process does not have permissions to create directory.
     /// Note: Includes read-only filesystems or if file system does not support directory creation.
-    case permissionDenied
+    case permissionDenied(String)
     /// The path provided is unresolvable because it has too many symbolic links or a path component is invalid.
-    case unresolvablePathComponent
+    case unresolvablePathComponent(String)
     /// Exceeded user quota or kernel is out of memory.
-    case outOfMemory
+    case outOfMemory(String)
     /// All other system errors with their value.
-    case other(Int32)
+    case other(Int32, String)
 }
 
 private extension MakeDirectoryError {
-    init(errno: Int32) {
+    init(errno: Int32, path: String) {
         switch errno {
         case EEXIST:
-            self = .pathExists
+            self = .pathExists(path)
         case ENAMETOOLONG:
-            self = .pathTooLong
+            self = .pathTooLong(path)
         case EACCES, EFAULT, EPERM, EROFS:
-            self = .permissionDenied
+            self = .permissionDenied(path)
         case ELOOP, ENOENT, ENOTDIR:
-            self = .unresolvablePathComponent
+            self = .unresolvablePathComponent(path)
         case ENOMEM:
-            self = .outOfMemory
+            self = .outOfMemory(path)
 #if !os(Windows)
         case EDQUOT:
-            self = .outOfMemory
+            self = .outOfMemory(path)
 #endif
         default:
-            self = .other(errno)
+            self = .other(errno, path)
         }
     }
 }
@@ -307,7 +307,7 @@ public func withTemporaryDirectory<Result>(
     var template = [UInt8](templatePath.pathString.utf8).map({ Int8($0) }) + [Int8(0)]
 
     if mkdtemp(&template) == nil {
-        throw MakeDirectoryError(errno: errno)
+        throw MakeDirectoryError(errno: errno, path: templatePath.pathString)
     }
 
     return try body(AbsolutePath(validatingAbsolutePath: String(cString: template))) { path in
@@ -345,7 +345,7 @@ public func withTemporaryDirectory<Result>(
     var template = [UInt8](templatePath.pathString.utf8).map({ Int8($0) }) + [Int8(0)]
 
     if mkdtemp(&template) == nil {
-        throw MakeDirectoryError(errno: errno)
+        throw MakeDirectoryError(errno: errno, path: templatePath.pathString)
     }
 
     return try await body(AbsolutePath(validatingAbsolutePath: String(cString: template))) { path in
