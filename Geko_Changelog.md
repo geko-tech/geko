@@ -1,3 +1,6 @@
+## Geko 1.0.10
+• [patch] fix: skip swiftinterface cache if xcframework contains _CodeSignature (#103)
+
 ## Geko 1.0.9
 • [patch] fix strErrorFilter hanging
 
