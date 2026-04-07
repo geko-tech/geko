@@ -38,7 +38,7 @@ public final class TemporaryDirectory {
         var template = [UInt8](path.pathString.utf8).map { Int8($0) } + [Int8(0)]
 
         if mkdtemp(&template) == nil {
-            throw MakeDirectoryError.other(errno)
+            throw MakeDirectoryError.other(errno, path.pathString)
         }
 
         self.path = try AbsolutePath(validatingAbsolutePath: String(cString: template))

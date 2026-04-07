@@ -286,9 +286,12 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
         profile: ProjectDescription.Cache.Profile,
         destination: CacheFrameworkDestination
     ) throws -> XCFrameworkBuildData? {
-        guard case let .xcframework(frameworkInfo) = dependency else {
+        guard
+            case let .xcframework(frameworkInfo) = dependency
+        else {
             return nil
         }
+
         let supportedArch = profile.platforms[platform]?.arch ?? developerEnvironment.architecture.binaryArchitecture
         let dependenciesSearchPaths = transitiveDependencies.compactMap { dep -> AbsolutePath? in
             guard case let .xcframework(frameworkInfo) = dep else {

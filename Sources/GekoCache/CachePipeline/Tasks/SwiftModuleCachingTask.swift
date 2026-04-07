@@ -90,7 +90,7 @@ public final class SwiftModuleCachingTask: CacheTask {
             destination: context.destination,
             hashedXCFrameworks: filteredHashesByXCFramework
         )
-        
+
         // Replace remaining ones
         try await replaceSwiftInterfaces(
             rootPath: context.path,
@@ -98,9 +98,9 @@ public final class SwiftModuleCachingTask: CacheTask {
             hashesByXCFrameworks: filteredHashesByXCFramework
         )
     }
-    
+
     // MARK: - Private
-    
+
     private func archive(
         graph: Graph,
         profile: ProjectDescription.Cache.Profile,
@@ -115,7 +115,7 @@ public final class SwiftModuleCachingTask: CacheTask {
                 hashedXCFrameworks: hashedXCFrameworks,
                 into: outputDirectory
             )
-            
+
             try await self.store(
                 hashedXCFrameworks: hashedXCFrameworks,
                 outputDirectory: outputDirectory,
@@ -123,7 +123,7 @@ public final class SwiftModuleCachingTask: CacheTask {
             )
         }
     }
-    
+
     private func store(
         hashedXCFrameworks: [AbsolutePath: String],
         outputDirectory: AbsolutePath,
@@ -185,6 +185,11 @@ public final class SwiftModuleCachingTask: CacheTask {
         let swiftModuleGlob = cacheProfile.platforms.isEmpty ? "*.swiftmodule" : "*{\(cacheProfile.platforms.keys.map { $0.rawValue }.joined(separator: ","))}*.swiftmodule"
         
         for (xcframeworkPath, swiftModuleFolderPath) in fetchedSwiftModules {
+            guard !xcframeworkMetadataProvider.containsCodeSignature(xcframeworkPath: xcframeworkPath) else {
+                logger.debug("Skipping swiftinterface cache for \(xcframeworkPath) because xcframework contains _CodeSignature.")
+                continue
+            }
+
             // We need path to {ModulName}.swiftmodule folder
             let swiftModules = FileHandler.shared.glob(swiftModuleFolderPath, glob: swiftModuleGlob)
             guard !swiftModules.isEmpty else {

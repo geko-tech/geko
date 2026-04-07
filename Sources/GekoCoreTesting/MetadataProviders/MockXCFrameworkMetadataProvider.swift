@@ -42,4 +42,8 @@ public final class MockXCFrameworkMetadataProvider: MockPrecompiledMetadataProvi
             return AbsolutePath.root
         }
     }
+
+    public func containsCodeSignature(xcframeworkPath: AbsolutePath) -> Bool {
+        return false
+    }
 }
