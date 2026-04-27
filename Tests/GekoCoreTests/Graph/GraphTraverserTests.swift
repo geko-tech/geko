@@ -2244,6 +2244,63 @@ final class GraphTraverserTests: GekoUnitTestCase {
         XCTAssertTrue(embeddable.isEmpty)
     }
 
+    func test_linkableAndEmbeddableDependencies_when_appDependensOnPrecompiledStaticBinaryWithPrecompiledStaticBinaryDependencyAndGraphContainsIgnoredDependencies(
+    ) throws {
+        // App ---(depends on)---> Precompiled static binary (A) ---> Precompiled static binary (B)
+
+        // Given
+        let target = Target.test(name: "Main")
+        let project = Project.test(targets: [target])
+
+        // Given: Value Graph
+        let dependencyPrecompiledStaticBinaryB = GraphDependency.testFramework(
+            path: "/test/StaticFrameworkB.framework",
+            binaryPath: "/test/StaticFrameworkB.framework/StaticFrameworkB",
+            dsymPath: nil,
+            bcsymbolmapPaths: [],
+            linking: .static,
+            architectures: [.arm64]
+        )
+        let dependencyPrecompiledStaticBinaryA = GraphDependency.testFramework(
+            path: "/test/StaticFrameworkA.framework",
+            binaryPath: "/test/StaticFrameworkA.framework/StaticFrameworkA",
+            dsymPath: nil,
+            bcsymbolmapPaths: [],
+            linking: .static,
+            architectures: [.arm64]
+        )
+
+        let dependencies: [GraphDependency: Set<GraphDependency>] = [
+            .target(name: target.name, path: project.path): Set(arrayLiteral: dependencyPrecompiledStaticBinaryA),
+            dependencyPrecompiledStaticBinaryA:
+                Set(arrayLiteral: dependencyPrecompiledStaticBinaryB),
+        ]
+        let ignoredDependencies: [GraphDependency: Set<GraphDependency>] = [
+            .target(name: target.name, path: project.path): Set(arrayLiteral: dependencyPrecompiledStaticBinaryB)
+        ]
+        let graph = Graph.test(
+            projects: [project.path: project],
+            targets: [project.path: [target.name: target]],
+            dependencies: dependencies,
+            ignoredDependencies: ignoredDependencies
+        )
+        let subject = GraphTraverser(graph: graph)
+
+        // When
+        let got = try subject.linkableDependencies(path: project.path, name: target.name).sorted()
+
+        // Then
+        XCTAssertEqual(got, [
+            GraphDependencyReference(dependencyPrecompiledStaticBinaryA)
+        ])
+
+        // When
+        let embeddable = subject.embeddableFrameworks(path: project.path, name: target.name)
+
+        // Then
+        XCTAssertTrue(embeddable.isEmpty)
+    }
+
     func test_linkableAndEmbeddableDependencies_when_appDependensOnPrecompiledDynamicBinaryWithPrecompiledDynamicBinaryDependency(
     ) throws {
         // App ---(depends on)---> Precompiled dynamic binary (A) ----> Precompiled dynamic binary (B)

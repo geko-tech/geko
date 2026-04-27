@@ -580,6 +580,13 @@ public class GraphTraverser: GraphTraversing {
             )
         }
 
+        if let ignoredDependencies = graph.ignoredDependencies[targetGraphDependency] {
+            let ignoredReferences = ignoredDependencies.compactMap {
+                dependencyReference(to: $0, from: targetGraphDependency)
+            }
+            references.subtract(ignoredReferences)
+        }
+
         return references
     }
 
