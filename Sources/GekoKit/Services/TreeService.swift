@@ -44,6 +44,7 @@ final class TreeService {
 
     func run(
         targets: consuming [String],
+        traceTargets: consuming [String],
         external: Bool,
         usage: Bool,
         minified: Bool,
@@ -61,6 +62,10 @@ final class TreeService {
         }
         if minified {
             minimalSpanningTree(&tree)
+        }
+
+        if !traceTargets.isEmpty {
+            trace(&tree, to: traceTargets)
         }
 
         if let outputFile {
@@ -209,6 +214,30 @@ final class TreeService {
                     tree[node]!.dependencies.remove(child)
                 }
             }
+        }
+    }
+
+    private func trace(_ tree: inout [String: TreeDependency], to: [String]) {
+        func dfs(_ node: String) -> Bool {
+            var keep = false
+
+            if to.contains(node) {
+                keep = true
+            }
+
+            for dep in (tree[node]?.dependencies ?? []) {
+                if dfs(dep) {
+                    keep = true
+                } else {
+                    tree[node]?.dependencies.remove(dep)
+                }
+            }
+
+            return keep
+        }
+
+        for node in tree.keys {
+            _ = dfs(node)
         }
     }
 

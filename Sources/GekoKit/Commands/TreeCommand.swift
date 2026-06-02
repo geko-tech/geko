@@ -25,6 +25,9 @@ public struct TreeCommand: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Output result into a file using json format")
     var output: String? = nil
 
+    @Option(name: .shortAndLong, help: "Trace path to specified dependency. Can be specified multiple times")
+    var trace: [String] = []
+
     @OptionGroup
     var manifestOptions: ManifestOptions
 
@@ -41,6 +44,7 @@ public struct TreeCommand: AsyncParsableCommand {
 
         try await TreeService().run(
             targets: targets,
+            traceTargets: trace,
             external: external,
             usage: usage,
             minified: minified,

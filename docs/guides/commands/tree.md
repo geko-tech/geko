@@ -10,10 +10,11 @@ The `geko tree` command allows you to inspect dependency tree of your project.
 By default `geko tree` outputs whole project tree to stdout.
 
 **Available options**
-* `-e, --external` - dump only external dependencies.
-* `-u, --usage` - invert dependency tree and show usage of modules rather than imports.
-* `-m, --minified` - remove dependencies from tree that are available through transitive dependencies. In the other words, simply builds minimal spanning tree.
+* `-e, --external` - output only external dependencies.
+* `-u, --usage` - invert dependency tree and output usage of modules rather than imports.
+* `-m, --minified` - remove dependencies from tree that are available through transitive dependencies. In other words, builds minimal spanning tree.
 * `-o, --output <file>` - output dependency tree into a json file.
+* `-t, --trace <trace>` - output only part of dependency tree that uses specified dependency.
 
 ::: tip
 Tree command requires that external dependencies are synced with `geko fetch` before calling it.
