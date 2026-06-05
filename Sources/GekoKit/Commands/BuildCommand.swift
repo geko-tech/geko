@@ -82,7 +82,13 @@ public struct BuildCommand: AsyncParsableCommand {
     )
     var generateOnly: Bool = false
 
+    @OptionGroup
+    var manifestOptions: ManifestOptions
+
     public func run() async throws {
+        try ManifestOptionsService()
+            .load(options: manifestOptions, path: nil)
+
         let absolutePath: AbsolutePath
         if let path {
             absolutePath = try AbsolutePath(validating: path, relativeTo: FileHandler.shared.currentPath)

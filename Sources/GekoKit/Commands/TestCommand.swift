@@ -23,6 +23,11 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     var scheme: String?
 
     @Flag(
+        help: "Force the generation of the project before testing."
+    )
+    var generate: Bool = false
+
+    @Flag(
         name: .shortAndLong,
         help: "When passed, it cleans the project before testing it."
     )
@@ -129,6 +134,9 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     )
     var generateOnly: Bool = false
 
+    @OptionGroup
+    var manifestOptions: ManifestOptions
+
     public func validate() throws {
         try TestService().validateParameters(
             testTargets: testTargets,
@@ -137,6 +145,9 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     }
 
     public func run() async throws {
+        try ManifestOptionsService()
+            .load(options: manifestOptions, path: nil)
+
         let absolutePath: AbsolutePath
 
         if let path {
@@ -147,6 +158,7 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
 
         try await TestService().run(
             schemeName: scheme,
+            generate: generate,
             clean: clean,
             configuration: configuration,
             path: absolutePath,

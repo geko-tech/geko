@@ -37,10 +37,6 @@ public final class ProjectMapperFactory: ProjectMapperFactorying {
         var mappers: [ProjectMapping] = []
         mappers += self.default()
 
-        mappers.append(
-            SourceRootPathProjectMapper()
-        )
-
         if skipUITests {
             mappers.append(
                 SkipUITestsProjectMapper()
