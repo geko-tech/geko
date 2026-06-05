@@ -637,6 +637,7 @@ final class TestServiceTests: GekoUnitTestCase {
 extension TestService {
     fileprivate func testRun(
         schemeName: String? = nil,
+        generate: Bool = true,
         clean: Bool = false,
         configuration: String? = nil,
         path: AbsolutePath,
@@ -655,6 +656,7 @@ extension TestService {
     ) async throws {
         try await run(
             schemeName: schemeName,
+            generate: generate,
             clean: clean,
             configuration: configuration,
             path: path,

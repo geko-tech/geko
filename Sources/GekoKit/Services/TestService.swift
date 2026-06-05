@@ -153,6 +153,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
     // swiftlint:disable:next function_body_length
     public func run(
         schemeName: String?,
+        generate: Bool,
         clean: Bool,
         configuration: String?,
         path: AbsolutePath,
@@ -197,10 +198,16 @@ public final class TestService { // swiftlint:disable:this type_body_length
             )
         }
 
-        logger.notice("Generating project for testing", metadata: .section)
-        let graph = try await testGenerator.generateWithGraph(
-            path: path
-        ).1
+        let graph: Graph
+
+        if try (generate || buildGraphInspector.workspacePath(directory: path) == nil) {
+            logger.notice("Generating project for testing", metadata: .section)
+            graph = try await testGenerator.generateWithGraph(
+                path: path
+            ).1
+        } else {
+            graph = try await testGenerator.load(path: path)
+        }
 
         if generateOnly {
             return
