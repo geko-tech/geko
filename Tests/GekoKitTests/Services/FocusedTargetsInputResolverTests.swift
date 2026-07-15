@@ -54,4 +54,93 @@ final class FocusedTargetsInputResolverTests: GekoUnitTestCase {
 
         XCTAssertEqual(got, Set(["App"]))
     }
+
+    func test_resolve_fails_whenSourcesAndPlanAreCombined() throws {
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: ["App"], planPath: "focus.plan"),
+            FocusedTargetsInputResolverError.conflictingInputs
+        )
+    }
+
+    func test_resolve_fails_whenPlanDoesNotExist() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "missing.plan")
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: [], planPath: planPath.pathString),
+            FocusedTargetsInputResolverError.planNotFound(planPath)
+        )
+    }
+
+    func test_resolve_fails_whenPlanIsDirectory() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        try FileHandler.shared.createFolder(planPath)
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: [], planPath: planPath.pathString),
+            FocusedTargetsInputResolverError.planIsDirectory(planPath)
+        )
+    }
+
+    func test_resolve_fails_whenPlanIsEmpty() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        try FileHandler.shared.write(
+            "",
+            path: planPath,
+            atomically: true
+        )
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: [], planPath: planPath.pathString),
+            FocusedTargetsInputResolverError.emptyPlan(planPath)
+        )
+    }
+
+    func test_resolve_fails_whenPlanContainsOnlyComments() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        try FileHandler.shared.write(
+            "\n  # comment\n  // another comment\n",
+            path: planPath,
+            atomically: true
+        )
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: [], planPath: planPath.pathString),
+            FocusedTargetsInputResolverError.emptyPlan(planPath)
+        )
+    }
+
+    func test_resolve_preservesInvalidTextEncodingError() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        fileHandler.stubExists = { $0 == planPath }
+        fileHandler.stubIsFolder = { _ in false }
+        fileHandler.stubReadTextFile = { _ in
+            throw FileHandlerError.invalidTextEncoding(planPath)
+        }
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: [], planPath: planPath.pathString),
+            FileHandlerError.invalidTextEncoding(planPath)
+        )
+    }
+
+    func test_resolve_wrapsUnhandledReadError() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        fileHandler.stubExists = { $0 == planPath }
+        fileHandler.stubIsFolder = { _ in false }
+        fileHandler.stubReadTextFile = { _ in
+            throw PlanReadTestError.unreadable
+        }
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: [], planPath: planPath.pathString),
+            FocusedTargetsInputResolverError.unableToReadPlan(
+                planPath,
+                reason: "unreadable"
+            )
+        )
+    }
+}
+
+private enum PlanReadTestError: Error {
+    case unreadable
 }
