@@ -56,6 +56,34 @@ App
 ATests ── A 
 ```
 
+## Using a focus plan
+
+When the focused target list is long or reused frequently, put one target name or regular expression on each line of a UTF-8 plan file:
+
+```text
+# Main application
+App
+
+// Current feature family
+Feature.*
+```
+
+Blank lines and full-line comments beginning with `#` or `//` are ignored.
+
+Use the plan for focused source generation:
+
+```bash
+geko generate --plan focus.plan
+```
+
+Or combine it with the cache workflow:
+
+```bash
+geko generate --cache --plan focus.plan
+```
+
+Relative plan paths resolve from the current working directory, independently of `--path`. A plan cannot be combined with positional focused targets, and an empty or comment-only plan is rejected.
+
 To simplify the focus, you can use the `-s, --scheme <scheme>` flag, in which case Geko will focus only on the targets specified in the scheme.
 
 ## Using focus tests 
