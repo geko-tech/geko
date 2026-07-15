@@ -58,7 +58,6 @@ public final class FocusedTargetsExpanderGraphMapper: GraphMapping {
         graph: inout Graph,
         sideTable: inout GraphSideTable
     ) async throws -> [SideEffectDescriptor] {
-        guard !sideTable.workspace.focusedTargets.isEmpty else { return [] }
         var focusedTargets = sideTable.workspace.focusedTargets
 
         let graphTraverser = GraphTraverser(graph: graph)
@@ -71,6 +70,8 @@ public final class FocusedTargetsExpanderGraphMapper: GraphMapping {
             // If only dependencies passed then we should focus on all internal targets
             focusedTargets = Set(allInternalTargets.map(\.target.name))
         } else {
+            guard !focusedTargets.isEmpty else { return [] }
+
             if focusDirectDependencies {
                 // If skip direct dependencies passed then we should find all direct dependencies and focus them
                 let nonRunnableSourceTargets = allInternalTargets
