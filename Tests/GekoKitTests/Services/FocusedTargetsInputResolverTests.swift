@@ -55,11 +55,20 @@ final class FocusedTargetsInputResolverTests: GekoUnitTestCase {
         XCTAssertEqual(got, Set(["App"]))
     }
 
-    func test_resolve_fails_whenSourcesAndPlanAreCombined() throws {
-        XCTAssertThrowsSpecific(
-            try subject.resolve(sources: ["App"], planPath: "focus.plan"),
-            FocusedTargetsInputResolverError.conflictingInputs
+    func test_resolve_combinesPlanAndPositionalSources_andRemovesDuplicates() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        try FileHandler.shared.write(
+            "App\nFeature.*\n",
+            path: planPath,
+            atomically: true
         )
+
+        let got = try subject.resolve(
+            sources: ["App", "Extra"],
+            planPath: planPath.pathString
+        )
+
+        XCTAssertEqual(got, Set(["App", "Feature.*", "Extra"]))
     }
 
     func test_resolve_fails_whenPlanDoesNotExist() throws {
@@ -91,6 +100,20 @@ final class FocusedTargetsInputResolverTests: GekoUnitTestCase {
 
         XCTAssertThrowsSpecific(
             try subject.resolve(sources: [], planPath: planPath.pathString),
+            FocusedTargetsInputResolverError.emptyPlan(planPath)
+        )
+    }
+
+    func test_resolve_fails_whenPlanIsEmpty_evenWithPositionalSources() throws {
+        let planPath = FileHandler.shared.currentPath.appending(component: "focus.plan")
+        try FileHandler.shared.write(
+            "",
+            path: planPath,
+            atomically: true
+        )
+
+        XCTAssertThrowsSpecific(
+            try subject.resolve(sources: ["App"], planPath: planPath.pathString),
             FocusedTargetsInputResolverError.emptyPlan(planPath)
         )
     }

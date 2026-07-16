@@ -9,7 +9,7 @@ struct CacheOptions: ParsableArguments {
     If no target is specified, all the project cacheable targets will be replaced. \
     You can use regular expressions to get the expected set of modules using quotes: 'Test.*'.\
 
-    Cannot be combined with `--plan`. \
+    Combined with entries from `--focus-plan` when both are provided. \
     If flag `--cache` wasn't passed, command will safely focus on these modules without replacing others with binary counterparts. \
     Optionally works with `--focus-tests` and `scheme`.
     """)
@@ -17,9 +17,9 @@ struct CacheOptions: ParsableArguments {
 
     @Option(
         name: .long,
-        help: "Path to a UTF-8 plan file containing one focused target name or regular expression per line. Cannot be combined with positional targets."
+        help: "Path to a UTF-8 plan file containing one focused target name or regular expression per line. Entries are combined with positional focused targets."
     )
-    var plan: String?
+    var focusPlan: String?
 
     @Option(
         name: .shortAndLong,

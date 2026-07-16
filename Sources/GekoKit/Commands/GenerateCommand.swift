@@ -39,7 +39,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
     public func run() async throws {
         let sources = try FocusedTargetsInputResolver().resolve(
             sources: options.sources,
-            planPath: options.plan
+            planPath: options.focusPlan
         )
 
         let path = try options.path.map {

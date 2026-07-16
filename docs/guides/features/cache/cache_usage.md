@@ -70,19 +70,25 @@ Feature.*
 
 Blank lines and full-line comments beginning with `#` or `//` are ignored.
 
-Use the plan for focused source generation:
+Use the plan for focused source generation with `--focus-plan`:
 
 ```bash
-geko generate --plan focus.plan
+geko generate --focus-plan focus.plan
 ```
 
 Or combine it with the cache workflow:
 
 ```bash
-geko generate --cache --plan focus.plan
+geko generate --cache --focus-plan focus.plan
 ```
 
-Relative plan paths resolve from the current working directory, independently of `--path`. A plan cannot be combined with positional focused targets, and an empty or comment-only plan is rejected.
+Positional focused targets are combined with plan entries and duplicates are removed. This lets you temporarily add another target without editing the plan:
+
+```bash
+geko generate ExtraModule --focus-plan focus.plan
+```
+
+Relative plan paths resolve from the current working directory, independently of `--path`. An explicitly provided empty or comment-only plan is rejected, including when positional focused targets are also provided.
 
 To simplify the focus, you can use the `-s, --scheme <scheme>` flag, in which case Geko will focus only on the targets specified in the scheme.
 

@@ -3,7 +3,6 @@ import GekoSupport
 import struct ProjectDescription.AbsolutePath
 
 enum FocusedTargetsInputResolverError: FatalError, Equatable {
-    case conflictingInputs
     case planNotFound(AbsolutePath)
     case planIsDirectory(AbsolutePath)
     case unableToReadPlan(AbsolutePath, reason: String)
@@ -13,8 +12,6 @@ enum FocusedTargetsInputResolverError: FatalError, Equatable {
 
     var description: String {
         switch self {
-        case .conflictingInputs:
-            return "Use either positional focused targets or --plan, not both."
         case let .planNotFound(path):
             return "The plan file was not found at \(path.pathString)."
         case let .planIsDirectory(path):
@@ -40,9 +37,6 @@ struct FocusedTargetsInputResolver {
     ) throws -> Set<String> {
         guard let planPath else {
             return Set(sources)
-        }
-        guard sources.isEmpty else {
-            throw FocusedTargetsInputResolverError.conflictingInputs
         }
 
         let path = try AbsolutePath(
@@ -72,7 +66,7 @@ struct FocusedTargetsInputResolver {
         guard !targets.isEmpty else {
             throw FocusedTargetsInputResolverError.emptyPlan(path)
         }
-        return targets
+        return targets.union(sources)
     }
 
     private func targets(from content: String) -> Set<String> {
