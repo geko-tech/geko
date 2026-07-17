@@ -125,9 +125,9 @@ open class GekoAcceptanceTestCase: XCTestCase {
     }
 
     public func run(_ command: (some AsyncParsableCommand).Type, _ arguments: [String] = []) async throws {
-        let arguments = arguments + [
+        let arguments = [
             "--path", fixturePath.pathString,
-        ]
+        ] + arguments
 
         var parsedCommand = try command.parse(arguments)
         try await parsedCommand.run()
@@ -151,10 +151,10 @@ open class GekoAcceptanceTestCase: XCTestCase {
     }
 
     public func run(_ command: EditCommand.Type, _ arguments: [String] = []) async throws {
-        let arguments = arguments + [
+        let arguments = [
             "--path", fixturePath.pathString,
             "--no-open",
-        ]
+        ] + arguments
 
         let parsedCommand = try command.parse(arguments)
         try await parsedCommand.run()
@@ -175,10 +175,10 @@ open class GekoAcceptanceTestCase: XCTestCase {
     }
 
     public func run(_ command: TestCommand.Type, _ arguments: [String] = []) async throws {
-        let arguments = arguments + [
+        let arguments = [
             "--derived-data-path", derivedDataPath.pathString,
             "--path", fixturePath.pathString,
-        ]
+        ] + arguments
 
         let parsedCommand = try command.parse(arguments)
         try await parsedCommand.run()
@@ -189,10 +189,10 @@ open class GekoAcceptanceTestCase: XCTestCase {
     }
 
     public func run(_ command: BuildCommand.Type, _ arguments: [String] = []) async throws {
-        let arguments = arguments + [
+        let arguments = [
             "--derived-data-path", derivedDataPath.pathString,
             "--path", fixturePath.pathString,
-        ]
+        ] + arguments
 
         let parsedCommand = try command.parse(arguments)
         try await parsedCommand.run()
@@ -203,10 +203,10 @@ open class GekoAcceptanceTestCase: XCTestCase {
     }
 
     public func run(_ command: GenerateCommand.Type, arguments: [String] = []) async throws {
-        let arguments = arguments + [
+        let arguments = [
             "--no-open",
             "--path", fixturePath.pathString,
-        ]
+        ] + arguments
 
         let parsedCommand = try command.parse(arguments)
         try await parsedCommand.run()

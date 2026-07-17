@@ -7,6 +7,12 @@ public enum XcodeBuildDestination: Equatable {
     case mac
 }
 
+public enum XcodeBuildTestAction: Equatable {
+    case test
+    case build
+    case testWithoutBuilding
+}
+
 /// An enum that represents value pairs that can be passed when creating an .xcframework.
 public enum XcodeBuildControllerCreateXCFrameworkArgument {
     
@@ -113,7 +119,8 @@ public protocol XcodeBuildControlling {
         rosetta: Bool,
         derivedDataPath: AbsolutePath?,
         clean: Bool,
-        arguments: [XcodeBuildArgument]
+        arguments: [XcodeBuildArgument],
+        passthroughXcodeBuildArguments: [String]
     ) throws
 
     /// Returns an observable to test the given project using xcodebuild.
@@ -132,7 +139,8 @@ public protocol XcodeBuildControlling {
         _ target: XcodeBuildTarget,
         scheme: String,
         clean: Bool,
-        destination: XcodeBuildDestination,
+        destination: XcodeBuildDestination?,
+        action: XcodeBuildTestAction,
         rosetta: Bool,
         derivedDataPath: AbsolutePath?,
         resultBundlePath: AbsolutePath?,
@@ -140,7 +148,8 @@ public protocol XcodeBuildControlling {
         retryCount: Int,
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
-        testPlanConfiguration: TestPlanConfiguration?
+        testPlanConfiguration: TestPlanConfiguration?,
+        passthroughXcodeBuildArguments: [String]
     ) throws
 
     /// Returns an observable that archives the given project using xcodebuild.

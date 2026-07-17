@@ -17,6 +17,7 @@ public protocol TargetBuilding {
     ///   - device: An optional device specifier to use when building the scheme.
     ///   - osVersion: An optional OS number to use when building the scheme.
     ///   - graphTraverser: The Graph traverser.
+    ///   - passthroughXcodeBuildArguments: The passthrough xcodebuild arguments to pass to xcodebuild
     func buildTarget(
         _ target: GraphTarget,
         platform: ProjectDescription.Platform,
@@ -29,7 +30,8 @@ public protocol TargetBuilding {
         device: String?,
         osVersion: Version?,
         rosetta: Bool,
-        graphTraverser: GraphTraversing
+        graphTraverser: GraphTraversing,
+        passthroughXcodeBuildArguments: [String]
     ) async throws
 }
 
@@ -86,7 +88,8 @@ public final class TargetBuilder: TargetBuilding {
         device: String?,
         osVersion: Version?,
         rosetta: Bool,
-        graphTraverser: GraphTraversing
+        graphTraverser: GraphTraversing,
+        passthroughXcodeBuildArguments: [String]
     ) async throws {
         logger.log(level: .notice, "Building scheme \(scheme.name)", metadata: .section)
 
@@ -115,7 +118,8 @@ public final class TargetBuilder: TargetBuilding {
                 rosetta: rosetta,
                 derivedDataPath: derivedDataPath,
                 clean: clean,
-                arguments: buildArguments
+                arguments: buildArguments,
+                passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
             )
 
         if let buildOutputPath {

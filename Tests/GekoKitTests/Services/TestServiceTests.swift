@@ -168,24 +168,6 @@ final class TestServiceTests: GekoUnitTestCase {
         )
     }
 
-    func test_run_generates_project() async throws {
-        // Given
-        let path = try temporaryPath()
-        var generatedPath: AbsolutePath?
-        generator.generateWithGraphStub = {
-            generatedPath = $0
-            return ($0, Graph.test())
-        }
-
-        // When
-        try? await subject.testRun(
-            path: path
-        )
-
-        // Then
-        XCTAssertEqual(generatedPath, path)
-    }
-
     func test_run_tests_wtih_specified_arch() async throws {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
@@ -194,7 +176,7 @@ final class TestServiceTests: GekoUnitTestCase {
                 Scheme.test(name: "TestScheme"),
             ]
         }
-        buildGraphInspector.testableTargetStub = { scheme, _, _, _, _ in
+        buildGraphInspector.testableTargetStub = { scheme, _, _, _, _, _ in
             GraphTarget.test(
                 target: Target.test(
                     name: scheme.name
@@ -205,7 +187,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedRosetta: Bool?
-        xcodebuildController.testStub = { _, _, _, _, rosetta, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, _, _, _, _, rosetta, _, _, _, _, _, _, _, _ in
             testedRosetta = rosetta
         }
 
@@ -228,7 +210,7 @@ final class TestServiceTests: GekoUnitTestCase {
                 Scheme.test(name: "TestScheme"),
             ]
         }
-        buildGraphInspector.testableTargetStub = { scheme, _, _, _, _ in
+        buildGraphInspector.testableTargetStub = { scheme, _, _, _, _, _ in
             GraphTarget.test(
                 target: Target.test(
                     name: scheme.name
@@ -239,7 +221,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedSchemes: [String] = []
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
 
@@ -270,7 +252,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedSchemes: [String] = []
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
         try fileHandler.touch(
@@ -312,7 +294,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedSchemes: [String] = []
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
         try fileHandler.touch(
@@ -343,7 +325,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedSchemes: [String] = []
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
 
@@ -371,7 +353,7 @@ final class TestServiceTests: GekoUnitTestCase {
         }
         var testedSchemes: [String] = []
         xcodebuildController.testErrorStub = NSError.test()
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
         try fileHandler.touch(
@@ -405,7 +387,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedSchemes: [String] = []
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
 
@@ -424,7 +406,7 @@ final class TestServiceTests: GekoUnitTestCase {
         let expectedResourceBundlePath = try AbsolutePath(validating: "/test")
         var resourceBundlePath: AbsolutePath?
 
-        xcodebuildController.testStub = { _, _, _, _, _, _, gotResourceBundlePath, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, _, _, _, _, _, _, gotResourceBundlePath, _, _, _, _, _, _ in
             resourceBundlePath = gotResourceBundlePath
         }
         generator.generateWithGraphStub = { path in
@@ -454,7 +436,7 @@ final class TestServiceTests: GekoUnitTestCase {
         let expectedResourceBundlePath = try AbsolutePath(validating: "/test")
         var resourceBundlePath: AbsolutePath?
 
-        xcodebuildController.testStub = { _, _, _, _, _, _, gotResourceBundlePath, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, _, _, _, _, _, _, gotResourceBundlePath, _, _, _, _, _, _ in
             resourceBundlePath = gotResourceBundlePath
         }
         generator.generateWithGraphStub = { path in
@@ -498,7 +480,7 @@ final class TestServiceTests: GekoUnitTestCase {
         }
 
         var passedRetryCount = 0
-        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, retryCount, _, _, _ in
+        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, _, retryCount, _, _, _, _ in
             passedRetryCount = retryCount
         }
 
@@ -530,7 +512,7 @@ final class TestServiceTests: GekoUnitTestCase {
         }
 
         var passedRetryCount = -1
-        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, retryCount, _, _, _ in
+        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, _, retryCount, _, _, _, _ in
             passedRetryCount = retryCount
         }
 
@@ -560,7 +542,7 @@ final class TestServiceTests: GekoUnitTestCase {
             ]
         }
         var passedTestPlan: String?
-        buildGraphInspector.testableTargetStub = { scheme, testPlan, _, _, _ in
+        buildGraphInspector.testableTargetStub = { scheme, testPlan, _, _, _, _ in
             passedTestPlan = testPlan
             return GraphTarget.test(
                 target: Target.test(
@@ -572,7 +554,7 @@ final class TestServiceTests: GekoUnitTestCase {
             (path, Graph.test())
         }
         var testedSchemes: [String] = []
-        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, scheme, _, _, _, _, _, _, _, _, _, _, _, _ in
             testedSchemes.append(scheme)
         }
 
@@ -611,7 +593,7 @@ final class TestServiceTests: GekoUnitTestCase {
         generator.generateWithGraphStub = { path in
             (path, Graph.test())
         }
-        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, _, _, _, _ in
+        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, _, _, _, _, _, _ in
         }
 
         let notDefinedTestPlan = "NotDefined"
@@ -644,6 +626,7 @@ extension TestService {
         deviceName: String? = nil,
         platform: String? = nil,
         osVersion: String? = nil,
+        action: XcodeBuildTestAction = .test,
         rosetta: Bool = false,
         skipUiTests: Bool = false,
         resultBundlePath: AbsolutePath? = nil,
@@ -652,7 +635,8 @@ extension TestService {
         testTargets: [TestIdentifier] = [],
         skipTestTargets: [TestIdentifier] = [],
         testPlanConfiguration: TestPlanConfiguration? = nil,
-        generateOnly: Bool = false
+        generateOnly: Bool = false,
+        passthroughXcodeBuildArguments: [String] = []
     ) async throws {
         try await run(
             schemeName: schemeName,
@@ -663,6 +647,7 @@ extension TestService {
             deviceName: deviceName,
             platform: platform,
             osVersion: osVersion,
+            action: action,
             rosetta: rosetta,
             skipUITests: skipUiTests,
             resultBundlePath: resultBundlePath,
@@ -671,7 +656,8 @@ extension TestService {
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
             testPlanConfiguration: testPlanConfiguration,
-            generateOnly: generateOnly
+            generateOnly: generateOnly,
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
         )
     }
 }

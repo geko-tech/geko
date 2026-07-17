@@ -46,7 +46,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
         rosetta: Bool,
         derivedDataPath: AbsolutePath?,
         clean: Bool = false,
-        arguments: [XcodeBuildArgument]
+        arguments: [XcodeBuildArgument],
+        passthroughXcodeBuildArguments: [String]
     ) throws {
         var command = ["NSUnbufferedIO=YES", "/usr/bin/xcrun", "xcodebuild"]
 
@@ -64,6 +65,9 @@ public final class XcodeBuildController: XcodeBuildControlling {
 
         // Arguments
         command.append(contentsOf: arguments.flatMap(\.arguments))
+
+        // Passthrough arguments
+        command.append(contentsOf: passthroughXcodeBuildArguments)
 
         // Destination
         switch destination {
@@ -91,7 +95,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
         _ target: XcodeBuildTarget,
         scheme: String,
         clean: Bool = false,
-        destination: XcodeBuildDestination,
+        destination: XcodeBuildDestination?,
+        action: XcodeBuildTestAction,
         rosetta: Bool,
         derivedDataPath: AbsolutePath?,
         resultBundlePath: AbsolutePath?,
@@ -99,7 +104,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
         retryCount: Int,
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
-        testPlanConfiguration: TestPlanConfiguration?
+        testPlanConfiguration: TestPlanConfiguration?,
+        passthroughXcodeBuildArguments: [String]
     ) throws {
         var command = ["NSUnbufferedIO=YES", "/usr/bin/xcrun", "xcodebuild"]
 
@@ -107,7 +113,14 @@ public final class XcodeBuildController: XcodeBuildControlling {
         if clean {
             command.append("clean")
         }
-        command.append("test")
+        switch action {
+        case .test:
+            command.append("test")
+        case .build:
+            command.append("build-for-testing")
+        case .testWithoutBuilding:
+            command.append("test-without-building")
+        }
 
         // Scheme
         command.append(contentsOf: ["-scheme", scheme])
@@ -117,6 +130,9 @@ public final class XcodeBuildController: XcodeBuildControlling {
 
         // Arguments
         command.append(contentsOf: arguments.flatMap(\.arguments))
+
+        // Passthrough arguments
+        command.append(contentsOf: passthroughXcodeBuildArguments)
 
         // Retry On Failure
         if retryCount > 0 {
@@ -133,6 +149,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
             command.append(contentsOf: ["-destination", value.joined(separator: ",")])
         case .mac:
             command.append(contentsOf: ["-destination", SimulatorController().macOSDestination()])
+        case nil:
+            break
         }
 
         // Derived data path
@@ -164,7 +182,22 @@ public final class XcodeBuildController: XcodeBuildControlling {
             }
         }
 
-        return try runBuild(command: command)
+        do {
+            try runBuild(command: command)
+        } catch let error as XcodeBuildError {
+            switch error {
+            case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
+                guard let xcodebuildErrorsAdditionalInfo = xcodebuildTestTargetErrorsAdditionalInfo(errors: errors) else {
+                    throw error
+                }
+
+                throw XcodeBuildError.buildFailed(
+                    errors: errors + xcodebuildErrorsAdditionalInfo,
+                    buildLogPath: buildLogPath,
+                    rawBuildLogPath: rawBuildLogPath
+                )
+            }
+        }
     }
 
     public func archive(
@@ -351,6 +384,35 @@ public final class XcodeBuildController: XcodeBuildControlling {
             timeoutTask.cancel()
             return result
         }.value
+    }
+
+    private func xcodebuildTestTargetErrorsAdditionalInfo(errors: [String]) -> [String]? {
+        if errors.contains(where: { $0.contains("There are no test bundles available to test.") }) {
+            return ["If you used a cache when generating a project, you may not have added test targets to the focus list."]
+        }
+        let targetNotFoundErrors: [String] = errors.compactMap {
+            guard let targetName = testTargetNotFoundError(text: $0.description) else { return nil }
+            return "It's possible that the test target \"\(targetName)\" was not added to the focus list when generating the project."
+        }
+        if !targetNotFoundErrors.isEmpty {
+            return targetNotFoundErrors
+        }
+        return nil
+    }
+
+    private func testTargetNotFoundError(text: String) -> String? {
+        let pattern = #"Tests in the target ["“”]([^"“”]+)["“”] can['’]t be run because ["“”]([^"“”]+)["“”] isn['’]t a member of the specified test plan or scheme"#
+        let regex = try! NSRegularExpression(pattern: pattern)
+
+        let range = NSRange(text.startIndex..., in: text)
+
+        guard let match = regex.firstMatch(in: text, range: range),
+              let targetRange = Range(match.range(at: 1), in: text)
+        else { return nil }
+
+        let targetName = String(text[targetRange])
+
+        return targetName
     }
 }
 

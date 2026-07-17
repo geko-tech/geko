@@ -71,6 +71,7 @@ final class TargetBuilderTests: GekoUnitTestCase {
         let version = "15.2".version()
         let rosetta = true
         let device = "iPhone 13 Pro"
+        let passthroughXcodeBuildArguments = ["-test-iterations 2"]
 
         simulatorController.findAvailableDeviceStub = { _, _version, _, _deviceName in
             XCTAssertEqual(_version, version)
@@ -83,13 +84,14 @@ final class TargetBuilderTests: GekoUnitTestCase {
         }
 
         xcodeBuildController
-            .buildStub = { _workspace, _scheme, _destination, _rosetta, _, _clean, _buildArguments in
+            .buildStub = { _workspace, _scheme, _destination, _rosetta, _, _clean, _buildArguments, _passthroughXcodeBuildArguments in
                 XCTAssertEqual(_workspace.path, workspacePath)
                 XCTAssertEqual(_scheme, scheme.name)
                 XCTAssertEqual(_destination, destination)
                 XCTAssertEqual(_rosetta, rosetta)
                 XCTAssertEqual(_clean, clean)
                 XCTAssertEqual(_buildArguments, buildArguments)
+                XCTAssertEqual(_passthroughXcodeBuildArguments, passthroughXcodeBuildArguments)
                 return [.standardOutput(.init(raw: "success"))]
             }
 
@@ -106,7 +108,8 @@ final class TargetBuilderTests: GekoUnitTestCase {
             device: device,
             osVersion: version,
             rosetta: rosetta,
-            graphTraverser: MockGraphTraverser()
+            graphTraverser: MockGraphTraverser(),
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
         )
     }
 
@@ -118,7 +121,7 @@ final class TargetBuilderTests: GekoUnitTestCase {
         let workspacePath = try AbsolutePath(validating: "/path/to/project.xcworkspace")
         let graphTraverser = MockGraphTraverser()
 
-        xcodeBuildController.buildStub = { _, _, _, _, _, _, _ in
+        xcodeBuildController.buildStub = { _, _, _, _, _, _, _, _ in
             [.standardOutput(.init(raw: "success"))]
         }
 
@@ -142,7 +145,8 @@ final class TargetBuilderTests: GekoUnitTestCase {
             device: nil,
             osVersion: nil,
             rosetta: false,
-            graphTraverser: graphTraverser
+            graphTraverser: graphTraverser,
+            passthroughXcodeBuildArguments: []
         )
 
         // Then
@@ -169,7 +173,7 @@ final class TargetBuilderTests: GekoUnitTestCase {
         let workspacePath = try AbsolutePath(validating: "/path/to/project.xcworkspace")
         let graphTraverser = MockGraphTraverser()
 
-        xcodeBuildController.buildStub = { _, _, _, _, _, _, _ in
+        xcodeBuildController.buildStub = { _, _, _, _, _, _, _, _ in
             [.standardOutput(.init(raw: "success"))]
         }
 
@@ -193,7 +197,8 @@ final class TargetBuilderTests: GekoUnitTestCase {
             device: nil,
             osVersion: nil,
             rosetta: false,
-            graphTraverser: graphTraverser
+            graphTraverser: graphTraverser,
+            passthroughXcodeBuildArguments: []
         )
 
         // Then
