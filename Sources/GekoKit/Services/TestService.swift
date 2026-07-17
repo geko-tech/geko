@@ -153,7 +153,6 @@ public final class TestService { // swiftlint:disable:this type_body_length
     // swiftlint:disable:next function_body_length
     public func run(
         schemeName: String?,
-        generate: Bool,
         clean: Bool,
         configuration: String?,
         path: AbsolutePath,
@@ -169,8 +168,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
         skipTestTargets: [TestIdentifier],
         testPlanConfiguration: TestPlanConfiguration?,
         validateTestTargetsParameters: Bool = true,
-        generator: Generating? = nil,
-        generateOnly: Bool
+        generator: Generating? = nil
     ) async throws {
         if validateTestTargetsParameters {
             try validateParameters(
@@ -198,20 +196,9 @@ public final class TestService { // swiftlint:disable:this type_body_length
             )
         }
 
-        let graph: Graph
-
-        if try (generate || buildGraphInspector.workspacePath(directory: path) == nil) {
-            logger.notice("Generating project for testing", metadata: .section)
-            graph = try await testGenerator.generateWithGraph(
-                path: path
-            ).1
-        } else {
-            graph = try await testGenerator.load(path: path)
-        }
-
-        if generateOnly {
-            return
-        }
+        let graph = try await testGenerator.load(
+            path: path
+        )
 
         let graphTraverser = GraphTraverser(graph: graph)
         let version = osVersion?.version()
@@ -239,6 +226,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
             }
 
             switch (testPlanConfiguration?.testPlan, scheme.testAction?.targets.isEmpty, scheme.testAction?.testPlans?.isEmpty) {
+            case (_, false, _), (_, _, false):
+                break
             case (nil, true, _), (nil, nil, _):
                 logger.log(level: .info, "The scheme \(schemeName)'s test action has no tests to run, finishing early.")
                 return
