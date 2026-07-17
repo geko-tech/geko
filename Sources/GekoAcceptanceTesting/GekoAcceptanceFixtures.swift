@@ -47,6 +47,7 @@ public enum GekoAcceptanceFixtures {
     case iosAppWithNoneLinkingStatusFramework
     case iosAppWithRemoteBinarySwiftPackage
     case iosAppWithSpmDependenciesForcedResolvedVersions
+    case iosAppWithSpmPackageTraits
     case iosAppWithStaticFrameworks
     case iosAppWithStaticLibraries
     case iosAppWithStaticLibraryAndPackage
@@ -167,6 +168,8 @@ public enum GekoAcceptanceFixtures {
             return "ios_app_with_remote_binary_swift_package"
         case .iosAppWithSpmDependenciesForcedResolvedVersions:
             return "ios_app_with_spm_dependencies_forced_resolved_versions"
+        case .iosAppWithSpmPackageTraits:
+            return "ios_app_with_spm_package_traits"
         case .iosAppWithStaticFrameworks:
             return "ios_app_with_static_frameworks"
         case .iosAppWithStaticLibraries:

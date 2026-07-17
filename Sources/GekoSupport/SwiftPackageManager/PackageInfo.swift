@@ -15,6 +15,12 @@ public struct PackageInfo: Hashable {
     /// The targets declared in the manifest.
     public let targets: [Target]
 
+    /// The traits supported by the package.
+    public let traits: [PackageTrait]?
+
+    /// The package dependencies and their enabled traits.
+    public let dependencies: [PackageDependency]
+
     /// The declared platforms in the manifest.
     public let platforms: [Platform]
 
@@ -54,6 +60,8 @@ public struct PackageInfo: Hashable {
         name: String,
         products: [Product],
         targets: [Target],
+        traits: [PackageTrait]? = nil,
+        dependencies: [PackageDependency] = [],
         platforms: [Platform],
         cLanguageStandard: String?,
         cxxLanguageStandard: String?,
@@ -63,6 +71,8 @@ public struct PackageInfo: Hashable {
         self.name = name
         self.products = products
         self.targets = targets
+        self.traits = traits
+        self.dependencies = dependencies
         self.platforms = platforms
         self.cLanguageStandard = cLanguageStandard
         self.cxxLanguageStandard = cxxLanguageStandard
@@ -101,13 +111,16 @@ extension PackageInfo {
     public struct PackageConditionDescription: Decodable, Hashable {
         public let platformNames: [String]
         public let config: String?
+        public let traits: [String]?
 
         public init(
             platformNames: [String],
-            config: String?
+            config: String?,
+            traits: [String]? = nil
         ) {
             self.platformNames = platformNames
             self.config = config
+            self.traits = traits
         }
     }
 }
@@ -495,7 +508,8 @@ extension PackageInfo: Decodable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, products, targets, platforms, cLanguageStandard, cxxLanguageStandard, swiftLanguageVersions, toolsVersion
+        case name, products, targets, traits, dependencies, platforms, cLanguageStandard, cxxLanguageStandard,
+             swiftLanguageVersions, toolsVersion
     }
 
     public init(from decoder: Decoder) throws {
@@ -503,6 +517,9 @@ extension PackageInfo: Decodable {
         name = try values.decode(String.self, forKey: .name)
         products = try values.decode([Product].self, forKey: .products)
         targets = try values.decode([Target].self, forKey: .targets)
+        traits = try values.decodeIfPresent([PackageTrait].self, forKey: .traits)
+        dependencies = try values.decodeIfPresent([PackageDependency].self, forKey: .dependencies)?
+            .filter { !$0.identity.isEmpty } ?? []
         platforms = try values.decode([Platform].self, forKey: .platforms)
         cLanguageStandard = try values.decodeIfPresent(String.self, forKey: .cLanguageStandard)
         cxxLanguageStandard = try values.decodeIfPresent(String.self, forKey: .cxxLanguageStandard)

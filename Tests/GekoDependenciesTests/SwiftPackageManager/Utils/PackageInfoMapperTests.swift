@@ -4375,6 +4375,143 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
         // Should use standard layout, not SE-0162 layout
         XCTAssertTrue(firstGlob!.pathString.contains("Package/Sources/Target1/**"))
     }
+
+    func testMap_whenDependencyTraitIsDisabled_excludesDependency() throws {
+        let project = try mapPackageWithTraitDependency(enabledTraits: [])
+
+        let rootTarget = try XCTUnwrap(project?.targets.first(where: { $0.name == "Root" }))
+        XCTAssertTrue(rootTarget.dependencies.isEmpty)
+    }
+
+    func testMap_whenDependencyTraitIsEnabled_includesDependencyWithPlatformCondition() throws {
+        let project = try mapPackageWithTraitDependency(enabledTraits: ["Feature"])
+
+        let rootTarget = try XCTUnwrap(project?.targets.first(where: { $0.name == "Root" }))
+        XCTAssertEqual(rootTarget.dependencies, [
+            .target(name: "Child", condition: .when([.ios])),
+        ])
+    }
+
+    func testMap_whenEnabledTraits_setsRecursiveSwiftCompilationConditions() throws {
+        let basePath = try temporaryPath()
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "Package/Sources/Root")))
+        let packageInfo = PackageInfo.test(
+            name: "Package",
+            products: [
+                .init(name: "Product", type: .library(.automatic), targets: ["Root"]),
+            ],
+            targets: [.test(name: "Root")],
+            traits: [
+                PackageTrait(enabledTraits: ["Intermediate"], name: "default", description: nil),
+                PackageTrait(enabledTraits: ["Concrete"], name: "Intermediate", description: nil),
+                PackageTrait(enabledTraits: [], name: "Concrete", description: nil),
+            ],
+            platforms: [.ios]
+        )
+
+        let project = try subject.map(
+            packageInfo: packageInfo,
+            path: basePath.appending(component: "Package"),
+            productTypes: [:],
+            baseSettings: .default,
+            targetSettings: [:],
+            projectOptions: nil,
+            targetsToArtifactPaths: [:],
+            packageModuleAliases: [:],
+            enabledTraits: ["default", "Unknown"]
+        )
+
+        let target = try XCTUnwrap(project?.targets.first)
+        XCTAssertEqual(
+            target.settings?.base["SWIFT_ACTIVE_COMPILATION_CONDITIONS"],
+            .array(["$(inherited)", "Concrete", "Intermediate"])
+        )
+    }
+
+    func testMap_whenEnabledTraits_preservesExistingSwiftCompilationConditions() throws {
+        let basePath = try temporaryPath()
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "Package/Sources/Root")))
+        let packageInfo = PackageInfo.test(
+            name: "Package",
+            products: [
+                .init(name: "Product", type: .library(.automatic), targets: ["Root"]),
+            ],
+            targets: [.test(name: "Root")],
+            traits: [
+                PackageTrait(enabledTraits: [], name: "Feature", description: nil),
+            ],
+            platforms: [.ios]
+        )
+
+        let project = try subject.map(
+            packageInfo: packageInfo,
+            path: basePath.appending(component: "Package"),
+            productTypes: [:],
+            baseSettings: .default,
+            targetSettings: [
+                "Root": .test(
+                    base: [
+                        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": ["$(inherited)", "ExistingCondition"],
+                    ]
+                ),
+            ],
+            projectOptions: nil,
+            targetsToArtifactPaths: [:],
+            packageModuleAliases: [:],
+            enabledTraits: ["Feature"]
+        )
+
+        let target = try XCTUnwrap(project?.targets.first)
+        XCTAssertEqual(
+            target.settings?.base["SWIFT_ACTIVE_COMPILATION_CONDITIONS"],
+            .array(["$(inherited)", "ExistingCondition", "Feature"])
+        )
+    }
+
+    private func mapPackageWithTraitDependency(enabledTraits: Set<String>) throws -> Project? {
+        let basePath = try temporaryPath()
+        for target in ["Root", "Child"] {
+            try fileHandler.createFolder(
+                basePath.appending(try RelativePath(validating: "Package/Sources/\(target)"))
+            )
+        }
+        let packageInfo = PackageInfo.test(
+            name: "Package",
+            products: [
+                .init(name: "Product", type: .library(.automatic), targets: ["Root"]),
+            ],
+            targets: [
+                .test(
+                    name: "Root",
+                    dependencies: [
+                        .target(
+                            name: "Child",
+                            condition: PackageInfo.PackageConditionDescription(
+                                platformNames: ["ios"],
+                                config: nil,
+                                traits: ["Feature"]
+                            )
+                        ),
+                    ]
+                ),
+                .test(name: "Child"),
+            ],
+            traits: [PackageTrait(enabledTraits: [], name: "Feature", description: nil)],
+            platforms: [.ios]
+        )
+
+        return try subject.map(
+            packageInfo: packageInfo,
+            path: basePath.appending(component: "Package"),
+            productTypes: [:],
+            baseSettings: .default,
+            targetSettings: [:],
+            projectOptions: nil,
+            targetsToArtifactPaths: [:],
+            packageModuleAliases: [:],
+            enabledTraits: enabledTraits
+        )
+    }
 }
 
 private func defaultSpmResources(_ target: String, customPath: String? = nil) -> ProjectDescription.ResourceFileElements {
@@ -4402,7 +4539,8 @@ extension PackageInfoMapping {
         baseSettings: Settings = .default,
         targetSettings: [String: Settings] = [:],
         projectOptions: Project.Options? = nil,
-        packageModuleAliases: [String: [String: String]] = [:]
+        packageModuleAliases: [String: [String: String]] = [:],
+        enabledTraits: Set<String> = []
     ) throws -> ProjectDescription.Project? {
         let packageToTargetsToArtifactPaths: [String: [String: AbsolutePath]] = try packageInfos
             .reduce(into: [:]) { packagesResult, element in
@@ -4432,7 +4570,8 @@ extension PackageInfoMapping {
             targetSettings: targetSettings,
             projectOptions: projectOptions,
             targetsToArtifactPaths: packageToTargetsToArtifactPaths[package]!,
-            packageModuleAliases: packageModuleAliases
+            packageModuleAliases: packageModuleAliases,
+            enabledTraits: enabledTraits
         )
     }
 }

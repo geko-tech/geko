@@ -100,7 +100,6 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
                 folder: AbsolutePath,
                 targetToArtifactPaths: [String: AbsolutePath],
                 version: String?,
-                dependencies: Set<String>,
                 info: PackageInfo,
                 kind: String
             )
@@ -130,15 +129,12 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
                     result[artifact.targetName] = try AbsolutePath(validatingAbsolutePath: artifact.path)
                 }
 
-            let targets = Set(packageInfo.targets.map { $0.name })
-            let dependencies = Set(packageInfo.targets.map { $0.dependencies.map { $0.name } }.flatMap { $0 })
             return (
                 id: dependency.packageRef.identity.lowercased(),
                 name: name,
                 folder: packageFolder,
                 targetToArtifactPaths: targetToArtifactPaths,
                 version: resolvedDependenciesVersions[dependency.packageRef.identity] ?? "",
-                dependencies: targets.union(dependencies).subtracting([name]),
                 info: packageInfo,
                 kind: dependency.packageRef.kind
             )
@@ -160,6 +156,11 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
         let packageToTargetsToArtifactPaths = Dictionary(uniqueKeysWithValues: packageInfos.map {
             ($0.name, $0.targetToArtifactPaths)
         })
+        let rootPackageInfo = try swiftPackageManagerController.loadPackageInfo(at: path.parentDirectory)
+        let enabledTraits = SwiftPackageTraitsResolver().enabledTraits(
+            rootPackageInfo: rootPackageInfo,
+            packageInfos: Dictionary(uniqueKeysWithValues: packageInfos.map { ($0.id, $0.info) })
+        )
         
         var mutablePackageModuleAliases: [String: [String: String]] = [:]
 
@@ -199,7 +200,8 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
                     targetSettings: targetSettings,
                     projectOptions: projectOptions[packageInfo.name],
                     targetsToArtifactPaths: packageToTargetsToArtifactPaths[packageInfo.name] ?? [:],
-                    packageModuleAliases: packageModuleAliases
+                    packageModuleAliases: packageModuleAliases,
+                    enabledTraits: enabledTraits[packageInfo.id] ?? []
                 )
             )
         }
@@ -211,9 +213,17 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
 
         var tree: [String: GekoCore.DependenciesGraph.TreeDependency] = [:]
         for info in packageInfos {
+            let packageEnabledTraits = enabledTraits[info.id] ?? []
+            let targets = Set(info.info.targets.map(\.name))
+            let dependencies = Set(
+                info.info.targets
+                    .flatMap(\.dependencies)
+                    .filter { $0.isEnabled(for: packageEnabledTraits) }
+                    .map(\.name)
+            )
             tree[info.name] = GekoCore.DependenciesGraph.TreeDependency(
                 version: info.version ?? "",
-                dependencies: Array(info.dependencies)
+                dependencies: Array(targets.union(dependencies).subtracting([info.name]))
             )
         }
 
@@ -232,6 +242,19 @@ extension PackageInfo.Target.Dependency {
         case .target(let name, _), .product(let name, _, _, _), .byName(let name, _):
             return name
         }
+    }
+
+    func isEnabled(for enabledTraits: Set<String>) -> Bool {
+        let condition: PackageInfo.PackageConditionDescription?
+        switch self {
+        case let .target(_, dependencyCondition), let .byName(_, dependencyCondition):
+            condition = dependencyCondition
+        case let .product(_, _, _, dependencyCondition):
+            condition = dependencyCondition
+        }
+
+        guard let traits = condition?.traits, !traits.isEmpty else { return true }
+        return !Set(traits).isDisjoint(with: enabledTraits)
     }
 }
 

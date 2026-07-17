@@ -73,6 +73,9 @@ let project = Project(
 ```
 :::
 
+## Package Traits
+
+Geko supports SwiftPM Package Traits, including default traits, transitive trait selection, conditional dependencies, and generated Swift compilation conditions. See [Package Traits](./package-traits.md) for setup and examples.
 
 ## Package Settings 
 
