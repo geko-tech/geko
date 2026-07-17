@@ -58,7 +58,7 @@ ATests ── A
 
 ## Using a focus plan
 
-When the focused target list is long or reused frequently, put one target name or regular expression on each line of a UTF-8 plan file:
+As a project grows, list of focused targets can become large enough to write by hand. Focus plan file can be used to pass a list of focused targets and represents a list of target names or regular expressions separated by newline. Example of focus plan can be seen below.
 
 ```text
 # Main application
@@ -68,15 +68,15 @@ App
 Feature.*
 ```
 
-Blank lines and full-line comments beginning with `#` or `//` are ignored.
+Blank lines and full-line comments starting with `#` or `//` are ignored.
 
-Use the plan for focused source generation with `--focus-plan`:
+Focus plan can be used through `--focus-plan` option:
 
 ```bash
 geko generate --focus-plan focus.plan
 ```
 
-Or combine it with the cache workflow:
+Or it can be combined with the cache workflow:
 
 ```bash
 geko generate --cache --focus-plan focus.plan
@@ -88,7 +88,7 @@ Positional focused targets are combined with plan entries and duplicates are rem
 geko generate ExtraModule --focus-plan focus.plan
 ```
 
-Relative plan paths resolve from the current working directory, independently of `--path`. An explicitly provided empty or comment-only plan is rejected, including when positional focused targets are also provided.
+Relative plan paths are resolved from the current working directory, independently of `--path`. An explicitly provided empty or comment-only plan is rejected, including when positional focused targets are also provided.
 
 To simplify the focus, you can use the `-s, --scheme <scheme>` flag, in which case Geko will focus only on the targets specified in the scheme.
 
