@@ -56,6 +56,40 @@ App
 ATests ── A 
 ```
 
+## Using a focus plan
+
+As a project grows, list of focused targets can become large enough to write by hand. Focus plan file can be used to pass a list of focused targets and represents a list of target names or regular expressions separated by newline. Example of focus plan can be seen below.
+
+```text
+# Main application
+App
+
+// Current feature family
+Feature.*
+```
+
+Blank lines and full-line comments starting with `#` or `//` are ignored.
+
+Focus plan can be used through `--focus-plan` option:
+
+```bash
+geko generate --focus-plan focus.plan
+```
+
+Or it can be combined with the cache workflow:
+
+```bash
+geko generate --cache --focus-plan focus.plan
+```
+
+Positional focused targets are combined with plan entries and duplicates are removed. This lets you temporarily add another target without editing the plan:
+
+```bash
+geko generate ExtraModule --focus-plan focus.plan
+```
+
+Relative plan paths are resolved from the current working directory, independently of `--path`. An explicitly provided empty or comment-only plan is rejected, including when positional focused targets are also provided.
+
 To simplify the focus, you can use the `-s, --scheme <scheme>` flag, in which case Geko will focus only on the targets specified in the scheme.
 
 ## Using focus tests 

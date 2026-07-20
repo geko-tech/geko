@@ -9,10 +9,17 @@ struct CacheOptions: ParsableArguments {
     If no target is specified, all the project cacheable targets will be replaced. \
     You can use regular expressions to get the expected set of modules using quotes: 'Test.*'.\
 
-    If flag `--cache` wasn't passed, command will safely focus on the modules passed in the `sources` without replacing other with binary counterparts.\
+    Combined with entries from `--focus-plan` when both are provided. \
+    If flag `--cache` wasn't passed, command will safely focus on these modules without replacing others with binary counterparts. \
     Optionally works with `--focus-tests` and `scheme`.
     """)
     var sources: [String] = []
+
+    @Option(
+        name: .long,
+        help: "Path to a UTF-8 plan file containing one focused target name or regular expression per line. Entries are combined with positional focused targets."
+    )
+    var focusPlan: String?
 
     @Option(
         name: .shortAndLong,
@@ -34,12 +41,12 @@ struct CacheOptions: ParsableArguments {
     var excludedTargets: [String] = []
 
     @Flag(
-        help: "If passed, the command doesn't cache direct internal target dependencies passed in the `--sources`, but will do it safely"
+        help: "If passed, the command doesn't cache direct internal dependencies of focused targets, but will do it safely"
     )
     var focusDirectDependencies: Bool = false
 
     @Flag(
-        help: "If passed, the command will additionaly focus on tests and apphost for passed sources targets"
+        help: "If passed, the command will additionally focus on tests and app host for focused targets"
     )
     var focusTests: Bool = false
 

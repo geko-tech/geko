@@ -23,7 +23,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
 
     @Flag(
         name: [.customLong("cache")],
-        help: "The command will cache all targets except those specified in sources."
+        help: "The command will cache all targets except the focused targets."
     )
     var cache: Bool = false
 
@@ -37,6 +37,11 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
     var manifestOptions: ManifestOptions
 
     public func run() async throws {
+        let sources = try FocusedTargetsInputResolver().resolve(
+            sources: options.sources,
+            planPath: options.focusPlan
+        )
+
         let path = try options.path.map {
             let resolvedPath = try AbsolutePath(validating: $0, relativeTo: .current)
             return try FileHandler.shared.resolveSymlinks(resolvedPath).pathString
@@ -62,7 +67,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
                 profile: options.profile,
                 scheme: options.scheme,
                 destination: options.destination,
-                sources: Set(options.sources),
+                sources: sources,
                 excludedTargets: Set(options.excludedTargets),
                 focusDirectDependencies: options.focusDirectDependencies,
                 focusTests: options.focusTests,
@@ -75,7 +80,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
             try await GenerateService().run(
                 path: path,
                 noOpen: options.noOpen,
-                sources: Set(options.sources),
+                sources: sources,
                 scheme: options.scheme,
                 focusTests: options.focusTests,
             )
@@ -84,7 +89,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
         GenerateCommand.analyticsDelegate?.addParameters(
             [
                 "destination": AnyCodable(options.destination),
-                "focus_targets": AnyCodable(options.sources.count),
+                "focus_targets": AnyCodable(sources.count),
                 "use_cache": AnyCodable(cache),
                 "ignore_remote_cache": AnyCodable(ignoreRemoteCache),
                 "cacheable_targets": AnyCodable(CacheAnalytics.cacheableTargets),
