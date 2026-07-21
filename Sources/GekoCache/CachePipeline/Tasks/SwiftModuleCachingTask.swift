@@ -22,6 +22,8 @@ public final class SwiftModuleCachingTask: CacheTask {
     
     private let xcframeworkMetadataProvider: XCFrameworkMetadataProviding
     
+    private let logSpiner = LogSpinner()
+    
     // MARK: - Initialization
     
     public convenience init(
@@ -65,6 +67,7 @@ public final class SwiftModuleCachingTask: CacheTask {
             throw CacheTaskError.cacheContextValueUninitialized
         }
 
+        logSpiner.start(message: "Hashing swiftmodule frameworks")
         // Caclulate hashes for xcframeworks if swiftmodule cache enabled
         let hashesByXCFrameworks = try xcframeworkContentHasher.contentHashes(
             for: graph,
@@ -73,6 +76,7 @@ public final class SwiftModuleCachingTask: CacheTask {
             cacheOutputType: context.outputType,
             cacheDestination: context.destination
         )
+        logSpiner.stop()
 
         // Replace swiftinterface with already cached swiftmodules
         try await replaceSwiftInterfaces(
@@ -107,6 +111,7 @@ public final class SwiftModuleCachingTask: CacheTask {
         destination: CacheFrameworkDestination,
         hashedXCFrameworks: [AbsolutePath: String]
     ) async throws {
+        logSpiner.start(message: "Start building and storing swiftmodules")
         try await FileHandler.shared.inTemporaryDirectory { outputDirectory in
             try await self.swiftModulesBuilder.build(
                 with: graph,
@@ -122,6 +127,7 @@ public final class SwiftModuleCachingTask: CacheTask {
                 cacheProfile: profile
             )
         }
+        logSpiner.stop()
     }
 
     private func store(
