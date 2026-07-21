@@ -21,7 +21,7 @@ final class CacheArtifactBuildingTask: CacheArchivingTask {
         let logSpinner = LogSpinner()
         
         for (platform, scheme) in context.schemesByPlatform.sorted(by: { $0.key < $1.key }) {
-            logSpinner.start(message: "Start building cacheable targets for platform \(platform.caseValue)")
+            logSpinner.start(message: "Building cacheable targets for platform \(platform.caseValue)")
             let outputDirectory = context.workDirectory.appending(component: scheme.name)
             try FileHandler.shared.createFolder(outputDirectory)
             try await artifactBuilder.build(

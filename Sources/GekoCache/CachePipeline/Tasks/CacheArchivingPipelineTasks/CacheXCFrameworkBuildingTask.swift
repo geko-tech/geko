@@ -21,7 +21,7 @@ final class CacheXCFrameworkBuildingTask: CacheArchivingTask {
         guard case .xcframework = context.outputType else { return }
         
         let logSpinner = LogSpinner()
-        logSpinner.start(message: "Start creating xcframeworks")
+        logSpinner.start(message: "Creating xcframeworks")
         
         try await xcframeworkBuilder.build(
             platforms: Array(context.schemesByPlatform.keys),

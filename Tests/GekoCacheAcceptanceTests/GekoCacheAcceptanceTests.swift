@@ -22,7 +22,7 @@ final class CacheAcceptanceTestsAllTargets: GekoAcceptanceTestCase {
         // Then
         // Check all expected targets was cached
         XCTAssertStandardOutput(pattern: "Targets to be cached now count: 13")
-        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform iOS")
+        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform iOS")
         XCTAssertStandardOutput(pattern: "Storing 13 cacheable targets")
         XCTAssertStandardOutput(pattern: "Stored target: FeaturePodA, FeaturePodA-FeaturePodAResources, FeaturePodAInterfaces, FeaturePodB, FeaturePodB-FeaturePodBResources, FeaturePodBInterfaces, InterimSinglePod, MultiPod, MultiPod-MultiPodTestsResources, MultiPodInterfaces, MultiPodMock, OrphanSinglePod, SinglePod")
         XCTAssertStandardOutput(pattern: "All cacheable targets have been cached successfully as frameworks with simulator destination.")
@@ -67,7 +67,7 @@ final class CacheAcceptanceTestsCacheWithFocus: GekoAcceptanceTestCase {
 
         // Then
         XCTAssertStandardOutput(pattern: "Targets to be cached now count: 9")
-        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform iOS")
+        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform iOS")
         XCTAssertStandardOutput(pattern: "Storing 9 cacheable targets")
         XCTAssertStandardOutput(pattern: "Stored target: FeaturePodAInterfaces, FeaturePodB, FeaturePodB-FeaturePodBResources, FeaturePodBInterfaces, InterimSinglePod, MultiPod, MultiPodInterfaces, OrphanSinglePod, SinglePod")
         XCTAssertStandardOutput(pattern: "All cacheable targets have been cached successfully as frameworks with simulator destination.")
@@ -132,7 +132,7 @@ final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesSafeMode: Gek
 
         // Then
         XCTAssertStandardOutput(pattern: "Targets to be cached now count: 2")
-        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform iOS")
+        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform iOS")
         XCTAssertStandardOutput(pattern: "Storing 2 cacheable targets")
         XCTAssertStandardOutput(pattern: "Stored target: FeaturePodBInterfaces, OrphanSinglePod")
         XCTAssertStandardOutput(pattern: "All cacheable targets have been cached successfully as frameworks with simulator destination.")
@@ -205,7 +205,7 @@ final class CacheAcceptanceTestsWithFocusAndFocusDirectDependenciesUnsafeMode: G
 
         // Then
         XCTAssertStandardOutput(pattern: "Targets to be cached now count: 5")
-        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform iOS")
+        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform iOS")
         XCTAssertStandardOutput(pattern: "Storing 5 cacheable targets")
         XCTAssertStandardOutput(pattern: "Stored target: FeaturePodB, FeaturePodB-FeaturePodBResources, FeaturePodBInterfaces, InterimSinglePod, OrphanSinglePod")
         XCTAssertStandardOutput(pattern: "All cacheable targets have been cached successfully as frameworks with simulator destination.")
@@ -279,7 +279,7 @@ final class CacheAcceptanceTestsWithSwiftModuleCache: GekoAcceptanceTestCase {
 
         // Then
         XCTAssertStandardOutput(pattern: "Targets to be cached now count: 5")
-        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform iOS")
+        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform iOS")
         XCTAssertStandardOutput(pattern: "Storing 5 cacheable targets")
         XCTAssertStandardOutput(pattern: "Stored target: FeaturePodB, FeaturePodB-FeaturePodBResources, FeaturePodBInterfaces, InterimSinglePod, OrphanSinglePod")
         XCTAssertStandardOutput(pattern: "All cacheable targets have been cached successfully as frameworks with simulator destination.")
@@ -338,8 +338,8 @@ final class CacheAcceptanceTestsWithSwiftModuleCache: GekoAcceptanceTestCase {
 //
 //        // Then
 //        XCTAssertStandardOutput(pattern: "Targets to be cached now count: 24")
-//        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform iOS")
-//        XCTAssertStandardOutput(pattern: "Start building cacheable targets for platform tvOS")
+//        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform iOS")
+//        XCTAssertStandardOutput(pattern: "Building cacheable targets for platform tvOS")
 //        XCTAssertStandardOutput(pattern: "Start creating xcframeworks")
 //        XCTAssertStandardOutput(pattern: "Start preparing bundles")
 //        XCTAssertStandardOutput(pattern: "Storing 24 cacheable targets")
