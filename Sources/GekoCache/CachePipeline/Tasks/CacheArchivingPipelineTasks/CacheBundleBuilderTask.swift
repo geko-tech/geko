@@ -20,7 +20,7 @@ final class CacheBundleBuilderTask: CacheArchivingTask {
     
     func run(context: ArchivingContext) async throws {
         let logSpinner = LogSpinner()
-        logSpinner.start(message: "Start preparing bundles")
+        logSpinner.start(message: "Preparing bundles")
         try await bundlesBuilder.prepareBundles(
             platforms: Array(context.schemesByPlatform.keys),
             workDirectory: context.workDirectory,

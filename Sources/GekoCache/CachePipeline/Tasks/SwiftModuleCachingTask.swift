@@ -111,8 +111,8 @@ public final class SwiftModuleCachingTask: CacheTask {
         destination: CacheFrameworkDestination,
         hashedXCFrameworks: [AbsolutePath: String]
     ) async throws {
-        logSpiner.start(message: "Start building and storing swiftmodules")
         try await FileHandler.shared.inTemporaryDirectory { outputDirectory in
+            self.logSpiner.start(message: "Building swiftmodules")
             try await self.swiftModulesBuilder.build(
                 with: graph,
                 profile: profile,
@@ -120,14 +120,16 @@ public final class SwiftModuleCachingTask: CacheTask {
                 hashedXCFrameworks: hashedXCFrameworks,
                 into: outputDirectory
             )
+            self.logSpiner.stop()
 
+            self.logSpiner.start(message: "Storing swiftmodules")
             try await self.store(
                 hashedXCFrameworks: hashedXCFrameworks,
                 outputDirectory: outputDirectory,
                 cacheProfile: profile
             )
+            self.logSpiner.stop()
         }
-        logSpiner.stop()
     }
 
     private func store(
