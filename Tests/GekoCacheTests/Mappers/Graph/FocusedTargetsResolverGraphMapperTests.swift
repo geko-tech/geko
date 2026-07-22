@@ -305,8 +305,10 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         ]
         
         let aTarget = Target.test(name: "App", product: .app)
+        let aTargetUnit = Target.test(name: "UnitTests", product: .unitTests)
+        let aTargetUI = Target.test(name: "UITests", product: .uiTests)
         let aProjectPath = try temporaryPath().appending(component: "App")
-        let aProject = Project.test(path: aProjectPath, name: "App", targets: [aTarget])
+        let aProject = Project.test(path: aProjectPath, name: "App", targets: [aTarget, aTargetUnit, aTargetUI])
         let aGraphTarget = GraphTarget.test(path: aProjectPath, target: aTarget)
         
         let bProjectPath = try temporaryPath().appending(component: "B")
@@ -347,7 +349,124 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
                 cProjectPath: cProject,
             ],
             targets: [
-                aProjectPath: ["App": aTarget],
+                aProjectPath: [
+                    "App": aTarget,
+                    "UnitTests": aTargetUnit,
+                    "UITests": aTargetUI
+                ],
+                bProjectPath: [
+                    "B": bTarget,
+                    "B-Unit-Tests": bTargetUnitTests,
+                    "B-Snapshot-Tests": bTargetSnapshotTests,
+                    "B-AppHost": bTargetAppHost
+                ],
+                bbProjectPath: [
+                    "BB": bbTarget,
+                    "BB-Unit-Tests": bbTargetUnitTests,
+                ],
+                cProjectPath: [
+                    "C": cTarget,
+                    "C-Unit-Tests": cTargetUnitTests
+                ],
+            ],
+            dependencies: [
+                .target(name: aTarget.name, path: aGraphTarget.path): [
+                    .target(name: bTarget.name, path: bGraphTarget.path),
+                    .target(name: cTarget.name, path: cGraphTarget.path)
+                ],
+                .target(name: bTarget.name, path: bGraphTarget.path): [
+                    .target(name: bbTarget.name, path: bbGraphTarget.path),
+                ],
+                .target(name: bTargetUnitTests.name, path: bUnitTestsGraphTarget.path): [
+                    .target(name: bTargetAppHost.name, path: bAppHostTestsGraphTarget.path)
+                ],
+                .target(name: bTargetSnapshotTests.name, path: bSnapshotTestsGraphTarget.path): [],
+                .target(name: bTargetAppHost.name, path: bAppHostTestsGraphTarget.path): [],
+                .target(name: bbTarget.name, path: bbGraphTarget.path): [],
+                .target(name: bbTargetUnitTests.name, path: bbUnitTestsGraphTarget.path): [],
+                .target(name: cTarget.name, path: cGraphTarget.path): [],
+                .target(name: cTargetUnitTests.name, path: cUnitTestsGraphTarget.path): [],
+            ]
+        )
+        
+        // When
+        var got = graph
+        var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
+        _ = try await subject.map(graph: &got, sideTable: &sideTable)
+        
+        // Then
+        XCTAssertEqual(
+            sideTable.workspace.focusedTargets.sorted(),
+            expectedResult.sorted()
+        )
+    }
+    
+    func test_map_when_sources_with_focus_tests_and_runnable_target_tests() async throws {
+        // Given
+
+        let focusedTargets: Set<String> = ["App", "B", "UnitTests"]
+        subject = FocusedTargetsResolverGraphMapper(focusTests: true, schemeName: nil)
+        let expectedResult = [
+            "App",
+            "UnitTests",
+            "B",
+            "B-Unit-Tests",
+            "B-Snapshot-Tests",
+            "B-AppHost",
+            CacheConstants.cacheProjectName
+        ]
+        
+        let aTarget = Target.test(name: "App", product: .app)
+        let aTargetUnit = Target.test(name: "UnitTests", product: .unitTests)
+        let aTargetUI = Target.test(name: "UITests", product: .uiTests)
+        let aProjectPath = try temporaryPath().appending(component: "App")
+        let aProject = Project.test(path: aProjectPath, name: "App", targets: [aTarget, aTargetUnit, aTargetUI])
+        let aGraphTarget = GraphTarget.test(path: aProjectPath, target: aTarget)
+        
+        let bProjectPath = try temporaryPath().appending(component: "B")
+        let bTarget = Target.test(name: "B", product: .staticFramework)
+        let bGraphTarget = GraphTarget.test(path: bProjectPath, target: bTarget)
+        let bTargetUnitTests = Target.test(name: "B-Unit-Tests", product: .unitTests)
+        let bUnitTestsGraphTarget = GraphTarget.test(path: bProjectPath, target: bTargetUnitTests)
+        let bTargetSnapshotTests = Target.test(name: "B-Snapshot-Tests", product: .unitTests)
+        let bSnapshotTestsGraphTarget = GraphTarget.test(path: bProjectPath, target: bTargetSnapshotTests)
+        let bTargetAppHost = Target.test(name: "B-AppHost", product: .app)
+        let bAppHostTestsGraphTarget = GraphTarget.test(path: bProjectPath, target: bTargetAppHost)
+        let bProject = Project.test(path: bProjectPath, name: "B", targets: [
+            bTarget,
+            bTargetUnitTests,
+            bTargetSnapshotTests,
+            bTargetAppHost
+        ])
+        
+        let bbProjectPath = try temporaryPath().appending(component: "BB")
+        let bbTarget = Target.test(name: "BB", product: .staticFramework)
+        let bbGraphTarget = GraphTarget.test(path: bbProjectPath, target: bbTarget)
+        let bbTargetUnitTests = Target.test(name: "BB-Unit-Tests", product: .unitTests)
+        let bbUnitTestsGraphTarget = GraphTarget.test(path: bbProjectPath, target: bbTargetUnitTests)
+        let bbProject = Project.test(path: bbProjectPath, name: "BB", targets: [bbTarget, bbTargetUnitTests])
+        
+        let cProjectPath = try temporaryPath().appending(component: "C")
+        let cTarget = Target.test(name: "C", product: .staticFramework)
+        let cGraphTarget = GraphTarget.test(path: cProjectPath, target: cTarget)
+        let cTargetUnitTests = Target.test(name: "C-Unit-Tests", product: .unitTests)
+        let cUnitTestsGraphTarget = GraphTarget.test(path: cProjectPath, target: cTargetUnitTests)
+        let cProject = Project.test(path: cProjectPath, name: "C", targets: [cTarget, cTargetUnitTests])
+        
+        let graph = Graph.test(
+            projects: [
+                aProjectPath: aProject,
+                bProjectPath: bProject,
+                bbProjectPath: bbProject,
+                cProjectPath: cProject,
+            ],
+            targets: [
+                aProjectPath: [
+                    "App": aTarget,
+                    "UnitTests": aTargetUnit,
+                    "UITests": aTargetUI
+                ],
                 bProjectPath: [
                     "B": bTarget,
                     "B-Unit-Tests": bTargetUnitTests,

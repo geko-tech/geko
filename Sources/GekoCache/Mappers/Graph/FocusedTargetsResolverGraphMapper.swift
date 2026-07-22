@@ -57,7 +57,7 @@ public final class FocusedTargetsResolverGraphMapper: GraphMapping {
         if focusTests {
             let focusedTests = allTargets
                 .filter { focusedTargets.contains($0.target.name) }
-                .filter { !$0.target.product.runnable }
+                .filter { !$0.target.product.runnable && !$0.target.product.testsBundle }
                 .flatMap { project in
                     project.project.targets
                         .filter {  $0.product.testsBundle }
