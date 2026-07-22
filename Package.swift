@@ -379,6 +379,13 @@ var targets: [Target] = [
     ),
 
     // Test Targets
+    
+    .testTarget(
+        name: "AnyCodableTests",
+        dependencies: [
+            .byName(name: "AnyCodable")
+        ]
+    ),
 
     .testTarget(
         name: "GekoCacheAcceptanceTests",
@@ -418,6 +425,15 @@ var targets: [Target] = [
             "GekoCoreTesting",
             loggingDependency,
             .byName(name: "AnyCodable"),
+        ]
+    ),
+    .testTarget(
+        name: "GekoCloudTests",
+        dependencies: [
+            "GekoCloud",
+            "GekoCloudTesting",
+            "GekoSupportTesting",
+            "GekoCoreTesting",
         ]
     ),
     .testTarget(

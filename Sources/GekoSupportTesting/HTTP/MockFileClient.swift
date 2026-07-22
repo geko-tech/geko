@@ -45,8 +45,22 @@ public final class MockFileClient: FileClienting {
         stubbedDownloadEtagResult
     }
     
+    public var invokedCheckIfUrlIsReachable = false
+    public var invokedCheckIfUrlIsReachableCount = 0
+    public var invokedCheckIfUrlIsReachableParameters: URL?
+    public var invokedCheckIfUrlIsReachableParametersList = [URL]()
+    public var stubbedCheckIfUrlIsReachableResult = false
+    public var stubbedCheckIfUrlIsReachableError: Error!
+    
     public func checkIfUrlIsReachable(_ url: URL) async throws -> Bool {
-        return false
+        invokedCheckIfUrlIsReachable = true
+        invokedCheckIfUrlIsReachableCount += 1
+        invokedCheckIfUrlIsReachableParameters = url
+        invokedCheckIfUrlIsReachableParametersList.append(url)
+        if let stubbedCheckIfUrlIsReachableError {
+            throw stubbedCheckIfUrlIsReachableError
+        }
+        return stubbedCheckIfUrlIsReachableResult
     }
 }
 
