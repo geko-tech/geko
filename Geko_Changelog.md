@@ -1,3 +1,10 @@
+## Geko 1.1.0
+Geko [patch] Fixed extra focus on test modules of runnable target (#110)
+Geko [patch] Add logs for swiftmodule caching task (#109)
+• [minor] feat: support plan files for generate command (#107)
+• [patch] feat: project profiles support for test and build commands (#106)
+• [minor] feat: --trace option for tree command (#105)
+
 ## Geko 1.0.11
 • [patch] fix: missing ignoreDependencies filter when forming linkable dependencies list (#104)
 
