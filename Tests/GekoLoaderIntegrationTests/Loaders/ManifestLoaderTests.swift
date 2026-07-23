@@ -75,6 +75,49 @@ final class ManifestLoaderTests: GekoTestCase {
         XCTAssertEqual(got.name, "geko")
     }
 
+    func test_loadProjects_usesRuntimeEnvironmentOnEveryRun() throws {
+        // Given
+        let flag = "GEKO_MANIFEST_FLAG_batch_runner_integration_test"
+        let firstPath = try temporaryPath().appending(component: "First")
+        let secondPath = try temporaryPath().appending(component: "Second")
+        try fileHandler.createFolder(firstPath)
+        try fileHandler.createFolder(secondPath)
+        addTeardownBlock {
+            unsetenv(flag)
+        }
+
+        try """
+        import ProjectDescription
+        let project = Project(
+            name: Flag["batch_runner_integration_test"] ? "FirstEnabled" : "FirstDisabled"
+        )
+        """.write(
+            to: firstPath.appending(component: Manifest.project.fileName(firstPath)).url,
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        import ProjectDescription
+        let project = Project(name: "Second")
+        """.write(
+            to: secondPath.appending(component: Manifest.project.fileName(secondPath)).url,
+            atomically: true,
+            encoding: .utf8
+        )
+
+        // When
+        unsetenv(flag)
+        let disabled = try subject.loadProjects(at: [firstPath, secondPath])
+        setenv(flag, "true", 1)
+        let enabled = try subject.loadProjects(at: [firstPath, secondPath])
+
+        // Then
+        XCTAssertEqual(disabled[firstPath]?.name, "FirstDisabled")
+        XCTAssertEqual(disabled[secondPath]?.name, "Second")
+        XCTAssertEqual(enabled[firstPath]?.name, "FirstEnabled")
+        XCTAssertEqual(enabled[secondPath]?.name, "Second")
+    }
+
     func test_loadPackageSettings() throws {
         // Given
         let temporaryPath = try temporaryPath()

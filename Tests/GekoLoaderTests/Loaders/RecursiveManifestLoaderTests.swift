@@ -210,6 +210,16 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
             "Some/Path/B": projectB,
             "Some/Path/C": projectC,
         ])
+        XCTAssertEqual(manifestLoader.loadProjectsCount, 2)
+        XCTAssertEqual(
+            manifestLoader.loadProjectsPaths.map { paths in
+                paths.map { $0.relative(to: path).pathString }
+            },
+            [
+                ["Some/Path/A", "Some/Path/B"],
+                ["Some/Path/C"],
+            ]
+        )
     }
 
     func test_loadWorkspace_withGlobPattern() throws {
