@@ -10,6 +10,7 @@ public class CompiledManifestLoader: ManifestLoading {
 
     static let startManifestToken = "GEKO_MANIFEST_START"
     static let endManifestToken = "GEKO_MANIFEST_END"
+    private static let manifestOutputCacheVersion = "interpreted-output-v1"
 
     //MARK: Dependencies
 
@@ -212,8 +213,6 @@ extension CompiledManifestLoader {
         _ manifest: Manifest,
         at path: AbsolutePath,
         manifestPath: AbsolutePath,
-        manifestExtensions: [AbsolutePath],
-        to destinationPath: AbsolutePath,
         projectDescriptionHelperArguments: [String]
     ) throws -> [String] {
         let projectDescriptionPath = try resourceLocator.projectDescription()
@@ -230,17 +229,18 @@ extension CompiledManifestLoader {
             frameworkName = "ProjectDescription"
         }
 
-#if DEBUG && !Xcode || os(Linux)
-            let projectDescriptionFlags: [String] = [
+        let projectDescriptionFlags: [String]
+        if projectDescriptionPath.extension == "dylib" || projectDescriptionPath.extension == "so" {
+            projectDescriptionFlags = [
                 "-L", searchPaths.librarySearchPath.pathString,
                 "-l\(frameworkName)",
             ]
-#else
-            let projectDescriptionFlags: [String] = [
+        } else {
+            projectDescriptionFlags = [
                 "-F", searchPaths.frameworkSearchPath.pathString,
                 "-framework", frameworkName,
             ]
-#endif
+        }
 
 #if os(macOS)
         var arguments = ["/usr/bin/xcrun"]
@@ -249,24 +249,14 @@ extension CompiledManifestLoader {
 #endif
 
         arguments += [
-            "swiftc",
+            "swift",
             "-Onone",
-            "-o", destinationPath.pathString,
             "-suppress-warnings",
             "-I", searchPaths.includeSearchPath.pathString,
             "-Xlinker", "-rpath",
             "-Xlinker", searchPaths.librarySearchPath.pathString,
         ]
         arguments.append(contentsOf: projectDescriptionFlags)
-
-        var files: [String] = [manifestPath.pathString]
-        files.append(contentsOf: manifestExtensions.map(\.pathString))
-
-        if files.count > 1 {
-            let cpuCount = ProcessInfo.processInfo.processorCount
-            let threadsCount = min(files.count, cpuCount) + 1
-            arguments.append(contentsOf: ["-j", "\(threadsCount)"])
-        }
 
         let packageDescriptionArguments: [String] = try {
             if case .package = manifest {
@@ -291,22 +281,28 @@ extension CompiledManifestLoader {
 
         arguments.append(contentsOf: projectDescriptionHelperArguments)
         arguments.append(contentsOf: packageDescriptionArguments)
-        // arguments.append(manifestPath.pathString)
-        // arguments.append(contentsOf: manifestExtensions.map(\.pathString))
-        arguments.append(contentsOf: files)
+        arguments.append(manifestPath.pathString)
+        arguments.append(contentsOf: ["--", "--geko-dump"])
 
         return arguments
     }
 
-    private func loadDataForManifest(
+    private func manifestOutputCachePaths(
+        _ manifest: Manifest,
+        hash: String
+    ) -> (folder: AbsolutePath, output: AbsolutePath) {
+        let folder = cacheDirectory.appending(component: hash)
+        return (
+            folder: folder,
+            output: folder.appending(component: "\(manifest.name).json")
+        )
+    }
+
+    private func interpretManifest(
         _ manifest: Manifest,
         at path: AbsolutePath,
-        manifestExtensions: [AbsolutePath],
-        hash: String
+        manifestExtensions: [AbsolutePath]
     ) throws -> Data {
-        let compiledHashFolderPath = cacheDirectory.appending(component: hash)
-        let compiledPath = compiledHashFolderPath.appending(component: manifest.name)
-
         let projectDescriptionHelpersCacheDirectory =
             try cacheDirectoryProviderFactory
             .cacheDirectories(config: nil)
@@ -317,86 +313,49 @@ extension CompiledManifestLoader {
             cacheDirectory: projectDescriptionHelpersCacheDirectory
         )
 
-        if !fileHandler.exists(compiledPath) {
-            let timer = clock.startTimer()
-
-            try compileManifest(
-                manifest,
-                at: path,
-                manifestExtensions: manifestExtensions,
-                to: compiledPath,
-                projectDescriptionHelperArguments: helperArguments
-            )
-
-            let duration = timer.stop()
-            let time = String(format: "%.3f", duration)
-            logger.info("Built \(path) in (\(time)s)", metadata: .success)
-        }
-
-        try modifyAcceesDateForPath(path: compiledHashFolderPath)
-
-        return try loadDataForCompiledManifest(manifest, at: compiledPath)
-    }
-
-    private func loadDataForCompiledManifest(
-        _ manifest: Manifest,
-        at path: AbsolutePath
-    ) throws -> Data {
-        let arguments: [String] = [
-            path.pathString,
-            "--geko-dump",
-        ]
-
-        let string = try system.capture(arguments, verbose: false, environment: system.env)
-
-        guard let startTokenRange = string.range(of: CompiledManifestLoader.startManifestToken),
-            let endTokenRange = string.range(of: CompiledManifestLoader.endManifestToken)
-        else {
-            return string.data(using: .utf8)!
-        }
-
-        let preManifestLogs = String(string[string.startIndex..<startTokenRange.lowerBound]).chomp()
-        let postManifestLogs = String(string[endTokenRange.upperBound..<string.endIndex]).chomp()
-
-        if !preManifestLogs.isEmpty { logger.info("\(path.pathString): \(preManifestLogs)") }
-        if !postManifestLogs.isEmpty { logger.info("\(path.pathString):\(postManifestLogs)") }
-
-        let manifest = string[startTokenRange.upperBound..<endTokenRange.lowerBound]
-
-        return manifest.data(using: .utf8)!
-    }
-
-    private func compileManifest(
-        _ manifest: Manifest,
-        at path: AbsolutePath,
-        manifestExtensions: [AbsolutePath],
-        to destinationPath: AbsolutePath,
-        projectDescriptionHelperArguments: [String]
-    ) throws {
-        var mainPath = path
-
-        // if there are several .swift files fed to swiftc, one of them must be named main.swift
-        // so we copy main manifest file to a temporary directory with name main.swift and use it instead
+        var interpretedPath = path
         var tmpDir: TemporaryDirectory?
         if !manifestExtensions.isEmpty {
             tmpDir = try .init(removeTreeOnDeinit: true)
-            mainPath = tmpDir!.path.appending(component: "main.swift")
-            try fileHandler.copy(from: path, to: mainPath)
+            interpretedPath = tmpDir!.path.appending(component: "main.swift")
+            let sourcePaths = manifestExtensions + [path]
+            let combinedSource = try sourcePaths.map { sourcePath in
+                let escapedPath = sourcePath.pathString
+                    .replacingOccurrences(of: "\\", with: "\\\\")
+                    .replacingOccurrences(of: "\"", with: "\\\"")
+                return """
+                #sourceLocation(file: "\(escapedPath)", line: 1)
+                \(try fileHandler.readTextFile(sourcePath))
+                #sourceLocation()
+                """
+            }.joined(separator: "\n")
+            try combinedSource.data(using: .utf8)!.write(to: interpretedPath.url, options: .atomic)
         }
 
         let arguments = try buildArguments(
             manifest,
             at: path,
-            manifestPath: mainPath,
-            manifestExtensions: manifestExtensions,
-            to: destinationPath,
-            projectDescriptionHelperArguments: projectDescriptionHelperArguments
+            manifestPath: interpretedPath,
+            projectDescriptionHelperArguments: helperArguments
         )
 
         do {
-            try fileHandler.createFolder(destinationPath.parentDirectory)
+            let string = try system.capture(arguments, verbose: false, environment: ProcessInfo.processInfo.environment)
 
-            _ = try system.capture(arguments, verbose: false, environment: ProcessInfo.processInfo.environment)
+            guard let startTokenRange = string.range(of: Self.startManifestToken),
+                let endTokenRange = string.range(of: Self.endManifestToken)
+            else {
+                return string.data(using: String.Encoding.utf8)!
+            }
+
+            let preManifestLogs = String(string[string.startIndex..<startTokenRange.lowerBound]).chomp()
+            let postManifestLogs = String(string[endTokenRange.upperBound..<string.endIndex]).chomp()
+
+            if !preManifestLogs.isEmpty { logger.info("\(path.pathString): \(preManifestLogs)") }
+            if !postManifestLogs.isEmpty { logger.info("\(path.pathString):\(postManifestLogs)") }
+
+            return String(string[startTokenRange.upperBound..<endTokenRange.lowerBound])
+                .data(using: String.Encoding.utf8)!
         } catch {
             logUnexpectedImportErrorIfNeeded(in: path, error: error, manifest: manifest)
             logPluginHelperBuildErrorIfNeeded(in: path, error: error, manifest: manifest)
@@ -424,10 +383,56 @@ extension CompiledManifestLoader {
             manifest: manifest
         )
 
-        let data = try loadDataForManifest(manifest, at: manifestPath, manifestExtensions: manifestExtensions, hash: hash)
+        let cachePaths = manifestOutputCachePaths(manifest, hash: hash)
+        if fileHandler.exists(cachePaths.output) {
+            let data = try fileHandler.readFile(cachePaths.output)
+            do {
+                let decoded = try decodeManifest(T.self, manifestPath: manifestPath, data: data)
+                try modifyAcceesDateForPath(path: cachePaths.folder)
+                return decoded
+            } catch {
+                // An empty Package.swift output means there are no Geko package settings.
+                // loadPackageSettings handles this as the default value, so it is a valid cache entry.
+                if manifest == .package, data.isEmpty {
+                    throw error
+                }
+                try? fileHandler.delete(cachePaths.output)
+            }
+        }
+
+        let timer = clock.startTimer()
+        let data = try interpretManifest(manifest, at: manifestPath, manifestExtensions: manifestExtensions)
 
         do {
-            return try decoder.decode(T.self, from: data)
+            let decoded = try decodeManifest(T.self, manifestPath: manifestPath, data: data)
+            try publishManifestOutput(data, at: cachePaths.output)
+            try modifyAcceesDateForPath(path: cachePaths.folder)
+            let time = String(format: "%.3f", timer.stop())
+            logger.info("Loaded \(manifestPath) in (\(time)s)", metadata: .success)
+            return decoded
+        } catch {
+            if manifest == .package, data.isEmpty {
+                try publishManifestOutput(data, at: cachePaths.output)
+                try modifyAcceesDateForPath(path: cachePaths.folder)
+                let time = String(format: "%.3f", timer.stop())
+                logger.info("Loaded \(manifestPath) in (\(time)s)", metadata: .success)
+            }
+            throw error
+        }
+    }
+
+    private func publishManifestOutput(_ data: Data, at path: AbsolutePath) throws {
+        try fileHandler.createFolder(path.parentDirectory)
+        try data.write(to: path.url, options: .atomic)
+    }
+
+    private func decodeManifest<T: Decodable>(
+        _ type: T.Type,
+        manifestPath: AbsolutePath,
+        data: Data
+    ) throws -> T {
+        do {
+            return try decoder.decode(type, from: data)
         } catch {
             guard let error = error as? DecodingError else {
                 throw ManifestLoaderError.manifestLoadingFailed(
@@ -531,6 +536,12 @@ extension CompiledManifestLoader {
 
         if let pluginsHashCache {
             hasher.combine(pluginsHashCache)
+        }
+        hasher.combine(Self.manifestOutputCacheVersion)
+        hasher.combine(try system.swiftlangVersion())
+        for (key, value) in environment.manifestLoadingVariables.sorted(by: { $0.key < $1.key }) {
+            hasher.combine(key)
+            hasher.combine(value)
         }
         hasher.combine(Constants.version)
         return hasher.finalize()
