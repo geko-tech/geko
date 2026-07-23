@@ -36,21 +36,15 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         let rootPath = try TemporaryDirectory(removeTreeOnDeinit: true).path
         let dependenciesDirectory = rootPath
             .appending(component: Constants.DependenciesDirectory.name)
-        let swiftPackageManagerDirectory = dependenciesDirectory
-            .appending(component: Constants.DependenciesDirectory.swiftPackageManagerDirectoryName)
-        let swiftPackageManagerBuildDirectory = swiftPackageManagerDirectory.appending(component: ".build")
+        let swiftPackageManagerDirectory = rootPath
+        let swiftPackageManagerBuildDirectory = rootPath.appending(component: ".build")
         let dependenciesFilePath = rootPath.appending(components: [
             Constants.DependenciesDirectory.packageSwiftName
         ])
         
-        let packageResolvedFilePath = rootPath.appending(components: [
-            Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.packageResolvedName
-        ])
+        let packageResolvedFilePath = rootPath.appending(component: Constants.DependenciesDirectory.packageResolvedName)
         
         let workspaceStatePath = rootPath.appending(components: [
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -85,11 +79,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
             XCTAssertTrue(printOutput)
             try self.simulateSPMOutput(at: path)
         }
-        swiftPackageManagerController.setToolsVersionStub = { path, version in
-            XCTAssertEqual(path, swiftPackageManagerDirectory)
-            XCTAssertEqual(version, Version(5, 6, 0))
-        }
-
         swiftPackageManagerGraphGenerator
             .generateStub =
             { path, automaticProductType, baseSettings, targetSettings, swiftToolsVersion, projectOptions, resolvedDependenciesVersions in
@@ -116,25 +105,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         // Then
         XCTAssertEqual(dependenciesGraph, .test())
         try XCTAssertDirectoryContentEqual(
-            dependenciesDirectory,
-            [
-                Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
-            ]
-        )
-        try XCTAssertDirectoryContentEqual(
             rootPath,
             [
-                "Dependencies",
-                "Geko",
+                ".build",
                 Constants.DependenciesDirectory.packageResolvedName,
                 "Package.swift"
-            ]
-        )
-        try XCTAssertDirectoryContentEqual(
-            swiftPackageManagerDirectory,
-            [
-                ".build",
-                "Package.swift",
             ]
         )
         try XCTAssertDirectoryContentEqual(
@@ -149,7 +124,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         )
 
         XCTAssertTrue(swiftPackageManagerController.invokedResolve)
-        XCTAssertTrue(swiftPackageManagerController.invokedSetToolsVersion)
+        XCTAssertFalse(swiftPackageManagerController.invokedSetToolsVersion)
         XCTAssertFalse(swiftPackageManagerController.invokedUpdate)
     }
 
@@ -158,8 +133,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         let rootPath = try TemporaryDirectory(removeTreeOnDeinit: true).path
         let dependenciesDirectory = rootPath
             .appending(component: Constants.DependenciesDirectory.name)
-        let swiftPackageManagerDirectory = dependenciesDirectory
-            .appending(component: Constants.DependenciesDirectory.swiftPackageManagerDirectoryName)
+        let swiftPackageManagerDirectory = rootPath
         let swiftPackageManagerBuildDirectory = swiftPackageManagerDirectory.appending(component: ".build")
         let packageResolvedFile = rootPath.appending(component: Constants.DependenciesDirectory.packageResolvedName)
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]
@@ -169,8 +143,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         ])
         
         let workspaceStatePath = rootPath.appending(components: [
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -237,24 +209,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         // Then
         XCTAssertEqual(dependenciesGraph, .test())
         try XCTAssertDirectoryContentEqual(
-            dependenciesDirectory,
-            [
-                Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
-            ]
-        )
-        try XCTAssertDirectoryContentEqual(
             rootPath,
             [
-                "Dependencies",
+                ".build",
                 Constants.DependenciesDirectory.packageResolvedName,
                 "Package.swift"
-            ]
-        )
-        try XCTAssertDirectoryContentEqual(
-            swiftPackageManagerDirectory,
-            [
-                ".build",
-                "Package.swift",
             ]
         )
         try XCTAssertDirectoryContentEqual(
@@ -269,7 +228,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         )
 
         XCTAssertTrue(swiftPackageManagerController.invokedResolve)
-        XCTAssertTrue(swiftPackageManagerController.invokedSetToolsVersion)
+        XCTAssertFalse(swiftPackageManagerController.invokedSetToolsVersion)
         XCTAssertFalse(swiftPackageManagerController.invokedUpdate)
     }
 
@@ -278,12 +237,9 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         let rootPath = try TemporaryDirectory(removeTreeOnDeinit: true).path
         let dependenciesDirectory = rootPath
             .appending(component: Constants.DependenciesDirectory.name)
-        let lockfilesDirectory = dependenciesDirectory
-            .appending(component: Constants.DependenciesDirectory.lockfilesDirectoryName)
-        let swiftPackageManagerDirectory = dependenciesDirectory
-            .appending(component: Constants.DependenciesDirectory.swiftPackageManagerDirectoryName)
+        let swiftPackageManagerDirectory = rootPath
         let swiftPackageManagerBuildDirectory = swiftPackageManagerDirectory.appending(component: ".build")
-        let packageResolvedFile = lockfilesDirectory.appending(component: Constants.DependenciesDirectory.packageResolvedName)
+        let packageResolvedFile = rootPath.appending(component: Constants.DependenciesDirectory.packageResolvedName)
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]
         
         let dependenciesFilePath = rootPath.appending(components: [
@@ -291,8 +247,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         ])
         
         let workspaceStatePath = rootPath.appending(components: [
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -359,22 +313,10 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         // Then
         XCTAssertEqual(dependenciesGraph, .test())
         try XCTAssertDirectoryContentEqual(
-            dependenciesDirectory,
-            [
-                Constants.DependenciesDirectory.lockfilesDirectoryName,
-                Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
-            ]
-        )
-        try XCTAssertDirectoryContentEqual(
-            lockfilesDirectory,
-            [
-                Constants.DependenciesDirectory.packageResolvedName,
-            ]
-        )
-        try XCTAssertDirectoryContentEqual(
-            swiftPackageManagerDirectory,
+            rootPath,
             [
                 ".build",
+                Constants.DependenciesDirectory.packageResolvedName,
                 "Package.swift",
             ]
         )
@@ -390,7 +332,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         )
 
         XCTAssertTrue(swiftPackageManagerController.invokedUpdate)
-        XCTAssertTrue(swiftPackageManagerController.invokedSetToolsVersion)
+        XCTAssertFalse(swiftPackageManagerController.invokedSetToolsVersion)
         XCTAssertFalse(swiftPackageManagerController.invokedResolve)
     }
     
@@ -399,8 +341,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         let rootPath = try TemporaryDirectory(removeTreeOnDeinit: true).path
         let dependenciesDirectory = rootPath
             .appending(component: Constants.DependenciesDirectory.name)
-        let swiftPackageManagerDirectory = dependenciesDirectory
-            .appending(component: Constants.DependenciesDirectory.swiftPackageManagerDirectoryName)
+        let swiftPackageManagerDirectory = rootPath
         let swiftPackageManagerBuildDirectory = swiftPackageManagerDirectory.appending(component: ".build")
         let packageResolvedFile = rootPath.appending(component: Constants.DependenciesDirectory.packageResolvedName)
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]
@@ -410,8 +351,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         ])
         
         let workspaceStatePath = rootPath.appending(components: [
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -503,8 +442,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         let rootPath = try TemporaryDirectory(removeTreeOnDeinit: true).path
         let dependenciesDirectory = rootPath
             .appending(component: Constants.DependenciesDirectory.name)
-        let swiftPackageManagerDirectory = dependenciesDirectory
-            .appending(component: Constants.DependenciesDirectory.swiftPackageManagerDirectoryName)
+        let swiftPackageManagerDirectory = rootPath
         let swiftPackageManagerBuildDirectory = swiftPackageManagerDirectory.appending(component: ".build")
         let packageResolvedFile = rootPath.appending(component: Constants.DependenciesDirectory.packageResolvedName)
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]
@@ -514,8 +452,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         ])
         
         let workspaceStatePath = rootPath.appending(components: [
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -612,8 +548,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -702,8 +636,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -787,8 +719,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -819,8 +749,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -901,8 +829,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -970,8 +896,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -1042,8 +966,6 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.name,
-            Constants.DependenciesDirectory.swiftPackageManagerDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
@@ -1066,10 +988,10 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
             .appending(component: Constants.DependenciesDirectory.name)
 
         try createFiles([
-            "Dependencies/SwiftPackageManager/Package.swift",
+            "Package.swift",
             "Package.resolved",
             "OtherLockfile.lock",
-            "Dependencies/SwiftPackageManager/Info.plist",
+            ".build/Info.plist",
             "Dependencies/OtherDependenciesManager/bar.bar",
         ])
 
@@ -1087,7 +1009,9 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
             rootPath,
             [
                 "Dependencies",
-                "OtherLockfile.lock"
+                "OtherLockfile.lock",
+                "Package.resolved",
+                "Package.swift"
             ]
         )
 

@@ -106,6 +106,11 @@ final class CleanServiceTests: GekoUnitTestCase {
             Constants.DependenciesDirectory.name,
             Constants.DependenciesDirectory.swiftPackageManagerDirectoryName
         )
+        let packageDirectory = projectPath.appending(component: Constants.gekoDirectoryName)
+        let sharedBuildPath = packageDirectory.appending(component: Constants.DependenciesDirectory.packageBuildDirectoryName)
+        let packageResolvedPath = packageDirectory.appending(component: Constants.DependenciesDirectory.packageResolvedName)
+        let packageManifestPath = packageDirectory.appending(component: Constants.DependenciesDirectory.packageSwiftName)
+        let unrelatedFilePath = packageDirectory.appending(component: "Keep.txt")
         let cocoapodsDependenciesPath = projectPath.appending(components: [
             Constants.gekoDirectoryName,
             Constants.DependenciesDirectory.name,
@@ -113,6 +118,10 @@ final class CleanServiceTests: GekoUnitTestCase {
         ])
         try fileHandler.createFolder(dependenciesPath)
         try fileHandler.createFolder(spmDependenciesPath)
+        try fileHandler.createFolder(sharedBuildPath)
+        try fileHandler.touch(packageResolvedPath)
+        try fileHandler.touch(packageManifestPath)
+        try fileHandler.touch(unrelatedFilePath)
         
         let logsPath = projectPath.appending(component: ".geko")
         logDirectoriesProvider.logDirectoryStub = logsPath
@@ -146,6 +155,22 @@ final class CleanServiceTests: GekoUnitTestCase {
         XCTAssertFalse(
             FileManager.default.fileExists(atPath: spmDependenciesPath.pathString),
             "Cache folder at path \(spmDependenciesPath) should have been deleted by the test."
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: sharedBuildPath.pathString),
+            "Cache folder at path \(sharedBuildPath) should have been deleted by the test."
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: packageResolvedPath.pathString),
+            "Resolved file at path \(packageResolvedPath) should not have been deleted by the test."
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: packageManifestPath.pathString),
+            "Manifest at path \(packageManifestPath) should not have been deleted by the test."
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: unrelatedFilePath.pathString),
+            "Unrelated file at path \(unrelatedFilePath) should not have been deleted by the test."
         )
         XCTAssertFalse(
             FileManager.default.fileExists(atPath: cocoapodsDependenciesPath.pathString),

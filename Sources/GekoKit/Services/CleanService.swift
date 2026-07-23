@@ -100,7 +100,12 @@ final class CleanService {
     }
 
     private func cleanDependencies(at path: AbsolutePath) throws {
-        let dependenciesPath = path.appending(components: [Constants.gekoDirectoryName, Constants.DependenciesDirectory.name])
+        let packagePath = path.appending(component: Constants.gekoDirectoryName)
+        let buildPath = packagePath.appending(component: Constants.DependenciesDirectory.packageBuildDirectoryName)
+        if FileHandler.shared.exists(buildPath) {
+            try FileHandler.shared.delete(buildPath)
+        }
+        let dependenciesPath = packagePath.appending(component: Constants.DependenciesDirectory.name)
         if FileHandler.shared.exists(dependenciesPath) {
             let spmPath = dependenciesPath.appending(component: Constants.DependenciesDirectory.swiftPackageManagerDirectoryName)
             if FileHandler.shared.exists(spmPath) {

@@ -4,6 +4,6 @@ import PackageDescription
 let package = Package(
     name: "PackageName",
     dependencies: [
-        .package(path: "../../../Packages/LocalPackage"),
+        .package(path: "../Packages/LocalPackage"),
     ]
 )
