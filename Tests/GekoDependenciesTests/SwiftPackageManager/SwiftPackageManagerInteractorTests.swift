@@ -228,7 +228,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         )
 
         XCTAssertTrue(swiftPackageManagerController.invokedResolve)
-        XCTAssertFalse(swiftPackageManagerController.invokedSetToolsVersion)
+        XCTAssertTrue(swiftPackageManagerController.invokedSetToolsVersion)
         XCTAssertFalse(swiftPackageManagerController.invokedUpdate)
     }
 

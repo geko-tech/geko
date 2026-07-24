@@ -46,7 +46,8 @@ public protocol SwiftPackageManagerInteracting {
     ///   - dependenciesDirectory: The path to the `Geko/Dependencies/` directory.
     ///   - packageSettings: User defined `Swift Package Manager` settings.
     ///   - shouldUpdate: Indicates whether dependencies should be updated or fetched based on the lockfile.
-    ///   - swiftToolsVersion: The Swift version used when generating dependency build settings. It does not modify `Package.swift`.
+    ///   - swiftToolsVersion: The Swift tools version written to `Package.swift` and used when generating dependency build settings.
+    ///     If `nil`, `Package.swift` is not modified.
     func install(
         dependenciesDirectory: AbsolutePath,
         packageSettings: PackageSettings,
@@ -91,6 +92,13 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
         logger.info("Installing Swift Package Manager dependencies.", metadata: .subsection)
 
         let pathsProvider = SwiftPackageManagerPathsProvider(dependenciesDirectory: dependenciesDirectory)
+
+        if let swiftToolsVersion = swiftToolsVersion {
+            try swiftPackageManagerController.setToolsVersion(
+                at: pathsProvider.packageDirectory,
+                to: swiftToolsVersion
+            )
+        }
 
         try logPackageManifest(pathsProvider: pathsProvider)
 
