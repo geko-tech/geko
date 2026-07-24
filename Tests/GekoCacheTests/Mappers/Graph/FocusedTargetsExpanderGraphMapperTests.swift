@@ -127,6 +127,53 @@ final class FocusedTargetsExpanderGraphMapperTests: GekoUnitTestCase {
         )
     }
 
+    func test_map_expand_when_dependencies_only_are_passed_without_sources() async throws {
+        // Given
+        let path = try temporaryPath()
+        let appPath = path.appending(component: "App")
+        let app = Target.test(name: "App", platform: .iOS, product: .app)
+        let framework = Target.test(name: "Framework", platform: .iOS, product: .staticFramework)
+        let appProject = Project.test(path: appPath, targets: [app, framework])
+
+        let externalProjectPath = path.appending(component: "External")
+        let externalFramework = Target.test(name: "ExternalFramework", platform: .iOS, product: .staticFramework)
+        let externalProject = Project.test(path: externalProjectPath, targets: [externalFramework], isExternal: true)
+
+        var graph = Graph.test(
+            name: "input",
+            workspace: .test(),
+            projects: [
+                appPath: appProject,
+                externalProjectPath: externalProject,
+            ],
+            targets: [
+                appPath: [
+                    "App": app,
+                    "Framework": framework,
+                ],
+                externalProjectPath: [
+                    "ExternalFramework": externalFramework,
+                ],
+            ]
+        )
+
+        subject = FocusedTargetsExpanderGraphMapper(
+            focusDirectDependencies: false,
+            unsafe: false,
+            dependenciesOnly: true
+        )
+
+        // When
+        var sideTable = GraphSideTable()
+        _ = try await subject.map(graph: &graph, sideTable: &sideTable)
+
+        // Then
+        XCTAssertEqual(
+            sideTable.workspace.focusedTargets.sorted(),
+            ["App", "Framework"].sorted()
+        )
+    }
+
     func test_map_expand_when_noting_are_passed() async throws {
         // Given
         //       +---->B (Framework)
