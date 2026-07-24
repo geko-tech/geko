@@ -21,8 +21,8 @@ let package = Package(
         .package(url: "https://github.com/Alamofire/Alamofire", exact: "5.8.0"),
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", .upToNextMinor(from: "1.5.0")),
         .package(url: "https://github.com/hCaptcha/HCaptcha-ios-sdk.git", exact: "2.10.0"),
-        .package(path: "../../../LocalSwiftPackage"),
-        .package(path: "../../../StringifyMacro"),
+        .package(path: "../LocalSwiftPackage"),
+        .package(path: "../StringifyMacro"),
         // Has space symbols in package name
         .package(url: "https://github.com/Shopify/mobile-buy-sdk-ios", from: "12.0.0"),
         // Has targets with slash symbols in their names

@@ -11,6 +11,6 @@ import PackageDescription
 let package = Package(
     name: "PackageName",
     dependencies: [
-        .package(path: "../../../Packages/LibraryA"),
+        .package(path: "../Packages/LibraryA"),
     ]
 )

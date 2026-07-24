@@ -30,7 +30,7 @@ let package = Package(
 
 The Package.swift file is just an interface for declaring external dependencies. For this reason, we do not define any targets or products in this package. 
 
-Once the dependencies are declared, you can run the following command to fetch all dependencies into the Geko/Dependencies directory:
+Once the dependencies are declared, you can run the following command to resolve them into the `Geko/.build` workspace. This workspace is shared with Swift-aware editors, so dependencies are not downloaded twice:
 
 ```bash
 geko fetch

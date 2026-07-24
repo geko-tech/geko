@@ -17,6 +17,6 @@ import PackageDescription
 let package = Package(
     name: "PackageName",
     dependencies: [
-        .package(path: "../../../LocalSwiftPackage"),
+        .package(path: "../LocalSwiftPackage"),
     ]
 )

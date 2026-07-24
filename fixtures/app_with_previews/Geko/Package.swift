@@ -15,6 +15,6 @@ import PackageDescription
 let package = Package(
     name: "PackageName",
     dependencies: [
-        .package(path: "../../../ResourcesFramework"),
+        .package(path: "../ResourcesFramework"),
     ]
 )

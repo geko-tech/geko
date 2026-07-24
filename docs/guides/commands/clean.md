@@ -37,6 +37,7 @@ If you run `geko clean --full`, the command will clean all files that were creat
 * `/user/Library/Caches/Geko/**`
 * `/user/your-project/.geko/**`
 * `/user/your-project/Geko/Dependencies/**`
+* `/user/your-project/Geko/.build/**`
 
 ### Run a command by specifying a category
 
