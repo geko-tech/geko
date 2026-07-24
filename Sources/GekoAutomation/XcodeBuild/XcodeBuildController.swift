@@ -164,7 +164,22 @@ public final class XcodeBuildController: XcodeBuildControlling {
             }
         }
 
-        return try runBuild(command: command)
+        do {
+            try runBuild(command: command)
+        } catch let error as XcodeBuildError {
+            switch error {
+            case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
+                guard let xcodebuildErrorsAdditionalInfo = xcodebuildTestTargetErrorsAdditionalInfo(errors: errors) else {
+                    throw error
+                }
+
+                throw XcodeBuildError.buildFailed(
+                    errors: errors + xcodebuildErrorsAdditionalInfo,
+                    buildLogPath: buildLogPath,
+                    rawBuildLogPath: rawBuildLogPath
+                )
+            }
+        }
     }
 
     public func archive(
@@ -351,6 +366,35 @@ public final class XcodeBuildController: XcodeBuildControlling {
             timeoutTask.cancel()
             return result
         }.value
+    }
+
+    private func xcodebuildTestTargetErrorsAdditionalInfo(errors: [String]) -> [String]? {
+        if errors.contains(where: { $0.contains("There are no test bundles available to test.") }) {
+            return ["If you used a cache when generating a project, you may not have added test targets to the focus list."]
+        }
+        let targetNotFoundErrors: [String] = errors.compactMap {
+            guard let targetName = testTargetNotFoundError(text: $0.description) else { return nil }
+            return "It's possible that the test target \"\(targetName)\" was not added to the focus list when generating the project."
+        }
+        if !targetNotFoundErrors.isEmpty {
+            return targetNotFoundErrors
+        }
+        return nil
+    }
+
+    private func testTargetNotFoundError(text: String) -> String? {
+        let pattern = #"Tests in the target ["“”]([^"“”]+)["“”] can['’]t be run because ["“”]([^"“”]+)["“”] isn['’]t a member of the specified test plan or scheme"#
+        let regex = try! NSRegularExpression(pattern: pattern)
+
+        let range = NSRange(text.startIndex..., in: text)
+
+        guard let match = regex.firstMatch(in: text, range: range),
+              let targetRange = Range(match.range(at: 1), in: text)
+        else { return nil }
+
+        let targetName = String(text[targetRange])
+
+        return targetName
     }
 }
 

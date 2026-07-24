@@ -23,11 +23,6 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     var scheme: String?
 
     @Flag(
-        help: "Force the generation of the project before testing."
-    )
-    var generate: Bool = false
-
-    @Flag(
         name: .shortAndLong,
         help: "When passed, it cleans the project before testing it."
     )
@@ -128,12 +123,6 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     )
     var skipConfigurations: [String] = []
 
-    @Flag(
-        name: .long,
-        help: "When passed, it generates the project and skips testing. This is useful for debugging purposes."
-    )
-    var generateOnly: Bool = false
-
     @OptionGroup
     var manifestOptions: ManifestOptions
 
@@ -158,7 +147,6 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
 
         try await TestService().run(
             schemeName: scheme,
-            generate: generate,
             clean: clean,
             configuration: configuration,
             path: absolutePath,
@@ -184,8 +172,7 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
                     skipConfigurations: skipConfigurations
                 )
             },
-            validateTestTargetsParameters: false,
-            generateOnly: generateOnly
+            validateTestTargetsParameters: false
         )
     }
 }

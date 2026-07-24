@@ -168,24 +168,6 @@ final class TestServiceTests: GekoUnitTestCase {
         )
     }
 
-    func test_run_generates_project() async throws {
-        // Given
-        let path = try temporaryPath()
-        var generatedPath: AbsolutePath?
-        generator.generateWithGraphStub = {
-            generatedPath = $0
-            return ($0, Graph.test())
-        }
-
-        // When
-        try? await subject.testRun(
-            path: path
-        )
-
-        // Then
-        XCTAssertEqual(generatedPath, path)
-    }
-
     func test_run_tests_wtih_specified_arch() async throws {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
@@ -637,7 +619,6 @@ final class TestServiceTests: GekoUnitTestCase {
 extension TestService {
     fileprivate func testRun(
         schemeName: String? = nil,
-        generate: Bool = true,
         clean: Bool = false,
         configuration: String? = nil,
         path: AbsolutePath,
@@ -651,12 +632,10 @@ extension TestService {
         retryCount: Int = 0,
         testTargets: [TestIdentifier] = [],
         skipTestTargets: [TestIdentifier] = [],
-        testPlanConfiguration: TestPlanConfiguration? = nil,
-        generateOnly: Bool = false
+        testPlanConfiguration: TestPlanConfiguration? = nil
     ) async throws {
         try await run(
             schemeName: schemeName,
-            generate: generate,
             clean: clean,
             configuration: configuration,
             path: path,
@@ -671,7 +650,6 @@ extension TestService {
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
             testPlanConfiguration: testPlanConfiguration,
-            generateOnly: generateOnly
         )
     }
 }
