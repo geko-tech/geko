@@ -27,7 +27,7 @@ public enum Constants {
     /// The cache version.
     /// This should change only when it changes the logic to map a `GekoGraph.Target` to a cached build artifact.
     /// Changing this results in changing the target hash and hence forcing a rebuild of its artifact.
-    public static let cacheVersion = "1.3.0"
+    public static let cacheVersion = "1.4.0"
     public static let cacheLatesBuildFileName = "latest_build"
 
     public enum GekoUserCacheDirectory {

@@ -310,6 +310,25 @@ public enum GraphDependency: Hashable, CustomStringConvertible, Comparable, Coda
             return name
         }
     }
+    
+    public var path: AbsolutePath {
+        switch self {
+        case let .macro(path):
+            return path
+        case let .xcframework(xcframework):
+            return xcframework.path
+        case let .framework(path, _, _, _, _, _, _):
+            return path
+        case let .library(path, _, _, _, _):
+            return path
+        case let .bundle(path):
+            return path
+        case let .target(_, path, _):
+            return path
+        case let .sdk(_, path, _, _):
+            return path
+        }
+    }
 
     // MARK: - Comparable
 
