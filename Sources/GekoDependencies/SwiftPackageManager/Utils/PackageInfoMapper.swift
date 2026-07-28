@@ -478,9 +478,12 @@ public final class PackageInfoMapper: PackageInfoMapping {
         // Module aliases of used dependencies.
         // These need to be mapped in `OTHER_SWIFT_FLAGS` using the `-module-alias` build flag.
         var dependencyModuleAliases: [String: String] = [:]
+        let enabledSettings = target.settings.compactMap {
+            $0.resolvingTraitCondition(for: enabledTraits)
+        }
         
         if target.type.supportsDependencies {
-            let linkerDependencies: [ProjectDescription.TargetDependency] = target.settings.compactMap { setting in
+            let linkerDependencies: [ProjectDescription.TargetDependency] = enabledSettings.compactMap { setting in
                 do {
                     let condition = try ProjectDescription.PlatformCondition.from(setting.condition)
 
@@ -538,7 +541,7 @@ public final class PackageInfoMapper: PackageInfoMapping {
             target: target,
             productName: productName,
             packageFolder: packageFolder,
-            settings: target.settings,
+            settings: enabledSettings,
             moduleMap: moduleMap,
             targetSettings: targetSettings[target.name],
             dependencyModuleAliases: dependencyModuleAliases,
@@ -1320,6 +1323,36 @@ extension PackageInfoMapper {
                 return []
             }
         }
+    }
+}
+
+extension PackageInfo.Target.TargetBuildSettingDescription.Setting {
+    fileprivate func resolvingTraitCondition(for enabledTraits: Set<String>) -> Self? {
+        guard let condition,
+              let traits = condition.traits
+        else {
+            return self
+        }
+        guard !Set(traits).isDisjoint(with: enabledTraits) else {
+            return nil
+        }
+
+        let remainingCondition: PackageInfo.PackageConditionDescription? =
+            if condition.platformNames.isEmpty, condition.config == nil {
+                nil
+            } else {
+                PackageInfo.PackageConditionDescription(
+                    platformNames: condition.platformNames,
+                    config: condition.config
+                )
+            }
+
+        return .init(
+            tool: tool,
+            name: name,
+            condition: remainingCondition,
+            value: value
+        )
     }
 }
 

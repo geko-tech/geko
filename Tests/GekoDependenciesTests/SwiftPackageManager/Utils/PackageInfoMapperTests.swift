@@ -4468,6 +4468,60 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
         )
     }
 
+    func testMap_whenBuildSettingTraitIsEnabled_mapsSwiftCXXCAndLinkerSettings() throws {
+        let project = try mapPackageWithTraitBuildSettings(enabledTraits: ["Feature"])
+        let target = try XCTUnwrap(project?.targets.first)
+
+        XCTAssertEqual(
+            target.settings?.base["SWIFT_ACTIVE_COMPILATION_CONDITIONS"],
+            .array(["$(inherited)", "FEATURE_SWIFT", "Feature"])
+        )
+        XCTAssertEqual(
+            target.settings?.base["GCC_PREPROCESSOR_DEFINITIONS"],
+            .array(["$(inherited)", "FEATURE_C=1"])
+        )
+        XCTAssertEqual(
+            target.settings?.base["OTHER_CPLUSPLUSFLAGS"],
+            .array(["$(inherited)", "-DBASE"])
+        )
+        XCTAssertEqual(
+            target.settings?.base["OTHER_CPLUSPLUSFLAGS[sdk=iphoneos*]"],
+            .array(["$(inherited)", "-DBASE", "-DFEATURE_CXX"])
+        )
+        XCTAssertEqual(
+            target.settings?.base["OTHER_LDFLAGS"],
+            .array(["$(inherited)", "-feature-linker"])
+        )
+
+        let debugSettings = try XCTUnwrap(XCTUnwrap(target.settings?.configurations[.debug])).settings
+        XCTAssertEqual(
+            debugSettings["OTHER_SWIFT_FLAGS"],
+            .array(["$(inherited)", "-feature-debug"])
+        )
+        XCTAssertEqual(target.dependencies, [
+            .sdk(name: "sqlite3", type: .library, status: .required),
+            .sdk(name: "Foundation", type: .framework, status: .required, condition: .when([.ios])),
+        ])
+    }
+
+    func testMap_whenBuildSettingTraitIsDisabled_excludesSwiftCXXCAndLinkerSettings() throws {
+        let project = try mapPackageWithTraitBuildSettings(enabledTraits: [])
+        let target = try XCTUnwrap(project?.targets.first)
+
+        XCTAssertNil(target.settings?.base["SWIFT_ACTIVE_COMPILATION_CONDITIONS"])
+        XCTAssertNil(target.settings?.base["GCC_PREPROCESSOR_DEFINITIONS"])
+        XCTAssertEqual(
+            target.settings?.base["OTHER_CPLUSPLUSFLAGS"],
+            .array(["$(inherited)", "-DBASE"])
+        )
+        XCTAssertNil(target.settings?.base["OTHER_CPLUSPLUSFLAGS[sdk=iphoneos*]"])
+        XCTAssertNil(target.settings?.base["OTHER_LDFLAGS"])
+
+        let debugSettings = try XCTUnwrap(XCTUnwrap(target.settings?.configurations[.debug])).settings
+        XCTAssertNil(debugSettings["OTHER_SWIFT_FLAGS"])
+        XCTAssertTrue(target.dependencies.isEmpty)
+    }
+
     private func mapPackageWithTraitDependency(enabledTraits: Set<String>) throws -> Project? {
         let basePath = try temporaryPath()
         for target in ["Root", "Child"] {
@@ -4509,6 +4563,102 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             projectOptions: nil,
             targetsToArtifactPaths: [:],
             packageModuleAliases: [:],
+            enabledTraits: enabledTraits
+        )
+    }
+
+    private func mapPackageWithTraitBuildSettings(enabledTraits: Set<String>) throws -> Project? {
+        let basePath = try temporaryPath()
+        try fileHandler.createFolder(
+            basePath.appending(try RelativePath(validating: "Package/Sources/Target"))
+        )
+        let traitCondition = PackageInfo.PackageConditionDescription(
+            platformNames: [],
+            config: nil,
+            traits: ["OtherFeature", "Feature"]
+        )
+        let platformAndTraitCondition = PackageInfo.PackageConditionDescription(
+            platformNames: ["ios"],
+            config: nil,
+            traits: ["Feature"]
+        )
+        let configurationAndTraitCondition = PackageInfo.PackageConditionDescription(
+            platformNames: [],
+            config: "debug",
+            traits: ["Feature"]
+        )
+
+        return try subject.map(
+            package: "Package",
+            basePath: basePath,
+            packageInfos: [
+                "Package": .test(
+                    name: "Package",
+                    products: [
+                        .init(name: "Product", type: .library(.automatic), targets: ["Target"]),
+                    ],
+                    targets: [
+                        .test(
+                            name: "Target",
+                            settings: [
+                                .init(
+                                    tool: .swift,
+                                    name: .define,
+                                    condition: traitCondition,
+                                    value: ["FEATURE_SWIFT"]
+                                ),
+                                .init(
+                                    tool: .c,
+                                    name: .define,
+                                    condition: traitCondition,
+                                    value: ["FEATURE_C=1"]
+                                ),
+                                .init(
+                                    tool: .cxx,
+                                    name: .unsafeFlags,
+                                    condition: nil,
+                                    value: ["-DBASE"]
+                                ),
+                                .init(
+                                    tool: .cxx,
+                                    name: .unsafeFlags,
+                                    condition: platformAndTraitCondition,
+                                    value: ["-DFEATURE_CXX"]
+                                ),
+                                .init(
+                                    tool: .swift,
+                                    name: .unsafeFlags,
+                                    condition: configurationAndTraitCondition,
+                                    value: ["-feature-debug"]
+                                ),
+                                .init(
+                                    tool: .linker,
+                                    name: .unsafeFlags,
+                                    condition: traitCondition,
+                                    value: ["-feature-linker"]
+                                ),
+                                .init(
+                                    tool: .linker,
+                                    name: .linkedLibrary,
+                                    condition: traitCondition,
+                                    value: ["sqlite3"]
+                                ),
+                                .init(
+                                    tool: .linker,
+                                    name: .linkedFramework,
+                                    condition: platformAndTraitCondition,
+                                    value: ["Foundation"]
+                                ),
+                            ]
+                        ),
+                    ],
+                    traits: [
+                        PackageTrait(enabledTraits: [], name: "Feature", description: nil),
+                        PackageTrait(enabledTraits: [], name: "OtherFeature", description: nil),
+                    ],
+                    platforms: [.ios]
+                ),
+            ],
             enabledTraits: enabledTraits
         )
     }

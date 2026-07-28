@@ -124,6 +124,33 @@ In this example, selecting `.defaults` for `RootPackage` produces the following 
 
 Trait conditions can be combined with platform conditions. Geko includes a dependency only when its trait condition is satisfied, while preserving any supported platform filters.
 
+## Conditional build settings
+
+Traits can also conditionally enable Swift, C, C++, and linker settings. Geko applies a setting when any trait named by its condition is enabled, then maps additional platform and build configuration conditions through the existing settings pipeline:
+
+```swift
+.target(
+    name: "RootLibrary",
+    cSettings: [
+        .define("ROOT_FEATURE_C", to: "1", .when(traits: ["RootFeature"])),
+    ],
+    cxxSettings: [
+        .unsafeFlags(
+            ["-DROOT_FEATURE_CXX"],
+            .when(platforms: [.iOS], traits: ["RootFeature"])
+        ),
+    ],
+    swiftSettings: [
+        .define("ROOT_FEATURE_SWIFT", .when(traits: ["RootFeature"])),
+    ],
+    linkerSettings: [
+        .linkedLibrary("sqlite3", .when(traits: ["RootFeature"])),
+    ]
+)
+```
+
+When `RootFeature` is disabled, Geko omits these settings and linker dependencies from the generated target.
+
 ## Fetch and generate
 
 After declaring or changing traits, use the normal dependency workflow:

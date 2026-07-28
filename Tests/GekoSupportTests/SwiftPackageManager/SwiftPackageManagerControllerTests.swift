@@ -148,7 +148,20 @@ final class SwiftPackageManagerControllerTests: GekoUnitTestCase {
                   ],
                   "publicHeadersPath": null,
                   "type": "regular",
-                  "settings": [],
+                  "settings": [
+                    {
+                      "condition": {
+                        "platformNames": [],
+                        "traits": ["Feature"]
+                      },
+                      "kind": {
+                        "define": {
+                          "_0": "TRAIT_SETTING"
+                        }
+                      },
+                      "tool": "swift"
+                    }
+                  ],
                   "checksum": null
                 }
               ],
@@ -202,6 +215,17 @@ final class SwiftPackageManagerControllerTests: GekoUnitTestCase {
             return XCTFail("Expected target dependency")
         }
         XCTAssertEqual(condition?.traits, ["Feature"])
+        XCTAssertEqual(
+            packageInfo.targets[0].settings,
+            [
+                .init(
+                    tool: .swift,
+                    name: .define,
+                    condition: .init(platformNames: [], config: nil, traits: ["Feature"]),
+                    value: ["TRAIT_SETTING"]
+                ),
+            ]
+        )
     }
 
     func test_loadPackageInfo_alamofire() throws {

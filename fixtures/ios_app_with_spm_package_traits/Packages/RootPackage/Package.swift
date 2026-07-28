@@ -28,6 +28,12 @@ let package = Package(
                     package: "ChildPackage",
                     condition: .when(traits: ["RootFeature"])
                 ),
+            ],
+            swiftSettings: [
+                .define(
+                    "ROOT_TRAIT_SETTING",
+                    .when(traits: ["RootFeature"])
+                ),
             ]
         ),
     ]
