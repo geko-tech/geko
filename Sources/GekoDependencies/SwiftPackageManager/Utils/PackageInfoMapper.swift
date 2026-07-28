@@ -119,7 +119,8 @@ public protocol PackageInfoMapping {
         targetSettings: [String: Settings],
         projectOptions: ProjectDescription.Project.Options?,
         targetsToArtifactPaths: [String: AbsolutePath],
-        packageModuleAliases: [String: [String: String]]
+        packageModuleAliases: [String: [String: String]],
+        enabledTraits: Set<String>
     ) throws -> ProjectDescription.Project?
 }
 
@@ -285,7 +286,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
         targetSettings: [String: Settings],
         projectOptions: ProjectDescription.Project.Options?,
         targetsToArtifactPaths: [String: AbsolutePath],
-        packageModuleAliases: [String: [String: String]]
+        packageModuleAliases: [String: [String: String]],
+        enabledTraits: Set<String> = []
     ) throws -> ProjectDescription.Project? {
         // Hardcoded mapping for some well known libraries, until the logic can handle those properly
         let productTypes = productTypes.merging(
@@ -336,7 +338,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
                 productTypes: productTypes,
                 artifactPaths: targetsToArtifactPaths,
                 targetSettings: targetSettings,
-                packageModuleAliases: packageModuleAliases
+                packageModuleAliases: packageModuleAliases,
+                enabledTraits: enabledTraits
             )
         }
         
@@ -372,7 +375,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
         productTypes: [String: Product],
         artifactPaths: [String: AbsolutePath],
         targetSettings: [String: Settings],
-        packageModuleAliases: [String: [String: String]]
+        packageModuleAliases: [String: [String: String]],
+        enabledTraits: Set<String>
     ) throws -> ProjectDescription.Target? {
         guard target.type.isSupported else {
             logger.debug("Target \(target.name) of type \(target.type) ignored")
@@ -474,9 +478,12 @@ public final class PackageInfoMapper: PackageInfoMapping {
         // Module aliases of used dependencies.
         // These need to be mapped in `OTHER_SWIFT_FLAGS` using the `-module-alias` build flag.
         var dependencyModuleAliases: [String: String] = [:]
+        let enabledSettings = target.settings.compactMap {
+            $0.resolvingTraitCondition(for: enabledTraits)
+        }
         
         if target.type.supportsDependencies {
-            let linkerDependencies: [ProjectDescription.TargetDependency] = target.settings.compactMap { setting in
+            let linkerDependencies: [ProjectDescription.TargetDependency] = enabledSettings.compactMap { setting in
                 do {
                     let condition = try ProjectDescription.PlatformCondition.from(setting.condition)
 
@@ -508,7 +515,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
                         condition: condition,
                         artifactPaths: artifactPaths,
                         moduleAliases: moduleAliases,
-                        dependencyModuleAliases: &dependencyModuleAliases
+                        dependencyModuleAliases: &dependencyModuleAliases,
+                        enabledTraits: enabledTraits
                     )
                 case let .byName(name, condition), let .target(name, condition):
                     try mapDependency(
@@ -517,7 +525,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
                         condition: condition,
                         artifactPaths: artifactPaths,
                         moduleAliases: packageModuleAliases[packageInfo.name],
-                        dependencyModuleAliases: &dependencyModuleAliases
+                        dependencyModuleAliases: &dependencyModuleAliases,
+                        enabledTraits: enabledTraits
                     )
                 }
             }
@@ -532,10 +541,12 @@ public final class PackageInfoMapper: PackageInfoMapping {
             target: target,
             productName: productName,
             packageFolder: packageFolder,
-            settings: target.settings,
+            settings: enabledSettings,
             moduleMap: moduleMap,
             targetSettings: targetSettings[target.name],
-            dependencyModuleAliases: dependencyModuleAliases
+            dependencyModuleAliases: dependencyModuleAliases,
+            packageTraits: packageInfo.traits ?? [],
+            enabledTraits: enabledTraits
         )
         
         return .init(
@@ -560,8 +571,15 @@ public final class PackageInfoMapper: PackageInfoMapping {
         condition: PackageInfo.PackageConditionDescription?,
         artifactPaths: [String: AbsolutePath],
         moduleAliases: [String: String]?,
-        dependencyModuleAliases: inout [String: String]
+        dependencyModuleAliases: inout [String: String],
+        enabledTraits: Set<String>
     ) throws -> TargetDependency? {
+        if let traits = condition?.traits,
+           !traits.isEmpty,
+           traits.allSatisfy({ !enabledTraits.contains($0) })
+        {
+            return nil
+        }
         let platformCondition: PlatformCondition?
         do {
             platformCondition = try PlatformCondition.from(condition)
@@ -915,7 +933,9 @@ extension ProjectDescription.Settings {
         settings: [PackageInfo.Target.TargetBuildSettingDescription.Setting],
         moduleMap: ModuleMap?,
         targetSettings: Settings?,
-        dependencyModuleAliases: [String: String]
+        dependencyModuleAliases: [String: String],
+        packageTraits: [PackageTrait],
+        enabledTraits: Set<String>
     ) throws -> Self? {
         let mainPath = try target.basePath(packageFolder: packageFolder)
         let mainRelativePath = mainPath.relative(to: packageFolder)
@@ -1019,7 +1039,21 @@ extension ProjectDescription.Settings {
                 }
             )
         }
-        
+
+        let traitConditions = concreteTraits(enabledTraits, packageTraits: packageTraits)
+        if !traitConditions.isEmpty {
+            let existingConditions: [String] = switch baseSettingsDictionary["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] {
+            case let .array(values):
+                values
+            case let .string(value):
+                value.split(separator: " ").map(String.init)
+            case nil:
+                ["$(inherited)"]
+            }
+            baseSettingsDictionary["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = .array(
+                existingConditions + traitConditions.sorted()
+            )
+        }
 
         let configurations: [ProjectDescription.Configuration] = targetSettings?.configurations
             .map { buildConfiguration, configuration in
@@ -1051,6 +1085,27 @@ extension ProjectDescription.Settings {
         }
 
         return result
+    }
+
+    private static func concreteTraits(
+        _ enabledTraits: Set<String>,
+        packageTraits: [PackageTrait]
+    ) -> Set<String> {
+        var concreteTraits: Set<String> = []
+        var visitedTraits: Set<String> = []
+        var pendingTraits = Array(enabledTraits)
+
+        while let traitName = pendingTraits.popLast() {
+            guard visitedTraits.insert(traitName).inserted,
+                  let trait = packageTraits.first(where: { $0.name == traitName })
+            else { continue }
+            if traitName != "default" {
+                concreteTraits.insert(traitName)
+            }
+            pendingTraits.append(contentsOf: trait.enabledTraits)
+        }
+
+        return concreteTraits
     }
 }
 
@@ -1271,6 +1326,36 @@ extension PackageInfoMapper {
     }
 }
 
+extension PackageInfo.Target.TargetBuildSettingDescription.Setting {
+    fileprivate func resolvingTraitCondition(for enabledTraits: Set<String>) -> Self? {
+        guard let condition,
+              let traits = condition.traits
+        else {
+            return self
+        }
+        guard !Set(traits).isDisjoint(with: enabledTraits) else {
+            return nil
+        }
+
+        let remainingCondition: PackageInfo.PackageConditionDescription? =
+            if condition.platformNames.isEmpty, condition.config == nil {
+                nil
+            } else {
+                PackageInfo.PackageConditionDescription(
+                    platformNames: condition.platformNames,
+                    config: condition.config
+                )
+            }
+
+        return .init(
+            tool: tool,
+            name: name,
+            condition: remainingCondition,
+            value: value
+        )
+    }
+}
+
 extension ProjectDescription.PlatformCondition {
     struct OnlyConditionsWithUnsupportedPlatforms: Error {}
 
@@ -1302,6 +1387,9 @@ extension ProjectDescription.PlatformCondition {
 
         // If empty, we know there are no supported platforms and this dependency should not be included in the graph
         if filters.isEmpty {
+            if let traits = condition.traits, !traits.isEmpty {
+                return nil
+            }
             throw OnlyConditionsWithUnsupportedPlatforms()
         }
 

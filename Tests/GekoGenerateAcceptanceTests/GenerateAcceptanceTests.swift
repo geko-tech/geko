@@ -226,6 +226,15 @@ final class GenerateAcceptanceTestiOSAppWithLocalSwiftPackage: GekoAcceptanceTes
     }
 }
 
+final class GenerateAcceptanceTestSpmPackageTraits: GekoAcceptanceTestCase {
+    func test_ios_app_with_spm_package_traits() async throws {
+        try setUpFixture(.iosAppWithSpmPackageTraits)
+        try await run(FetchCommand.self)
+        try await run(GenerateCommand.self)
+        try await run(BuildCommand.self)
+    }
+}
+
 final class GenerateAcceptanceTestiOSAppWithMultiConfigs: GekoAcceptanceTestCase {
     func test_ios_app_with_multi_configs() async throws {
         try setUpFixture(.iosAppWithMultiConfigs)

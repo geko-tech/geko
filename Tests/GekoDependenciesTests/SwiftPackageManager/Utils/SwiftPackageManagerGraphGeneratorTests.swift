@@ -76,6 +76,130 @@ class SwiftPackageManagerGraphGeneratorTests: GekoUnitTestCase {
         )
     }
 
+    // swiftlint:disable:next function_body_length
+    func test_generate_resolvesPackageTraitsTransitively() throws {
+        let workspacePath = path.appending(component: "workspace-state.json")
+        try fileHandler.touch(workspacePath)
+        fileHandler.stubReadFile = { requestedPath in
+            XCTAssertEqual(requestedPath, workspacePath)
+            return Data("""
+            {
+              "object": {
+                "dependencies": [
+                  {
+                    "packageRef": {
+                      "identity": "feature-package",
+                      "kind": "remoteSourceControl",
+                      "name": "FeaturePackage"
+                    },
+                    "subpath": "FeaturePackage"
+                  },
+                  {
+                    "packageRef": {
+                      "identity": "child-package",
+                      "kind": "remoteSourceControl",
+                      "name": "ChildPackage"
+                    },
+                    "subpath": "ChildPackage"
+                  }
+                ],
+                "artifacts": []
+              }
+            }
+            """.utf8)
+        }
+
+        let rootPackage = PackageInfo.test(
+            name: "Root",
+            traits: [
+                PackageTrait(enabledTraits: ["WorkspaceFeature"], name: "default", description: nil),
+                PackageTrait(enabledTraits: [], name: "WorkspaceFeature", description: nil),
+            ],
+            dependencies: [
+                PackageDependency(
+                    identity: "feature-package",
+                    traits: [PackageDependencyTrait(name: "default", condition: ["WorkspaceFeature"])]
+                ),
+            ]
+        )
+        let featurePackage = PackageInfo.test(
+            name: "FeaturePackage",
+            targets: [
+                PackageInfo.Target(
+                    name: "FeatureTarget",
+                    path: nil,
+                    url: nil,
+                    sources: nil,
+                    resources: [],
+                    exclude: [],
+                    dependencies: [
+                        .byName(
+                            name: "EnabledDependency",
+                            condition: .init(platformNames: [], config: nil, traits: ["Feature"])
+                        ),
+                        .byName(
+                            name: "DisabledDependency",
+                            condition: .init(platformNames: [], config: nil, traits: ["Other"])
+                        ),
+                    ],
+                    publicHeadersPath: nil,
+                    type: .regular,
+                    settings: [],
+                    checksum: nil
+                ),
+            ],
+            traits: [
+                PackageTrait(enabledTraits: ["Feature"], name: "default", description: nil),
+                PackageTrait(enabledTraits: [], name: "Feature", description: nil),
+            ],
+            dependencies: [
+                PackageDependency(
+                    identity: "child-package",
+                    traits: [PackageDependencyTrait(name: "ChildFeature", condition: ["Feature"])]
+                ),
+            ]
+        )
+        let childPackage = PackageInfo.test(
+            name: "ChildPackage",
+            traits: [PackageTrait(enabledTraits: [], name: "ChildFeature", description: nil)]
+        )
+        swiftPackageManagerController.loadPackageInfoStub = { packagePath in
+            switch packagePath {
+            case self.path.parentDirectory:
+                return rootPackage
+            case self.checkoutsPath.appending(component: "FeaturePackage"):
+                return featurePackage
+            case self.checkoutsPath.appending(component: "ChildPackage"):
+                return childPackage
+            default:
+                XCTFail("Unexpected path: \(packagePath)")
+                return .test()
+            }
+        }
+        let packageInfoMapper = RecordingPackageInfoMapper()
+        subject = SwiftPackageManagerGraphGenerator(
+            swiftPackageManagerController: swiftPackageManagerController,
+            packageInfoMapper: packageInfoMapper
+        )
+
+        let graph = try subject.generate(
+            at: path,
+            productTypes: [:],
+            baseSettings: .default,
+            targetSettings: [:],
+            swiftToolsVersion: nil,
+            projectOptions: [:],
+            resolvedDependenciesVersions: [:]
+        )
+
+        XCTAssertEqual(packageInfoMapper.enabledTraits["FeaturePackage"], ["default", "Feature"])
+        XCTAssertEqual(packageInfoMapper.enabledTraits["ChildPackage"], ["ChildFeature"])
+        XCTAssertEqual(
+            Set(try XCTUnwrap(graph.tree["FeaturePackage"]).dependencies),
+            ["FeatureTarget", "EnabledDependency"]
+        )
+    }
+
     func test_generate_google_measurement() throws {
         try fileHandler.createFolder(try AbsolutePath(validating: "\(spmFolder.pathString)/checkouts/nanopb/Sources/nanopb"))
         try fileHandler
@@ -478,7 +602,12 @@ class SwiftPackageManagerGraphGeneratorTests: GekoUnitTestCase {
             true
         }
 
-        swiftPackageManagerController.loadPackageInfoStub = loadPackageInfoStub
+        swiftPackageManagerController.loadPackageInfoStub = { packagePath in
+            if packagePath == self.path.parentDirectory {
+                return .test(name: "Root")
+            }
+            return loadPackageInfoStub(packagePath)
+        }
 
         // When
         let got = try subject.generate(
@@ -499,6 +628,35 @@ class SwiftPackageManagerGraphGeneratorTests: GekoUnitTestCase {
         XCTAssertEqual(got.externalFrameworkDependencies.map { "\($0.key):\($0.value)"}.sorted(), dependenciesGraph.externalFrameworkDependencies.map { "\($0.key):\($0.value)"}.sorted())
         XCTAssertEqual(got.externalProjects.map { "\($0.key):\($0.value)"}.sorted(), dependenciesGraph.externalProjects.map { "\($0.key):\($0.value)"}.sorted())
         XCTAssertEqual(got.tree.map { "\($0.key):\($0.value.dependencies.sorted())"}.sorted(), dependenciesGraph.tree.map { "\($0.key):\($0.value.dependencies.sorted())"}.sorted())
+    }
+}
+
+private final class RecordingPackageInfoMapper: PackageInfoMapping {
+    var enabledTraits: [String: Set<String>] = [:]
+
+    func resolveExternalDependencies(
+        path _: AbsolutePath,
+        packageInfos _: [String: PackageInfo],
+        packageToFolder _: [String: AbsolutePath],
+        packageToTargetsToArtifactPaths _: [String: [String: AbsolutePath]],
+        packageModuleAliases _: [String: [String: String]]
+    ) throws -> [String: [ProjectDescription.TargetDependency]] {
+        [:]
+    }
+
+    func map(
+        packageInfo: PackageInfo,
+        path _: AbsolutePath,
+        productTypes _: [String: Product],
+        baseSettings _: Settings,
+        targetSettings _: [String: Settings],
+        projectOptions _: ProjectDescription.Project.Options?,
+        targetsToArtifactPaths _: [String: AbsolutePath],
+        packageModuleAliases _: [String: [String: String]],
+        enabledTraits: Set<String>
+    ) throws -> ProjectDescription.Project? {
+        self.enabledTraits[packageInfo.name] = enabledTraits
+        return nil
     }
 }
 
