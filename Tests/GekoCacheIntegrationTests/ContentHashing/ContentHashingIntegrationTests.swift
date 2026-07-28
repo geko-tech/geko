@@ -155,8 +155,8 @@ final class ContentHashingIntegrationTests: GekoUnitTestCase {
         )
 
         // Then
-        XCTAssertEqual(contentHash[framework1.target.name], "959814bec04d5ece")
-        XCTAssertEqual(contentHash[framework2.target.name], "cda9a8709ec95942")
+        XCTAssertEqual(contentHash[framework1.target.name], "b99049ffa9e61ee8")
+        XCTAssertEqual(contentHash[framework2.target.name], "fc861140042127e4")
     }
 
     func test_contentHashes_hashChangesWithCacheOutputType() throws {

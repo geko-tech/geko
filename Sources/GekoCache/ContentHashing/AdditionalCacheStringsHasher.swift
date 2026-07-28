@@ -56,7 +56,8 @@ public final class AdditionalCacheStringsHasher: AdditionalCacheStringsHashing {
             cacheOutputType.rawValue,
             destination.rawValue,
             try system.swiftlangVersion(),
-            cacheUserVersion ?? Constants.cacheVersion
+            cacheUserVersion ?? "",
+            Constants.cacheVersion
         ]
         return try contentHasher.hash(additionalStringsToHash)
     }

@@ -81,8 +81,8 @@ final class XCFrameworksContentHasherTests: GekoUnitTestCase {
     func test_xcframeworksHashes_returnsExpectedResult() throws {
         // Given
         let expectedHashes = [
-            filePath1: "de1c9c5c1735fa98", // FooFramework
-            filePath2: "16b9097ab14ecec9", // BarFramework
+            filePath1: "63e9c438b0271526", // FooFramework
+            filePath2: "ef0b247da6a747a5", // BarFramework
         ]
 
         xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
@@ -139,7 +139,173 @@ final class XCFrameworksContentHasherTests: GekoUnitTestCase {
         // Then
         XCTAssertEqual(hashes, expectedHashes)
     }
-
+    
+    func test_xcframeworksHashes_doNotInvalidateWithoutUpdate() throws {
+        // Given
+        let profile = Cache.Profile.test(options: .options(swiftModuleCacheEnabled: true))
+        system.swiftlangVersionStub = { "6.0.0" }
+        
+        let xcframework1 = GraphDependency.testXCFramework(path: filePath1) // FooFramework
+        let xcframework2 = GraphDependency.testXCFramework(path: filePath2) // BarFramework
+        
+        xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
+        
+        let externalDependenciesGraphBeforeUpdate = DependenciesGraph(
+            externalDependencies: [:],
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [
+                "FooFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "1.0.0", dependencies: []),
+                "BarFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "2.0.0", dependencies: [])
+            ]
+        )
+        
+        let externalDependenciesGraphAfterUpdate = DependenciesGraph(
+            externalDependencies: [:],
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [
+                "FooFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "1.0.0", dependencies: []),
+                "BarFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "2.0.0", dependencies: [])
+            ]
+        )
+        
+        let project1 = Project.test(path: try temporaryPath().appending(component: "f1"))
+        let project2 = Project.test(path: try temporaryPath().appending(component: "f2"))
+        let framework1 = makeFramework(project: project1, sources: [source1])
+        let framework2 = makeFramework(project: project2, sources: [source2])
+        
+        // FooFramework depends on BarFramework
+        let graphBefore = Graph.test(
+            projects: [
+                project1.path: project1,
+                project2.path: project2,
+            ],
+            targets: [
+                project1.path: [
+                    framework1.target.name: framework1.target,
+                ],
+                project2.path: [
+                    framework2.target.name: framework2.target,
+                ],
+            ],
+            dependencies: [
+                xcframework1: [xcframework2] // FooFramework → BarFramework
+            ],
+            xcframeworks: [
+                filePath1: xcframework1,
+                filePath2: xcframework2
+            ],
+            externalDependenciesGraph: externalDependenciesGraphBeforeUpdate
+        )
+        var graphAfter = graphBefore
+        graphAfter.externalDependenciesGraph = externalDependenciesGraphAfterUpdate
+        
+        // When
+        let hashesBefore = try subject.contentHashes(
+            for: graphBefore,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+        
+        let hashesAfter = try subject.contentHashes(
+            for: graphAfter,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+        
+        // Then
+        XCTAssertEqual(hashesBefore, hashesAfter)
+    }
+    
+    func test_xcframeworksHashes_InvalidateWithUpdate() throws {
+        // Given
+        let profile = Cache.Profile.test(options: .options(swiftModuleCacheEnabled: true))
+        system.swiftlangVersionStub = { "6.0.0" }
+        
+        let xcframework1 = GraphDependency.testXCFramework(path: filePath1) // FooFramework
+        let xcframework2 = GraphDependency.testXCFramework(path: filePath2) // BarFramework
+        
+        xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
+        
+        let externalDependenciesGraphBeforeUpdate = DependenciesGraph(
+            externalDependencies: [:],
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [
+                "FooFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "1.0.0", dependencies: []),
+                "BarFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "2.0.0", dependencies: [])
+            ]
+        )
+        
+        let externalDependenciesGraphAfterUpdate = DependenciesGraph(
+            externalDependencies: [:],
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: [
+                "FooFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "1.0.0", dependencies: []),
+                "BarFramework": GekoGraph.DependenciesGraph.TreeDependency(version: "3.0.0", dependencies: [])
+            ]
+        )
+        
+        let project1 = Project.test(path: try temporaryPath().appending(component: "f1"))
+        let project2 = Project.test(path: try temporaryPath().appending(component: "f2"))
+        let framework1 = makeFramework(project: project1, sources: [source1])
+        let framework2 = makeFramework(project: project2, sources: [source2])
+        
+        // FooFramework depends on BarFramework
+        let graphBefore = Graph.test(
+            projects: [
+                project1.path: project1,
+                project2.path: project2,
+            ],
+            targets: [
+                project1.path: [
+                    framework1.target.name: framework1.target,
+                ],
+                project2.path: [
+                    framework2.target.name: framework2.target,
+                ],
+            ],
+            dependencies: [
+                xcframework1: [xcframework2] // FooFramework → BarFramework
+            ],
+            xcframeworks: [
+                filePath1: xcframework1,
+                filePath2: xcframework2
+            ],
+            externalDependenciesGraph: externalDependenciesGraphBeforeUpdate
+        )
+        var graphAfter = graphBefore
+        graphAfter.externalDependenciesGraph = externalDependenciesGraphAfterUpdate
+        
+        // When
+        let hashesBefore = try subject.contentHashes(
+            for: graphBefore,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+        
+        let hashesAfter = try subject.contentHashes(
+            for: graphAfter,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+        
+        // Then
+        XCTAssertNotEqual(hashesBefore, hashesAfter)
+    }
+    
+    // MARK: - Help
+    
     private func makeFramework(
         project: Project,
         platform: Platform = .iOS,
