@@ -18,6 +18,77 @@ final class SwiftPackageTraitsResolverTests: XCTestCase {
         XCTAssertEqual(result["package-a"], ["FeatureA"])
     }
 
+    func test_rootDefaultTraitEnablesConditionalDependencyTrait() {
+        let root = PackageInfo.test(
+            traits: [
+                trait("default", enables: ["RootFeature"]),
+                trait("RootFeature"),
+            ],
+            dependencies: [
+                PackageDependency(
+                    identity: "package-a",
+                    traits: [PackageDependencyTrait(name: "FeatureA", condition: ["RootFeature"])]
+                ),
+            ]
+        )
+        let packageA = package(traits: [trait("FeatureA")])
+
+        let result = SwiftPackageTraitsResolver().enabledTraits(
+            rootPackageInfo: root,
+            packageInfos: ["package-a": packageA]
+        )
+
+        XCTAssertEqual(result["package-a"], ["FeatureA"])
+    }
+
+    func test_rootDefaultTraitRecursivelyEnablesConditionalDependencyTrait() {
+        let root = PackageInfo.test(
+            traits: [
+                trait("default", enables: ["Intermediate"]),
+                trait("Intermediate", enables: ["RootFeature"]),
+                trait("RootFeature"),
+            ],
+            dependencies: [
+                PackageDependency(
+                    identity: "package-a",
+                    traits: [PackageDependencyTrait(name: "FeatureA", condition: ["RootFeature"])]
+                ),
+            ]
+        )
+        let packageA = package(traits: [trait("FeatureA")])
+
+        let result = SwiftPackageTraitsResolver().enabledTraits(
+            rootPackageInfo: root,
+            packageInfos: ["package-a": packageA]
+        )
+
+        XCTAssertEqual(result["package-a"], ["FeatureA"])
+    }
+
+    func test_declaredRootTraitWithoutDefaultDoesNotEnableConditionalDependencyTrait() {
+        let root = PackageInfo.test(
+            traits: [
+                trait("default", enables: ["DefaultFeature"]),
+                trait("DefaultFeature"),
+                trait("OptInFeature"),
+            ],
+            dependencies: [
+                PackageDependency(
+                    identity: "package-a",
+                    traits: [PackageDependencyTrait(name: "FeatureA", condition: ["OptInFeature"])]
+                ),
+            ]
+        )
+        let packageA = package(traits: [trait("FeatureA")])
+
+        let result = SwiftPackageTraitsResolver().enabledTraits(
+            rootPackageInfo: root,
+            packageInfos: ["package-a": packageA]
+        )
+
+        XCTAssertNil(result["package-a"])
+    }
+
     func test_defaultTraitRecursivelyEnablesConcreteTraits() {
         let root = PackageInfo.test(dependencies: [
             PackageDependency(identity: "package-a", traits: [PackageDependencyTrait(name: "default")]),

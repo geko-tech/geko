@@ -9,13 +9,20 @@ struct SwiftPackageTraitsResolver {
             packageInfos.map { ($0.key.lowercased(), $0.value) },
             uniquingKeysWith: { first, _ in first }
         )
+        let rootPackageTraits = rootPackageInfo.traits ?? []
+        let rootEnabledTraits: Set<String> =
+            if rootPackageTraits.contains(where: { $0.name == "default" }) {
+                resolve(["default"], packageTraits: rootPackageTraits)
+            } else {
+                []
+            }
         var result: [String: Set<String>] = [:]
         var changed = true
 
         while changed {
             changed = process(
                 dependencies: rootPackageInfo.dependencies,
-                parentTraits: [],
+                parentTraits: rootEnabledTraits,
                 packageInfos: normalizedPackageInfos,
                 result: &result
             )

@@ -9,7 +9,19 @@ import PackageDescription
 
 let package = Package(
     name: "PackageTraits",
+    traits: [
+        .default(enabledTraits: ["Some"]),
+        .trait(name: "Some"),
+    ],
     dependencies: [
-        .package(path: "../Packages/RootPackage", traits: [.defaults]),
+        .package(
+            path: "../Packages/RootPackage",
+            traits: [
+                .trait(
+                    name: "RootFeature",
+                    condition: .when(traits: ["Some"])
+                ),
+            ]
+        ),
     ]
 )

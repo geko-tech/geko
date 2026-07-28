@@ -111,10 +111,14 @@ class SwiftPackageManagerGraphGeneratorTests: GekoUnitTestCase {
 
         let rootPackage = PackageInfo.test(
             name: "Root",
+            traits: [
+                PackageTrait(enabledTraits: ["WorkspaceFeature"], name: "default", description: nil),
+                PackageTrait(enabledTraits: [], name: "WorkspaceFeature", description: nil),
+            ],
             dependencies: [
                 PackageDependency(
                     identity: "feature-package",
-                    traits: [PackageDependencyTrait(name: "default")]
+                    traits: [PackageDependencyTrait(name: "default", condition: ["WorkspaceFeature"])]
                 ),
             ]
         )

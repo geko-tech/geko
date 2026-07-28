@@ -70,6 +70,33 @@ let package = Package(
 ```
 :::
 
+### Conditional traits in the root package
+
+The root `Geko/Package.swift` can define default traits and use them to conditionally select traits for its dependencies:
+
+```swift
+let package = Package(
+    name: "Dependencies",
+    traits: [
+        .default(enabledTraits: ["Some"]),
+        .trait(name: "Some"),
+    ],
+    dependencies: [
+        .package(
+            path: "../Packages/RootPackage",
+            traits: [
+                .trait(
+                    name: "RootFeature",
+                    condition: .when(traits: ["Some"])
+                ),
+            ]
+        ),
+    ]
+)
+```
+
+Geko recursively enables the root package's default traits, so `Some` enables `RootFeature` in this example. Traits outside the default trait's recursive closure remain disabled. Geko does not currently provide a separate mechanism for selecting opt-in root package traits.
+
 ## Conditional and transitive traits
 
 A package can select a trait on one of its dependencies only when another trait is enabled. Target and product dependencies can use the same condition:
