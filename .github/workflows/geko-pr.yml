@@ -33,7 +33,7 @@ jobs:
       - name: build_and_test
         if: steps.only_docs_changes.outputs.run == 'true'
         run: |
-          set -o pipefail && xcrun swift test --enable-code-coverage | xcbeautify --renderer github-actions --is-ci
+          set -o pipefail && xcrun swift test --parallel --enable-code-coverage | xcbeautify --renderer github-actions --is-ci
 
       - name: Generate code coverage report
         if: steps.only_docs_changes.outputs.run == 'true'
@@ -60,6 +60,7 @@ jobs:
         if: steps.only_docs_changes.outputs.run == 'true'
         run: |
           swift test \
+            --parallel \
             --filter GekoAcceptanceTests \
             --filter GekoSupportTests \
             --filter GekoCoreIntegrationTests \

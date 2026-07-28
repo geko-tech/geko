@@ -35,6 +35,17 @@ open class GekoAcceptanceTestCase: XCTestCase {
         derivedDataDirectory = try! TemporaryDirectory(removeTreeOnDeinit: true)
         fixtureTemporaryDirectory = try! TemporaryDirectory(removeTreeOnDeinit: true)
 
+        setenv(
+            Constants.EnvironmentVariables.cocoapodsCacheDirectory.rawValue,
+            fixtureTemporaryDirectory.path.appending(component: "CocoapodsCache").pathString,
+            1
+        )
+        setenv(
+            Constants.EnvironmentVariables.cocoapodsRepoCacheDirectory.rawValue,
+            fixtureTemporaryDirectory.path.appending(component: "CocoapodsRepoCache").pathString,
+            1
+        )
+
         let sourceURL = URL(fileURLWithPath: #file).pathComponents
             .prefix(while: { $0 != "Sources" }).joined(separator: "/").dropFirst()
         
