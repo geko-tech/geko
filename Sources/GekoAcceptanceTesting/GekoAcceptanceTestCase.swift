@@ -24,8 +24,6 @@ open class GekoAcceptanceTestCase: XCTestCase {
 
     private var derivedDataDirectory: TemporaryDirectory!
     private var fixtureTemporaryDirectory: TemporaryDirectory!
-    private var testSimulatorName: String?
-    private var testSimulatorUDID: String?
 
     override open func setUp() {
         super.setUp()
@@ -70,11 +68,6 @@ open class GekoAcceptanceTestCase: XCTestCase {
     }
 
     override open func tearDown() async throws {
-        if let testSimulatorUDID {
-            try? System.shared.run(["/usr/bin/xcrun", "simctl", "delete", testSimulatorUDID])
-        }
-        testSimulatorName = nil
-        testSimulatorUDID = nil
         xcodeprojPath = nil
         workspacePath = nil
         fixturePath = nil
@@ -183,7 +176,6 @@ open class GekoAcceptanceTestCase: XCTestCase {
 
     public func run(_ command: TestCommand.Type, _ arguments: [String] = []) async throws {
         let arguments = arguments + [
-            "--device", try await isolatedTestSimulatorName(),
             "--derived-data-path", derivedDataPath.pathString,
             "--path", fixturePath.pathString,
         ]
@@ -194,33 +186,6 @@ open class GekoAcceptanceTestCase: XCTestCase {
 
     public func run(_ command: TestCommand.Type, _ arguments: String...) async throws {
         try await run(command, arguments)
-    }
-
-    private func isolatedTestSimulatorName() async throws -> String {
-        if let testSimulatorName {
-            return testSimulatorName
-        }
-
-        let sourceSimulator = try await SimulatorController().findAvailableDevice(
-            platform: .iOS,
-            version: nil,
-            minVersion: nil,
-            deviceName: nil
-        )
-        let deviceTypeIdentifier = try XCTUnwrap(sourceSimulator.device.deviceTypeIdentifier)
-        let name = "GekoAcceptanceTests-\(UUID().uuidString)"
-        let udid = try System.shared.capture([
-            "/usr/bin/xcrun",
-            "simctl",
-            "create",
-            name,
-            deviceTypeIdentifier,
-            sourceSimulator.runtime.identifier,
-        ]).trimmingCharacters(in: .whitespacesAndNewlines)
-
-        testSimulatorName = name
-        testSimulatorUDID = udid
-        return name
     }
 
     public func run(_ command: BuildCommand.Type, _ arguments: [String] = []) async throws {
