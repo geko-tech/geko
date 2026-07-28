@@ -30,7 +30,7 @@ final class DirectCacheCloudServiceTests: GekoUnitTestCase {
         super.tearDown()
     }
     
-    // MARK: - Tests: cacheExists
+    // MARK: - Tests
     
     func test_cacheExists_whenCacheExists_returnsTrue() async throws {
         // Given
@@ -102,7 +102,7 @@ final class DirectCacheCloudServiceTests: GekoUnitTestCase {
         )
     }
     
-    // MARK: - Tests: download
+    // MARK: - Tests
     
     func test_download_returnsExpectedPath() async throws {
         // Given
