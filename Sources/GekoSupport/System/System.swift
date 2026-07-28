@@ -220,12 +220,12 @@ public final class System: Systeming {
         )
         process.standardOutput = pipe
 
-        let inputFilePath = ".~input.temp"
-        var inputFile: FileHandle? = nil
+        var inputPipe: Pipe?
 
-        if let input {
-            inputFile = try inputFileForInput(input, atPath: inputFilePath)
-            process.standardInput = inputFile
+        if input != nil {
+            let pipe = Pipe()
+            inputPipe = pipe
+            process.standardInput = pipe
         }
 
         var result = Data()
@@ -243,10 +243,15 @@ public final class System: Systeming {
         }
 
         try process.run()
+
+        if let input, let inputPipe {
+            let inputWriter = inputPipe.fileHandleForWriting
+            defer { inputWriter.closeFile() }
+            try inputWriter.write(contentsOf: Data(input.utf8))
+        }
+
         process.waitUntilExit()
         group.wait()
-
-        if let inputFile { deleteInputFile(inputFile, atPath: inputFilePath) }
 
         return String(data: result, encoding: .utf8)!
     }
@@ -351,28 +356,6 @@ public final class System: Systeming {
     }
 
     // MARK: Helpers
-
-    private func deleteInputFile(_ fileHandle: FileHandle, atPath filePath: String) {
-        fileHandle.closeFile()
-        try? FileManager.default.removeItem(atPath: filePath)
-    }
-
-    private func inputFileForInput(_ input: String, atPath inputFilePath: String) throws -> FileHandle {
-        if FileManager.default.fileExists(atPath: inputFilePath) {
-            try FileManager.default.removeItem(atPath: inputFilePath)
-        }
-        guard FileManager.default.createFile(atPath: inputFilePath, contents: nil),
-              let inputData = input.data(using: .utf8),
-              let inputFile = FileHandle(forUpdatingAtPath: inputFilePath)
-        else {
-            throw SystemError.canNotCreateInputFile
-        }
-
-        try inputFile.seekToEnd()
-        try inputFile.write(contentsOf: inputData)
-        try inputFile.seek(toOffset: 0)
-        return inputFile
-    }
 
     /// Converts an array of arguments into a `Foundation.Process`
     /// - Parameters:
