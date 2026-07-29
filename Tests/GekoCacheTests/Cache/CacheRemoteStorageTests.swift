@@ -170,7 +170,7 @@ final class CacheRemoteStorageTests: GekoUnitTestCase {
         _ = try await subject.fetch(name: targetName, hash: hash)
 
         // Then
-        XCTAssertTrue(fileUnarchiver.invokedUnzip)
+        XCTAssertFalse(fileUnarchiver.invokedUnzip)
     }
 
     // - store
