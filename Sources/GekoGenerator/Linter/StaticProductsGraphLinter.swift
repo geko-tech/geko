@@ -34,8 +34,7 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
             let results = buildStaticProductsMap(
                 visiting: dependency,
                 graphTraverser: graphTraverser,
-                cache: cache,
-                config: config
+                cache: cache
             )
 
             warnings.formUnion( results.linked.flatMap {
@@ -66,23 +65,81 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
     private func buildStaticProductsMap(
         visiting dependency: GraphDependency,
         graphTraverser: GraphTraversing,
-        cache: Cache,
-        config: Config
+        cache: Cache
     ) -> StaticProducts {
         if let cachedResult = cache.results(for: dependency) {
             return cachedResult
         }
 
-        // Collect dependency results traversing the graph (dfs)
-        var results = dependencies(for: dependency, graphTraverser: graphTraverser).reduce(StaticProducts()) { results, dep in
-            buildStaticProductsMap(visiting: dep, graphTraverser: graphTraverser, cache: cache, config: config)
-                .merged(with: results)
+        var activeDependencies = Set([dependency])
+        var stack = [
+            StaticProductsFrame(
+                dependency: dependency,
+                dependencies: dependencies(for: dependency, graphTraverser: graphTraverser),
+                nextDependencyIndex: 0,
+                results: StaticProducts()
+            ),
+        ]
+
+        while !stack.isEmpty {
+            let frameIndex = stack.count - 1
+            let frame = stack[frameIndex]
+
+            if frame.nextDependencyIndex < frame.dependencies.count {
+                let childDependency = frame.dependencies[frame.nextDependencyIndex]
+
+                if let cachedResult = cache.results(for: childDependency) {
+                    stack[frameIndex].nextDependencyIndex += 1
+                    stack[frameIndex].results = cachedResult.merged(with: stack[frameIndex].results)
+                    continue
+                }
+
+                if activeDependencies.contains(childDependency) {
+                    stack[frameIndex].nextDependencyIndex += 1
+                    continue
+                }
+
+                activeDependencies.insert(childDependency)
+                stack.append(
+                    StaticProductsFrame(
+                        dependency: childDependency,
+                        dependencies: dependencies(for: childDependency, graphTraverser: graphTraverser),
+                        nextDependencyIndex: 0,
+                        results: StaticProducts()
+                    )
+                )
+            } else {
+                let completedFrame = stack.removeLast()
+                let results = finalize(
+                    results: completedFrame.results,
+                    for: completedFrame.dependency,
+                    graphTraverser: graphTraverser
+                )
+                cache.cache(results: results, for: completedFrame.dependency)
+                activeDependencies.remove(completedFrame.dependency)
+
+                if let parentFrameIndex = stack.indices.last {
+                    stack[parentFrameIndex].nextDependencyIndex += 1
+                    stack[parentFrameIndex].results = results.merged(with: stack[parentFrameIndex].results)
+                } else {
+                    return results
+                }
+            }
         }
+
+        return cache.results(for: dependency) ?? StaticProducts()
+    }
+
+    private func finalize(
+        results: StaticProducts,
+        for dependency: GraphDependency,
+        graphTraverser: GraphTraversing
+    ) -> StaticProducts {
+        var results = results
 
         // Static node case
         if isStaticProduct(dependency, graphTraverser: graphTraverser) {
             results.unlinked.insert(dependency)
-            cache.cache(results: results, for: dependency)
             return results
         }
 
@@ -97,11 +154,6 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
         while let staticProduct = results.unlinked.popFirst() {
             results.linked[staticProduct, default: Set()].insert(dependency)
         }
-
-        cache.cache(
-            results: results,
-            for: dependency
-        )
 
         return results
     }
@@ -243,6 +295,13 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
 // MARK: - Helper Types
 
 extension StaticProductsGraphLinter {
+    private struct StaticProductsFrame {
+        let dependency: GraphDependency
+        let dependencies: [GraphDependency]
+        var nextDependencyIndex: Int
+        var results: StaticProducts
+    }
+
     private struct StaticDependencyWarning: Hashable, Comparable {
         var staticProduct: GraphDependency
         var linkingDependencies: [GraphDependency]
