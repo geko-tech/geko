@@ -746,4 +746,38 @@ final class ModuleMapMapperTests: GekoUnitTestCase {
         XCTAssertEqual(gotSideEffects, [])
         
     }
+
+    func test_maps_longDependencyChainWithoutRecursion() async throws {
+        // Given
+        let projectPath = try temporaryPath()
+        let nodeCount = 20_000
+        let targets = (0 ..< nodeCount).map { index in
+            Target.test(
+                name: "Target\(index)",
+                dependencies: index + 1 < nodeCount
+                    ? [.target(name: "Target\(index + 1)")]
+                    : []
+            )
+        }
+        let project = Project.test(
+            path: projectPath,
+            name: "Project",
+            targets: targets
+        )
+        var graph = Graph.test(
+            projects: [projectPath: project],
+            targets: [
+                projectPath: Dictionary(
+                    uniqueKeysWithValues: targets.map { ($0.name, $0) }
+                ),
+            ]
+        )
+        var sideTable = GraphSideTable()
+
+        // When
+        let sideEffects = try await subject.map(graph: &graph, sideTable: &sideTable)
+
+        // Then
+        XCTAssertEqual(sideEffects, [])
+    }
 }
