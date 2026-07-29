@@ -34,7 +34,7 @@ jobs:
         if: steps.only_docs_changes.outputs.run == 'true'
         run: |
           set -o pipefail
-          SWIFTPM_TEST_RUNNER_PROGRESS_BAR=lit xcrun swift test --parallel  \ 
+          SWIFTPM_TEST_RUNNER_PROGRESS_BAR=lit xcrun swift test --parallel \ 
             | tee /dev/stderr \
             | xcbeautify --renderer github-actions --is-ci
 
