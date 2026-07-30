@@ -158,3 +158,14 @@ jobs:
           gh release create $TAG -d --title $TAG --notes "${{ env.CHANGELOG }}" --target $COMMIT_SHA build_artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy_docs:
+    name: Deploy documentation
+    needs: draft_release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
+    with:
+      deploy: true
