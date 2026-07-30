@@ -3,7 +3,6 @@ title: Clean
 order: 1
 ---
 
-
 # geko clean
 
 Description of the geko clean command and how to use it.

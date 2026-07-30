@@ -5,7 +5,7 @@ import GekoGraph
 import GekoLoader
 import GekoSupport
 
-enum CacheUploadError: FatalError {
+enum CacheUploadError: FatalError, Equatable {
     case cloudHasNotBeenConfigured
     case cloudInvalidURL(String)
 
@@ -38,11 +38,26 @@ public final class CacheUploadService {
 
     // MARK: - Initialization
 
-    public init() {
-        configLoader = ConfigLoader(manifestLoader: CompiledManifestLoader())
-        clock = WallClock()
-        timeTakenLoggerFormatter = TimeTakenLoggerFormatter()
-        fileArchiverFactory = FileArchivingFactory()
+    public convenience init() {
+        self.init(
+            configLoader: ConfigLoader(manifestLoader: CompiledManifestLoader()),
+            clock: WallClock(),
+            timeTakenLoggerFormatter: TimeTakenLoggerFormatter(),
+            fileArchiverFactory: FileArchivingFactory()
+        )
+    }
+
+    // Package initializer for testing
+    init(
+        configLoader: ConfigLoading,
+        clock: Clock,
+        timeTakenLoggerFormatter: TimeTakenLoggerFormatting,
+        fileArchiverFactory: FileArchivingFactorying
+    ) {
+        self.configLoader = configLoader
+        self.clock = clock
+        self.timeTakenLoggerFormatter = timeTakenLoggerFormatter
+        self.fileArchiverFactory = fileArchiverFactory
     }
 
     // MARK: - Service

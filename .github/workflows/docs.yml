@@ -1,13 +1,19 @@
 name: docs
 
 on:
-  push:
-    branches: [main]
   pull_request:
     paths:
       - 'docs/**'
 
   workflow_dispatch:
+
+  workflow_call:
+    inputs:
+      deploy:
+        description: Deploy the built documentation to GitHub Pages
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -53,7 +59,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
-    if: github.event_name == 'push'
+    if: inputs.deploy
     runs-on: ubuntu-latest
     name: Deploy
     steps:

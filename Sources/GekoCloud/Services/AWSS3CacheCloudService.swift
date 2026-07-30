@@ -6,10 +6,10 @@ public final class AWSS3CacheCloudService: CacheCloudServicing {
 
     // MARK: - Attributes
 
-    private let awsService: AWSS3Service
+    private let awsService: AWSS3Servicing
     private let temporaryDir: TemporaryDirectory
     
-    public init(awsService: AWSS3Service) throws {
+    public init(awsService: AWSS3Servicing) throws {
         self.awsService = awsService
         self.temporaryDir = try TemporaryDirectory(removeTreeOnDeinit: true)
     }
