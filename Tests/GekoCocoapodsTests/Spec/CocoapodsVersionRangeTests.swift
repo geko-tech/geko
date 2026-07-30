@@ -34,6 +34,48 @@ final class CocoapodsVersionRangeTests: GekoUnitTestCase {
         )
     }
 
+    func testRangeComponents() throws {
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: "2.0.1"),
+            ["2.0.1"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: "= 2.0.1"),
+            ["= 2.0.1"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: ">= 2.0.1 < 3.0.0"),
+            [">= 2.0.1", "< 3.0.0"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: "          >= 2.0.1 < 3.0.0"),
+            [">= 2.0.1", "< 3.0.0"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: "          >= 2.0.1 < 3.0.0    = 4.0.0"),
+            [">= 2.0.1", "< 3.0.0", "= 4.0.0"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: "          >= 2.0.1-pre+001 < 3.0.0-alpha    = 4.0.0+test"),
+            [">= 2.0.1-pre+001", "< 3.0.0-alpha", "= 4.0.0+test"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: ">=2.0.1-pre+001 <   3.0.0-alpha=4.0.0+test"),
+            [">=2.0.1-pre+001", "<   3.0.0-alpha", "=4.0.0+test"]
+        )
+
+        XCTAssertEqual(
+            CocoapodsVersionRange.rangeComponents(from: ">=2.0.1-pre+001 < < < 3.0.0-alpha=4.0.0+test 5.0.0-preRelease"),
+            [">=2.0.1-pre+001", "< ", "< ", "< 3.0.0-alpha", "=4.0.0+test", "5.0.0-preRelease"]
+        )
+    }
+
     func testVersionRangeExact() throws {
         let range1 = try CocoapodsVersionRange.from(["= 2.0.1"])
         let range2 = try CocoapodsVersionRange.from(["2.0.1"])

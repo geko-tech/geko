@@ -65,7 +65,7 @@ final class DependenciesControllerTests: GekoUnitTestCase {
             at: rootPath,
             config: .default,
             passthroughArguments: stubbedPassthroughArguments,
-            cocoapodsDependencies: nil,
+            dependencies: nil,
             packageSettings: stubPackageSettings,
             repoUpdate: false,
             deployment: false
@@ -121,7 +121,7 @@ final class DependenciesControllerTests: GekoUnitTestCase {
             at: rootPath,
             config: config,
             passthroughArguments: stubbedPassthroughArguments,
-            cocoapodsDependencies: nil,
+            dependencies: nil,
             packageSettings: stubPackageSettings,
             repoUpdate: false,
             deployment: false

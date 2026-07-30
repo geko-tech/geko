@@ -142,10 +142,10 @@ final class FetchServiceTests: GekoUnitTestCase {
             stubbedConfig
         }
 
-        dependenciesController.updateStub = { path, config, _, cocoapods, packageSettings in
+        dependenciesController.updateStub = { path, config, _, dependencies, packageSettings in
             XCTAssertEqual(path, stubbedPath)
             XCTAssertEqual(config, stubbedConfig)
-            XCTAssertEqual(cocoapods, stubbedDependencies.cocoapods)
+            XCTAssertEqual(dependencies?.cocoapods, stubbedDependencies.cocoapods)
             return .none
         }
         dependenciesController.saveStub = { dependenciesGraph, path in
@@ -282,10 +282,10 @@ final class FetchServiceTests: GekoUnitTestCase {
         configLoader.loadConfigStub = { _ in
             stubbedConfig
         }
-        dependenciesController.fetchStub = { path, config, arguments, cocoapodsDeps, packageSettings, repoUpdate, deployment in
+        dependenciesController.fetchStub = { path, config, arguments, dependencies, packageSettings, repoUpdate, deployment in
             XCTAssertEqual(path, stubbedPath)
             XCTAssertEqual(config, stubbedConfig)
-            XCTAssertEqual(cocoapodsDeps, stubbedDependencies.cocoapods)
+            XCTAssertEqual(dependencies?.cocoapods, stubbedDependencies.cocoapods)
             XCTAssertEqual(repoUpdate, stubbedRepoUpdate)
             XCTAssertEqual(deployment, stubbedDeployment)
             return .none

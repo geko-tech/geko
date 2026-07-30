@@ -24,6 +24,10 @@ public protocol ManifestGraphLoading {
         path: AbsolutePath
     ) async throws -> (Graph, GraphSideTable, [SideEffectDescriptor], [LintingIssue])
     // swiftlint:disable:previous large_tuple
+    func loadWorkspace(
+        path: AbsolutePath
+    ) async throws -> (WorkspaceWithProjects, WorkspaceSideTable, [SideEffectDescriptor], [LintingIssue], DependenciesGraph)
+    // swiftlint:disable:previous large_tuple
 }
 
 public final class ManifestGraphLoader: ManifestGraphLoading {
@@ -223,6 +227,92 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
             graphSideTable,
             modelMapperSideEffects + podspecSideEffects + graphMapperSideEffects + manifestsSideEffects,
             lintingIssues
+        )
+    }
+
+    public func loadWorkspace(path: AbsolutePath) async throws -> (WorkspaceWithProjects, WorkspaceSideTable, [SideEffectDescriptor], [LintingIssue], DependenciesGraph) {
+        try manifestLoader.validateHasProjectOrWorkspaceManifest(at: path)
+
+        // Load Config
+        let config = try configLoader.loadConfig(path: path)
+
+        // Load Plugins
+        let plugins = try await loadPlugins(at: path)
+
+        // Load DependenciesGraph
+        let dependenciesGraphTask = Task {
+            return try dependenciesGraphController.load(at: path)
+        }
+
+        let allManifests = try recursiveManifestLoader.loadWorkspace(at: path)
+        var (workspaceModels, manifestProjects) = (
+            try converter.convert(manifest: allManifests.workspace, path: allManifests.path),
+            allManifests.projects
+        )
+
+        var graphSideTable = GraphSideTable()
+
+        // Load and register Plugin Mappers
+        let gekoPlugins = try await workspaceMapperPluginLoader.loadPlugins(
+            using: config,
+            workspaceMappers: allManifests.workspace.workspaceMappers,
+            generationOptions: allManifests.workspace.generationOptions,
+        )
+        gekoPluginStorage.register(gekoPlugins: gekoPlugins)
+
+        // Lint Manifests
+        let lintingIssues = manifestProjects.flatMap { manifestLinter.lint(project: $0.value) }
+        try lintingIssues.printAndThrowErrorsIfNeeded()
+
+        // Cleanup Old Manifests
+        let manifestsSideEffects = try manifestLoader.cleanupOldManifests()
+
+        // Save globs for Impact Analysis
+        saveGlobs(manifestProjects: manifestProjects, graphSideTable: &graphSideTable, rootPath: allManifests.path)
+
+        let dependenciesGraph = try await dependenciesGraphTask.value
+
+        graphSideTable.workspace.dependenciesGraph = dependenciesGraph
+
+        // Convert to models
+        var projectsModels = try convert(
+            projects: manifestProjects,
+            plugins: plugins
+        )
+
+        // Convert Podspecs to models
+        let (podspecProjects, podspecSideEffects) = try await cocoapodsPodspecLoader.load(
+            config: config,
+            workspace: workspaceModels,
+            gekoProjects: projectsModels,
+            externalDependencies: dependenciesGraph.externalDependencies,
+            defaultForceLinking: nil,
+            forceLinking: [:],
+            sideTable: &graphSideTable
+        )
+        projectsModels += podspecProjects
+        projectsModels += dependenciesGraph.externalProjects.values
+        workspaceModels.projects += podspecProjects.map { $0.path }
+
+        // Check circular dependencies
+        try graphLoaderLinter.lintWorkspace(workspace: workspaceModels, projects: projectsModels, externalDependencies: dependenciesGraph)
+
+        // Apply any registered model mappers
+        var updatedModels = WorkspaceWithProjects(
+            workspace: workspaceModels,
+            projects: projectsModels
+        )
+        let modelMapperSideEffects = try workspaceMapper.map(
+            workspace: &updatedModels,
+            sideTable: &graphSideTable.workspace
+        )
+
+        return (
+            updatedModels,
+            graphSideTable.workspace,
+            modelMapperSideEffects + podspecSideEffects + manifestsSideEffects,
+            lintingIssues,
+            dependenciesGraph
         )
     }
 

@@ -20,6 +20,11 @@ public enum CocoapodsVersionRange: Equatable {
         charset.invert()
         return charset
     }()
+
+    fileprivate enum componentType {
+        case quantifier
+        case string
+    }
 }
 
 public enum CocoapodsVersionRangeError: Error, CustomStringConvertible {
@@ -37,6 +42,44 @@ public enum CocoapodsVersionRangeError: Error, CustomStringConvertible {
 }
 
 extension CocoapodsVersionRange {
+    public static func rangeComponents(from versionRange: String) -> [String] {
+        var result: [String] = []
+
+        var idx = versionRange.startIndex
+
+        while idx < versionRange.endIndex {
+            // skip non-ascii symbols
+            guard versionRange[idx].unicodeScalars.count == 1 else {
+                idx = versionRange.index(after: idx)
+                continue
+            }
+
+            var newIdx = idx
+            if CocoapodsVersion.versionCharset.contains(versionRange[idx].unicodeScalars.first!) {
+                newIdx = versionRange.idxWhile(idx: idx, charset: CocoapodsVersion.versionCharset)
+                result.append(String(versionRange[idx..<newIdx]))
+            } else if quantifierCharset.contains(versionRange[idx].unicodeScalars.first!) {
+                newIdx = versionRange.idxWhile(idx: idx, charset: quantifierCharset)
+                // skip other characters
+                while newIdx < versionRange.endIndex, otherCharset.contains(versionRange[newIdx].unicodeScalars.first!) {
+                    newIdx = versionRange.index(after: newIdx)
+                }
+
+                // append version to range
+                newIdx = versionRange.idxWhile(idx: newIdx, charset: CocoapodsVersion.versionCharset)
+                result.append(String(versionRange[idx..<newIdx]))
+            } else {
+                while newIdx < versionRange.endIndex, otherCharset.contains(versionRange[newIdx].unicodeScalars.first!) {
+                    newIdx = versionRange.index(after: newIdx)
+                }
+            }
+
+            idx = newIdx
+        }
+
+        return result
+    }
+
     public static func components(from versionRange: String) -> [Substring] {
         var result: [Substring] = []
 
@@ -65,6 +108,12 @@ extension CocoapodsVersionRange {
         }
 
         return result
+    }
+
+    public static func from(string: String) throws -> CocoapodsVersionRange {
+        let comps = rangeComponents(from: string)
+
+        return try .from(comps)
     }
 
     public static func from(_ components: [String]) throws -> CocoapodsVersionRange {

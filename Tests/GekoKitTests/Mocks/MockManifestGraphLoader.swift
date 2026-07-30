@@ -11,4 +11,11 @@ final class MockManifestGraphLoader: ManifestGraphLoading {
     func load(path _: AbsolutePath) async throws -> (Graph, GraphSideTable, [SideEffectDescriptor], [LintingIssue]) {
         (stubLoadGraph ?? .test(), GraphSideTable(), [], [])
     }
+
+    var stubLoadWorkspace: WorkspaceWithProjects?
+    func loadWorkspace(
+        path: AbsolutePath
+    ) async throws -> (WorkspaceWithProjects, WorkspaceSideTable, [SideEffectDescriptor], [LintingIssue], DependenciesGraph) {
+        return (stubLoadWorkspace ?? .test(), WorkspaceSideTable(), [], [], .none)
+    }
 }

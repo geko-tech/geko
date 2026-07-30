@@ -144,6 +144,7 @@ public class GeneratorFactory: GeneratorFactorying {
                 manifestLoader: manifestLoader,
                 workspaceMapper: SequentialWorkspaceMapper(mappers: workspaceMappers),
                 graphMapper: SequentialGraphMapper(graphMappers)
+
             )
         )
     }

@@ -16,8 +16,6 @@ public enum Constants {
     public static let helpersDirectoryName: String = "ProjectDescriptionHelpers"
     public static let signingDirectoryName: String = "Signing"
 
-    public static let masterKey = "master.key"
-    public static let encryptedExtension = "encrypted"
     public static let templatesDirectoryName: String = "Templates"
     public static let stencilsDirectoryName: String = "Stencils"
     public static let vendorDirectoryName: String = "vendor"
@@ -33,6 +31,11 @@ public enum Constants {
     public enum GekoUserCacheDirectory {
         public static let name = ".geko"
         public static let versionsDir = "Versions"
+    }
+
+    public enum GekoSandboxDirectory {
+        public static let name = ".geko"
+        public static let registryDir = "Registry"
     }
 
     public enum DependenciesDirectory {

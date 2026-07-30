@@ -462,6 +462,7 @@ struct GlobNDFABuilder {
                     bufPos += 1
                     // encountered '}', no need to start another alteration
                     try builder.endAlteration()
+                    continue
                 }
 
                 try builder.switchAlteration()

@@ -69,7 +69,7 @@ public protocol DependenciesControlling {
         at path: AbsolutePath,
         config: Config,
         passthroughArguments: [String],
-        cocoapodsDependencies: CocoapodsDependencies?,
+        dependencies: Dependencies?,
         packageSettings: PackageSettings?,
         repoUpdate: Bool,
         deployment: Bool
@@ -86,7 +86,7 @@ public protocol DependenciesControlling {
         at path: AbsolutePath,
         config: Config,
         passthroughArguments: [String],
-        cocoapodsDependencies: CocoapodsDependencies?,
+        dependencies: Dependencies?,
         packageSettings: PackageSettings?
     ) async throws -> DependenciesGraph
 
@@ -117,6 +117,7 @@ public protocol DependenciesControlling {
 
 public final class DependenciesController: DependenciesControlling {
     private let cocoapodsInteractor: CocoapodsInteractor = .init()
+    private let dependenciesInteractor: DependenciesInteractor = .init()
     private let swiftPackageManagerInteractor: SwiftPackageManagerInteracting
     private let dependenciesGraphController: DependenciesGraphControlling
 
@@ -132,7 +133,7 @@ public final class DependenciesController: DependenciesControlling {
         at path: AbsolutePath,
         config: Config,
         passthroughArguments: [String],
-        cocoapodsDependencies: CocoapodsDependencies?,
+        dependencies: Dependencies?,
         packageSettings: PackageSettings?,
         repoUpdate: Bool,
         deployment: Bool
@@ -140,7 +141,7 @@ public final class DependenciesController: DependenciesControlling {
         try await install(
             at: path,
             config: config,
-            cocoapods: cocoapodsDependencies,
+            dependencies: dependencies,
             packageSettings: packageSettings,
             passthroughArguments: passthroughArguments,
             shouldUpdate: false,
@@ -153,13 +154,13 @@ public final class DependenciesController: DependenciesControlling {
         at path: AbsolutePath,
         config: Config,
         passthroughArguments: [String],
-        cocoapodsDependencies: CocoapodsDependencies?,
+        dependencies: Dependencies?,
         packageSettings: PackageSettings?
     ) async throws -> DependenciesGraph {
         try await install(
             at: path,
             config: config,
-            cocoapods: cocoapodsDependencies,
+            dependencies: dependencies,
             packageSettings: packageSettings,
             passthroughArguments: passthroughArguments,
             shouldUpdate: true,
@@ -208,7 +209,7 @@ public final class DependenciesController: DependenciesControlling {
     private func install(
         at path: AbsolutePath,
         config: Config,
-        cocoapods: CocoapodsDependencies?,
+        dependencies: Dependencies?,
         packageSettings: PackageSettings?,
         passthroughArguments: [String],
         shouldUpdate: Bool,
@@ -227,7 +228,7 @@ public final class DependenciesController: DependenciesControlling {
         if let packageSettings = packageSettings {
             // Passthrough arguments come last so they override config arguments (last flag wins)
             let mergedArguments = config.installOptions.passthroughSwiftPackageManagerArguments + passthroughArguments
-            
+
             let swiftPackageManagerDependenciesGraph = try swiftPackageManagerInteractor.install(
                 dependenciesDirectory: dependenciesDirectory,
                 packageSettings: packageSettings,
@@ -241,22 +242,39 @@ public final class DependenciesController: DependenciesControlling {
             try swiftPackageManagerInteractor.clean(dependenciesDirectory: dependenciesDirectory)
         }
 
-        if let cocoapodsDependencies = cocoapods {
-            let cocoapodsGraph = try await cocoapodsInteractor.install(
+        if let dependencies = dependencies, dependencies.cocoapods != nil || dependencies.registry != nil {
+            let depsGraph = try await dependenciesInteractor.install(
                 path: path,
                 dependenciesDirectory: dependenciesDirectory,
                 generatorPaths: generatorPaths,
                 config: config,
-                dependencies: cocoapodsDependencies,
+                dependencies: dependencies,
                 shouldUpdate: shouldUpdate,
                 repoUpdate: repoUpdate,
                 deployment: deployment
             )
 
-            dependenciesGraph = try dependenciesGraph.merging(with: cocoapodsGraph)
+            dependenciesGraph = try dependenciesGraph.merging(with: depsGraph)
         } else {
-            try cocoapodsInteractor.clean(dependenciesDirectory: dependenciesDirectory)
+            try dependenciesInteractor.clean(dependenciesDirectory: dependenciesDirectory)
         }
+        //
+        // if let cocoapodsDependencies = dependencies?.cocoapods {
+        //     let cocoapodsGraph = try await cocoapodsInteractor.install(
+        //         path: path,
+        //         dependenciesDirectory: dependenciesDirectory,
+        //         generatorPaths: generatorPaths,
+        //         config: config,
+        //         dependencies: cocoapodsDependencies,
+        //         shouldUpdate: shouldUpdate,
+        //         repoUpdate: repoUpdate,
+        //         deployment: deployment
+        //     )
+        //
+        //     dependenciesGraph = try dependenciesGraph.merging(with: cocoapodsGraph)
+        // } else {
+        //     try cocoapodsInteractor.clean(dependenciesDirectory: dependenciesDirectory)
+        // }
 
         // Cleanup folder with swiftinterfaces on each fetch
         let swiftinterfacesDir = path.appending(components: [

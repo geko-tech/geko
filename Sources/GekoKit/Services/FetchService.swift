@@ -86,30 +86,32 @@ final class FetchService {
     }
 
     func needFetch(path: String?, cache: Bool) async throws -> Bool {
+        return true
+
         let path = try locateDependencies(at: path)
         let config = try fetchConfig(path: path)
         let plugins = try await fetchPlugins(config: config)
-        
+
         let dependenciesManifestPath = path.appending(
             components: Constants.gekoDirectoryName,
             Manifest.dependencies.fileName(path)
         )
-        
+
         let packageManifestPath = path.appending(
             components: Constants.gekoDirectoryName,
             Constants.DependenciesDirectory.packageSwiftName
         ) 
-        
+
         var cocoapodsDependencies: CocoapodsDependencies? = nil
         var packageSettings: PackageSettings? = nil
         if fileHandler.exists(dependenciesManifestPath) {
             cocoapodsDependencies = try dependenciesModelLoader.loadDependencies(at: path, with: plugins).cocoapods
         }
-        
+
         if fileHandler.exists(packageManifestPath) {
             packageSettings = try packageSettingsLoader.loadPackageSettings(at: path, with: plugins)
         }
-        
+
         return try dependenciesController.needFetch(
             cocoapodsDependencies: cocoapodsDependencies,
             packageSettings: packageSettings,
@@ -117,7 +119,7 @@ final class FetchService {
             cache: cache
         )
     }
-    
+
     func fetchPluginsOnly(path: String?) async throws {
         let path = try locateDependencies(at: path)
         let config = try fetchConfig(path: path)
@@ -201,23 +203,23 @@ final class FetchService {
         }
 
         let dependenciesManifest: GekoCore.DependenciesGraph
-        var cocoapodsDependencies: CocoapodsDependencies? = nil
+        var dependencies: Dependencies? = nil
         var packageSettings: PackageSettings? = nil
-        
+
         if fileHandler.exists(dependenciesManifestPath) {
-            cocoapodsDependencies = try dependenciesModelLoader.loadDependencies(at: path, with: plugins).cocoapods
+            dependencies = try dependenciesModelLoader.loadDependencies(at: path, with: plugins)
         }
-        
+
         if fileHandler.exists(packageManifestPath) {
             packageSettings = try packageSettingsLoader.loadPackageSettings(at: path, with: plugins)
         }
-        
+
         if update {
             dependenciesManifest = try await dependenciesController.update(
                 at: path,
                 config: config,
                 passthroughArguments: passthroughArguments,
-                cocoapodsDependencies: cocoapodsDependencies,
+                dependencies: dependencies,
                 packageSettings: packageSettings
             )
         } else {
@@ -225,7 +227,7 @@ final class FetchService {
                 at: path,
                 config: config,
                 passthroughArguments: passthroughArguments,
-                cocoapodsDependencies: cocoapodsDependencies,
+                dependencies: dependencies,
                 packageSettings: packageSettings,
                 repoUpdate: repoUpdate,
                 deployment: deployment
@@ -245,7 +247,7 @@ final class FetchService {
             logger.info("Dependencies resolved and fetched successfully.", metadata: .success)
         }
     }
-    
+
     private func checkDuplicates(_ dependencies: [CocoapodsDependencies.Dependency]) throws {
         var seen = Set<String>()
         for dep in dependencies {

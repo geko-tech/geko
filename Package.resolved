@@ -46,15 +46,6 @@
       }
     },
     {
-      "identity" : "project-description",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/geko-tech/project-description.git",
-      "state" : {
-        "branch" : "precompiled-macro",
-        "revision" : "b857562056740953c740afb2cb04889e9717c256"
-      }
-    },
-    {
       "identity" : "shellout",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JohnSundell/ShellOut.git",

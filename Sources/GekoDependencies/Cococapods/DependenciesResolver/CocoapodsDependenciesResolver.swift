@@ -60,6 +60,12 @@ class CocoapodsDependenciesResolver {
         }
     }
 
+    func prepare() async throws {
+        if let lockfile {
+            try await prefetchSpecs(lockfile: lockfile)
+        }
+    }
+
     func resolve() async throws -> CocoapodsDependencyGraph {
         if let lockfile {
             try await prefetchSpecs(lockfile: lockfile)
@@ -166,6 +172,75 @@ class CocoapodsDependenciesResolver {
                 for subspec in subspecs {
                     logger.debug("    \(subspec)")
                 }
+            }
+        }
+
+        return .init(specs: Array(specs.values))
+    }
+
+    func resolve(packages: [String: CocoapodsVersion]) async throws -> CocoapodsDependencyGraph {
+        typealias SpecsMap = [String: (
+            spec: CocoapodsSpec,
+            version: CocoapodsVersion,
+            subspecs: Set<String>,
+            source: CocoapodsSource
+        )]
+        var specs: SpecsMap = [:]
+
+        for kv in packages {
+            let (package, version) = kv
+            let components = package.components(separatedBy: "/")
+            let name = components[0]
+            guard name != rootName else {
+                continue
+            }
+
+            if specs[name] == nil {
+                let spec: (spec: CocoapodsSpec, source: CocoapodsSource)
+                if gitInteractor.contains(name) {
+                    spec = gitInteractor.spec(for: name)
+                } else if pathInteractor.contains(name) {
+                    spec = pathInteractor.spec(for: name)
+                } else {
+                    switch rootDependencies[name] {
+                    case let .cdn(_, _, source):
+                        spec = try await repoInteractorCdn.spec(
+                            for: name,
+                            version: version,
+                            source: source
+                        )
+                    case let .gitRepo(_, _, source):
+                        spec = try await repoInteractorGit.spec(
+                            for: name,
+                            version: version,
+                            source: source
+                        )
+                    case .none:
+                        do {
+                            spec = try await repoInteractorCdn.spec(
+                                for: name,
+                                version: version,
+                                source: nil
+                            )
+                        } catch CocoapodsRepoInteractorError.specNotFound {
+                            spec = try await repoInteractorGit.spec(
+                                for: name,
+                                version: version,
+                                source: nil
+                            )
+                        }
+                    case .path, .git:
+                        // Impossible cases
+                        continue
+                    }
+                }
+
+                specs[name] = (spec.spec, version, [], spec.source)
+            }
+
+            if components.count > 1 {
+                let subspec = components[1...].joined(separator: "/")
+                specs[name]!.subspecs.insert(subspec)
             }
         }
 
@@ -451,7 +526,7 @@ extension CocoapodsDependenciesResolver: PubGrubDependencyProvider {
 }
 
 extension CocoapodsVersionRange {
-    fileprivate func toVersionSet() -> VersionSet<CocoapodsVersion> {
+    func toVersionSet() -> VersionSet<CocoapodsVersion> {
         switch self {
         case .any:
             return .any()
