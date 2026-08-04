@@ -176,9 +176,9 @@ public class GraphLinter: GraphLinting {
             switch $0 {
             case let .framework(path, _, _), let .xcframework(path, _, _), let .library(path, _, _, _):
                 LintingIssue(reason: "Dependency \(path.basenameWithoutExt) is unused. It should be added to at least one target", severity: .warning)
-            case .local, .sdk, .target, .xctest, .external, .project, .bundle:
-                nil
-            @unknown default:
+            case let .project(name, _, _, _):
+                LintingIssue(reason: "Dependency \(name) is unused. It should be added to at least one target", severity: .warning)
+            case .local, .sdk, .target, .xctest, .external, .bundle:
                 nil
             }
         }
