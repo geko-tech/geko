@@ -969,6 +969,15 @@ public class GraphTraverser: GraphTraversing {
 
     public func allUnusedDependencies() -> Set<TargetDependency> {
         var unusedDeps: Set<TargetDependency> = []
+        
+        var usedDependencies: Set<String> = []
+        for (key, deps) in graph.dependencies {
+            usedDependencies.insert(key.nameWithoutExtension)
+            for dep in deps {
+                usedDependencies.insert(dep.nameWithoutExtension)
+            }
+        }
+        
         for (_, deps) in graph.externalDependenciesGraph.externalDependencies {
             for dep in deps {
                 switch dep {
@@ -984,9 +993,11 @@ public class GraphTraverser: GraphTraversing {
                     if xcframeworks[path] == nil {
                         unusedDeps.insert(dep)
                     }
-                case .local, .sdk, .target, .xctest, .external, .project, .bundle:
-                    break
-                @unknown default:
+                case let .project(target, _, _, _):
+                    if !usedDependencies.contains(target) {
+                        unusedDeps.insert(dep)
+                    }
+                case .local, .sdk, .target, .xctest, .external, .bundle:
                     break
                 }
             }

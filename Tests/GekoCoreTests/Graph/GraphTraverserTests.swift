@@ -5931,6 +5931,134 @@ final class GraphTraverserTests: GekoUnitTestCase {
         ])
     }
 
+    // MARK: - allUnusedDependencies
+
+    func test_allUnusedDependencies_when_allExternalDependenciesAreUnused() throws {
+        // Given
+        let unusedFrameworkPath: AbsolutePath = "/unused/UnusedFramework.xcframework"
+        let unusedLibraryPath: AbsolutePath = "/unused/UnusedLibrary.a"
+        let unusedXCFrameworkPath: AbsolutePath = "/unused/UnusedXCFramework.xcframework"
+        let unusedProjectPath: AbsolutePath = "/unused/UnusedProject"
+
+        let externalDependenciesGraph = try DependenciesGraph.test(
+            externalDependencies: [
+                "UnusedFramework": [.framework(path: FilePath(validating: unusedFrameworkPath.pathString), status: .required)],
+                "UnusedLibrary": [
+                    .library(
+                        path: FilePath(validating: unusedLibraryPath.pathString),
+                        publicHeaders: "/Headers",
+                        swiftModuleMap: nil
+                    )
+                ],
+                "UnusedXCFramework": [
+                    .xcframework(
+                        path: FilePath(validating: unusedXCFrameworkPath.pathString),
+                        status: .required
+                    )
+                ],
+                "UnusedProject": [
+                    .project(
+                        target: "UnusedTarget",
+                        path: FilePath(validating: unusedProjectPath.pathString),
+                        status: .required
+                    )
+                ],
+            ],
+            externalProjects: [:]
+        )
+
+        let graph = Graph.test(
+            dependencies: [
+                .target(name: "UsedTarget", path: "/used/UsedTarget", status: .required): [
+                    GraphDependency.target(name: "UsedTarget1", path: "/used/UsedTarget1", status: .required)
+                ]
+            ],
+            externalDependenciesGraph: externalDependenciesGraph
+        )
+        let subject = GraphTraverser(graph: graph)
+
+        // When
+        let got = subject.allUnusedDependencies()
+
+        // Then
+        XCTAssertEqual(got.count, 4)
+        XCTAssert(got.contains { dep in
+            if case let .framework(path, _, _) = dep { return path.pathString == unusedFrameworkPath.pathString }
+            return false
+        })
+        XCTAssert(got.contains { dep in
+            if case let .library(path, _, _, _) = dep { return path.pathString == unusedLibraryPath.pathString }
+            return false
+        })
+        XCTAssert(got.contains { dep in
+            if case let .xcframework(path, _, _) = dep { return path.pathString == unusedXCFrameworkPath.pathString }
+            return false
+        })
+        XCTAssert(got.contains { dep in
+            if case let .project(_, path, _, _) = dep { return path.pathString == unusedProjectPath.pathString }
+            return false
+        })
+    }
+
+    func test_allUnusedDependencies_when_mixedUsedAndUnused() throws {
+        // Given
+        let usedDependencyPath: AbsolutePath = "/used/UsedDependency"
+        let unusedFrameworkPath: AbsolutePath = "/unused/UnusedFramework.framework"
+        let unusedProjectPath: AbsolutePath = "/unused/UnusedProject"
+        let project = Project.test()
+        let appTarget = Target.test(name: "App")
+
+        let externalDependenciesGraph = try DependenciesGraph.test(
+            externalDependencies: [
+                "UsedDependency": [.framework(path: FilePath(validating: usedDependencyPath.pathString), status: .required)],
+                "UnusedFramework": [.framework(path: FilePath(validating: unusedFrameworkPath.pathString), status: .required)],
+                "UnusedProject": [
+                    .project(
+                        target: "UnusedTarget",
+                        path: FilePath(validating: unusedProjectPath.pathString),
+                        status: .required
+                    )
+                ],
+            ],
+            externalProjects: [:]
+        )
+
+        let usedDependency: GraphDependency = .framework(
+            path: usedDependencyPath,
+            binaryPath: "",
+            dsymPath: nil,
+            bcsymbolmapPaths: [],
+            linking: .static,
+            architectures: [],
+            status: .required
+        )
+
+        let dependencies: [GraphDependency: Set<GraphDependency>] = [
+            .target(name: appTarget.name, path: project.path): [usedDependency]
+        ]
+
+        let graph = Graph.test(
+            dependencies: dependencies,
+            frameworks: [usedDependencyPath: usedDependency],
+            externalDependenciesGraph: externalDependenciesGraph
+        )
+        let subject = GraphTraverser(graph: graph)
+
+        // When
+        let got = subject.allUnusedDependencies()
+
+        // Then
+        XCTAssertEqual(got.count, 2)
+        XCTAssertTrue(got.contains { dep in
+            if case let .framework(path, _, _) = dep { return path.pathString == unusedFrameworkPath.pathString }
+            return false
+        })
+        XCTAssertTrue(got.contains { dep in
+            if case let .project(_, path, _, _) = dep { return path.pathString == unusedProjectPath.pathString }
+            return false
+        })
+    }
+
     // MARK: - Helpers
 
     private func sdkDependency(from dependency: GraphDependencyReference) -> SDKPathAndStatus? {
