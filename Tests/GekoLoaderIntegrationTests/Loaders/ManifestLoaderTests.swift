@@ -75,6 +75,42 @@ final class ManifestLoaderTests: GekoTestCase {
         XCTAssertEqual(got.name, "geko")
     }
 
+    func test_loadProject_withExtensionDependingOnLaterGlobal() throws {
+        // Given
+        let temporaryPath = try temporaryPath()
+
+        try """
+        import ProjectDescription
+
+        let project = Project(name: static2.map(String.init).joined())
+        """.write(
+            to: temporaryPath.appending(component: Manifest.project.fileName(temporaryPath)).url,
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        import ProjectDescription
+
+        let static2: [Int] = interimFunc()
+
+        fileprivate let static1 = ["1", "2", "3"]
+
+        fileprivate func interimFunc() -> [Int] {
+            static1.map { Int($0) ?? -1 }
+        }
+        """.write(
+            to: temporaryPath.appending(component: "Project+Ext.swift").url,
+            atomically: true,
+            encoding: .utf8
+        )
+
+        // When
+        let got = try subject.loadProject(at: temporaryPath)
+
+        // Then
+        XCTAssertEqual(got.name, "123")
+    }
+
     func test_loadProjects_usesRuntimeEnvironmentOnEveryRun() throws {
         // Given
         let flag = "GEKO_MANIFEST_FLAG_batch_runner_integration_test"

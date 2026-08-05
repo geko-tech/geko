@@ -370,11 +370,11 @@ extension CompiledManifestLoader {
     private func compileManifestObject(_ input: ManifestObjectInput) throws -> ManifestObject {
         if !fileHandler.exists(input.objectPath) {
             let temporaryDirectory = try TemporaryDirectory(removeTreeOnDeinit: true)
-            let sourcePath = temporaryDirectory.path.appending(component: "main.swift")
-            try combinedManifestSource(
-                manifestPath: input.path,
-                extensions: input.extensions
-            ).data(using: .utf8)!.write(to: sourcePath.url, options: .atomic)
+            var mainPath = input.path
+            if !input.extensions.isEmpty {
+                mainPath = temporaryDirectory.path.appending(component: "main.swift")
+                try fileHandler.copy(from: input.path, to: mainPath)
+            }
 
             try fileHandler.createFolder(input.objectPath.parentDirectory)
             let temporaryObjectPath = input.objectPath.parentDirectory.appending(
@@ -385,16 +385,15 @@ extension CompiledManifestLoader {
                 "swiftc",
                 "-c",
                 "-Onone",
+                "-whole-module-optimization",
                 "-suppress-warnings",
                 "-module-name", "GekoManifest_\(input.hash)",
                 "-Xfrontend", "-entry-point-function-name",
                 "-Xfrontend", input.entryPoint,
             ]
             arguments.append(contentsOf: input.buildArguments)
-            arguments.append(contentsOf: [
-                sourcePath.pathString,
-                "-o", temporaryObjectPath.pathString,
-            ])
+            arguments.append(contentsOf: ([mainPath] + input.extensions).map(\.pathString))
+            arguments.append(contentsOf: ["-o", temporaryObjectPath.pathString])
 
             do {
                 _ = try system.capture(
@@ -427,22 +426,6 @@ extension CompiledManifestLoader {
             objectPath: input.objectPath,
             linkArguments: input.buildArguments
         )
-    }
-
-    private func combinedManifestSource(
-        manifestPath: AbsolutePath,
-        extensions: [AbsolutePath]
-    ) throws -> String {
-        try (extensions + [manifestPath]).map { sourcePath in
-            let escapedPath = sourcePath.pathString
-                .replacingOccurrences(of: "\\", with: "\\\\")
-                .replacingOccurrences(of: "\"", with: "\\\"")
-            return """
-            #sourceLocation(file: "\(escapedPath)", line: 1)
-            \(try fileHandler.readTextFile(sourcePath))
-            #sourceLocation()
-            """
-        }.joined(separator: "\n")
     }
 
     private func loadDataForManifestObjects(
