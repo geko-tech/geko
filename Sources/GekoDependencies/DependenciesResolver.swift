@@ -94,8 +94,8 @@ extension DependenciesResolver {
             }
         }
 
-        dump(packageTypes)
-        exit(0)
+//        dump(packageTypes)
+//        exit(0)
 
         var resultGraph: DependencyGraph = .empty
         resultGraph.cocoapodsGraph = try await cocoapodsResolver.resolve(packages: cocoapodsPackageGraph)

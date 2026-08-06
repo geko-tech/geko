@@ -88,8 +88,8 @@ class DependenciesInteractor {
         let dependenciesGraph = try await resolver.resolve()
         let newLockfile = CocoapodsLockfile.from(dependenciesGraph: dependenciesGraph.cocoapodsGraph)
 
-        dump(dependenciesGraph)
-        exit(0)
+        // dump(dependenciesGraph)
+        // exit(0)
 
         logger.info("Installing Cocoapods dependencies", metadata: .subsection)
         let downloader = CocoapodsDependencyDownloader(

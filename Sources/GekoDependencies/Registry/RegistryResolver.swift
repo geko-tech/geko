@@ -89,10 +89,14 @@ extension RegistryResolver: PubGrubDependencyProvider {
             }
             packageVersions[pkg] = set
 
-            if minimalVersionsCount > versions.count {
+            if versions.count > 0, minimalVersionsCount > versions.count {
                 minimalVersionsCount = versions.count
                 minimalVersionsPackage = pkg
             }
+        }
+
+        if minimalVersionsPackage == "" {
+            return (packageVersions.first!.key, nil)
         }
 
         return (minimalVersionsPackage, packageVersions[minimalVersionsPackage]!.last)

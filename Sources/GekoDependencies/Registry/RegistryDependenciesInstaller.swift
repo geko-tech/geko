@@ -28,7 +28,9 @@ final class RegistryDependenciesInstaller {
     }
 
     func convertSpec(spec: RegistryPackage) -> GekoCore.DependenciesGraph {
-        guard let pathString = spec.artifact.path else { fatalError("Only path registry specs are implemented") }
+        guard let pathString = spec.artifact.path else {
+            fatalError("Only path registry specs are implemented")
+        }
         let path = FilePath(pathString)
 
         var targets: [Target] = []
@@ -41,7 +43,8 @@ final class RegistryDependenciesInstaller {
                 name: module.name,
                 destinations: Destinations.iOS,
                 product: product,
-                sources: SourceFilesList(globs: flavor.sources)
+                sources: SourceFilesList(globs: flavor.sources),
+                dependencies: []
             )
 
             targets.append(target)

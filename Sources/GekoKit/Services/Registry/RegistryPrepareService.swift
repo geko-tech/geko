@@ -102,6 +102,8 @@ final class RegistryPrepareService {
         var modules: [RegistryPackage.Module] = []
 
         for target in project.targets {
+            guard target.product.isPublishable else { continue }
+
             modules.append(
                 RegistryPackage.Module(
                     name: target.name,
@@ -126,8 +128,27 @@ final class RegistryPrepareService {
             name: project.name,
             version: spec.version,
             dependencies: dependencies,
-            artifact: .init(path: nil),
+            artifact: .init(path: project.path.pathString),
             modules: modules
         )
+    }
+}
+
+private extension ProjectDescription.Product {
+    var isPublishable: Bool {
+        switch self {
+        case .macro,
+            .staticLibrary, .dynamicLibrary,
+            .framework, .staticFramework,
+            .bundle:
+            return true
+        case .app, .unitTests, .uiTests, .commandLineTool, .appExtension,
+            .watch2App, .watch2Extension, 
+            .tvTopShelfExtension,
+            .messagesExtension, .stickerPackExtension, .appClip, 
+            .xpc, .systemExtension, .extensionKitExtension, 
+            .aggregateTarget:
+            return false
+        }
     }
 }
