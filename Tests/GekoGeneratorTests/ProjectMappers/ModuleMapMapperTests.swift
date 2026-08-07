@@ -751,9 +751,16 @@ final class ModuleMapMapperTests: GekoUnitTestCase {
         // Given
         let projectPath = try temporaryPath()
         let nodeCount = 20_000
+        let leafModuleMapPath = projectPath.appending(component: "Leaf.modulemap")
         let targets = (0 ..< nodeCount).map { index in
             Target.test(
                 name: "Target\(index)",
+                settings: index == nodeCount - 1
+                    ? .test(base: [
+                        "MODULEMAP_FILE": .string(leafModuleMapPath.pathString),
+                        "HEADER_SEARCH_PATHS": .array(["$(SRCROOT)/Leaf/include"]),
+                    ])
+                    : .test(),
                 dependencies: index + 1 < nodeCount
                     ? [.target(name: "Target\(index + 1)")]
                     : []
@@ -762,7 +769,8 @@ final class ModuleMapMapperTests: GekoUnitTestCase {
         let project = Project.test(
             path: projectPath,
             name: "Project",
-            targets: targets
+            targets: targets,
+            projectType: .spm
         )
         var graph = Graph.test(
             projects: [projectPath: project],
@@ -779,5 +787,20 @@ final class ModuleMapMapperTests: GekoUnitTestCase {
 
         // Then
         XCTAssertEqual(sideEffects, [])
+        let rootSettings = try XCTUnwrap(
+            graph.targets[projectPath]?[targets[0].name]?.settings?.base
+        )
+        XCTAssertEqual(
+            rootSettings["OTHER_CFLAGS"],
+            .array(["$(inherited)", "-fmodule-map-file=$(SRCROOT)/Leaf.modulemap"])
+        )
+        XCTAssertEqual(
+            rootSettings["OTHER_SWIFT_FLAGS"],
+            .array(["$(inherited)", "-Xcc", "-fmodule-map-file=$(SRCROOT)/Leaf.modulemap"])
+        )
+        XCTAssertEqual(
+            rootSettings["HEADER_SEARCH_PATHS"],
+            .array(["$(inherited)", "$(SRCROOT)/Leaf/include"])
+        )
     }
 }

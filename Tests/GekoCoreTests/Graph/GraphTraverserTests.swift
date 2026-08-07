@@ -2724,6 +2724,54 @@ final class GraphTraverserTests: GekoUnitTestCase {
         )
     }
 
+    func test_linkableDependencies_handlesLongDynamicDependencyChainWithoutRecursion() throws {
+        // Given
+        let path: AbsolutePath = "/project"
+        let frameworkCount = 20_000
+        let app = Target.test(name: "App", product: .app)
+        let frameworks = (0 ..< frameworkCount).map {
+            Target.test(name: "Framework\($0)", product: .framework)
+        }
+        let targets = [app] + frameworks
+        let project = Project.test(path: path, targets: targets)
+        let frameworkDependencies = frameworks.map {
+            GraphDependency.target(name: $0.name, path: path)
+        }
+
+        var dependencies: [GraphDependency: Set<GraphDependency>] = [
+            .target(name: app.name, path: path): [frameworkDependencies[0]],
+            frameworkDependencies[frameworkCount - 1]: [],
+        ]
+        for index in 0 ..< frameworkCount - 1 {
+            dependencies[frameworkDependencies[index]] = [frameworkDependencies[index + 1]]
+        }
+
+        let subject = GraphTraverser(
+            graph: .test(
+                path: path,
+                projects: [path: project],
+                targets: [
+                    path: Dictionary(uniqueKeysWithValues: targets.map { ($0.name, $0) }),
+                ],
+                dependencies: dependencies
+            )
+        )
+
+        // When
+        let result = try subject.linkableDependencies(path: path, name: app.name)
+
+        // Then
+        XCTAssertEqual(
+            result,
+            [
+                .product(
+                    target: frameworks[0].name,
+                    productName: frameworks[0].productNameWithExtension
+                ),
+            ]
+        )
+    }
+
     func test_linkableDependencies_transitiveDynamicLibrariesOneStaticHop() throws {
         // Given
         let staticFramework = Target.test(

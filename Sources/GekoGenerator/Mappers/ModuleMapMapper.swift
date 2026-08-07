@@ -62,15 +62,15 @@ public final class ModuleMapMapper: GraphMapping {
         let headerSearchPaths: [String]
     }
 
-    private struct DependenciesModuleMapsFrame {
-        let target: GraphTarget
-        var nextDependencyIndex: Int
-        var dependenciesMetadata: Set<DependencyMetadata>
-    }
-
     private struct ResolvedDependency {
         let project: Project
         let target: GraphTarget
+    }
+
+    private struct DependenciesModuleMapsFrame {
+        let target: GraphTarget
+        var resolvedDependencies: [ResolvedDependency]
+        var preOrderVisit: Bool
     }
 
     public init() {}
@@ -162,12 +162,12 @@ public final class ModuleMapMapper: GraphMapping {
             return
         }
 
-        var activeTargetIDs = Set([rootTargetID])
+        var activeTargetIDs = Set<TargetID>()
         var stack = [
             DependenciesModuleMapsFrame(
                 target: target,
-                nextDependencyIndex: 0,
-                dependenciesMetadata: []
+                resolvedDependencies: [],
+                preOrderVisit: true
             ),
         ]
 
@@ -175,48 +175,50 @@ public final class ModuleMapMapper: GraphMapping {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
-            if frame.nextDependencyIndex < frame.target.target.dependencies.count {
-                let dependency = frame.target.target.dependencies[frame.nextDependencyIndex]
+            if frame.preOrderVisit {
+                let frameTargetID = targetID(for: frame.target)
+                guard targetToDependenciesMetadata[frameTargetID] == nil else {
+                    stack.removeLast()
+                    continue
+                }
 
-                guard
-                    let resolvedDependency = try resolve(
+                guard activeTargetIDs.insert(frameTargetID).inserted else {
+                    throw GraphError.unexpectedCycle
+                }
+
+                let resolvedDependencies = try frame.target.target.dependencies.compactMap { dependency in
+                    try resolve(
                         dependency: dependency,
                         from: frame.target,
                         graph: graph,
                         graphTraverser: graphTraverser
                     )
-                else {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
                 }
 
-                let dependencyTargetID = targetID(for: resolvedDependency.target)
-                if let indirectDependencyMetadata = targetToDependenciesMetadata[dependencyTargetID] {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    stack[frameIndex].dependenciesMetadata.formUnion(indirectDependencyMetadata)
-                    stack[frameIndex].dependenciesMetadata.insert(
-                        try dependencyMetadata(for: resolvedDependency)
+                stack[frameIndex].resolvedDependencies = resolvedDependencies
+                stack[frameIndex].preOrderVisit = false
+
+                for resolvedDependency in resolvedDependencies.reversed() {
+                    stack.append(
+                        DependenciesModuleMapsFrame(
+                            target: resolvedDependency.target,
+                            resolvedDependencies: [],
+                            preOrderVisit: true
+                        )
                     )
-                    continue
                 }
-
-                if activeTargetIDs.contains(dependencyTargetID) {
-                    throw GraphError.unexpectedCycle
-                }
-
-                activeTargetIDs.insert(dependencyTargetID)
-                stack.append(
-                    DependenciesModuleMapsFrame(
-                        target: resolvedDependency.target,
-                        nextDependencyIndex: 0,
-                        dependenciesMetadata: []
-                    )
-                )
             } else {
-                let completedFrame = stack.removeLast()
-                let completedTargetID = targetID(for: completedFrame.target)
-                targetToDependenciesMetadata[completedTargetID] = completedFrame.dependenciesMetadata
-                activeTargetIDs.remove(completedTargetID)
+                var dependenciesMetadata = Set<DependencyMetadata>()
+                for resolvedDependency in frame.resolvedDependencies {
+                    let dependencyTargetID = targetID(for: resolvedDependency.target)
+                    dependenciesMetadata.formUnion(targetToDependenciesMetadata[dependencyTargetID] ?? [])
+                    dependenciesMetadata.insert(try dependencyMetadata(for: resolvedDependency))
+                }
+
+                let frameTargetID = targetID(for: frame.target)
+                targetToDependenciesMetadata[frameTargetID] = dependenciesMetadata
+                activeTargetIDs.remove(frameTargetID)
+                stack.removeLast()
             }
         }
     }

@@ -7,23 +7,20 @@ import ProjectDescription
 public class GraphTraverser: GraphTraversing {
     private struct DependencySetTraversalFrame {
         let node: GraphDependency
-        let dependencies: [GraphDependency]
-        var nextDependencyIndex: Int
-        var result: Set<GraphDependency>
+        let dependencies: Set<GraphDependency>
+        var preOrderVisit: Bool
     }
 
     private struct ConditionMapTraversalFrame {
         let node: GraphDependency
-        let dependencies: [GraphDependency]
-        var nextDependencyIndex: Int
-        var result: [GraphDependency: PlatformCondition.CombinationResult]
+        let dependencies: Set<GraphDependency>
+        var preOrderVisit: Bool
     }
 
     private struct SwiftMacroTargetsTraversalFrame {
         let target: GraphTarget
-        let dependencies: [GraphTarget]
-        var nextDependencyIndex: Int
-        var result: Set<GraphTarget>
+        let dependencies: Set<GraphTarget>
+        var preOrderVisit: Bool
     }
 
     public var name: String { graph.name }
@@ -159,14 +156,12 @@ public class GraphTraverser: GraphTraversing {
             }
         }
 
-        let rootDependencies = Array(graph.dependencies[targetGraphDependency] ?? [])
-        var activeDependencies = Set([targetGraphDependency])
+        var activeDependencies = Set<GraphDependency>()
         var stack = [
             DependencySetTraversalFrame(
                 node: targetGraphDependency,
-                dependencies: rootDependencies,
-                nextDependencyIndex: 0,
-                result: Set(rootDependencies)
+                dependencies: graph.dependencies[targetGraphDependency] ?? [],
+                preOrderVisit: true
             ),
         ]
 
@@ -174,39 +169,35 @@ public class GraphTraverser: GraphTraversing {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
-            if frame.nextDependencyIndex < frame.dependencies.count {
-                let dependency = frame.dependencies[frame.nextDependencyIndex]
-
-                if let cachedDependencies = allTargetDependenciesCache[dependency] {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    stack[frameIndex].result.formUnion(cachedDependencies)
+            if frame.preOrderVisit {
+                guard
+                    allTargetDependenciesCache[frame.node] == nil,
+                    activeDependencies.insert(frame.node).inserted
+                else {
+                    stack.removeLast()
                     continue
                 }
 
-                if activeDependencies.contains(dependency) {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
-                }
+                stack[frameIndex].preOrderVisit = false
 
-                let dependencies = Array(graph.dependencies[dependency] ?? [])
-                activeDependencies.insert(dependency)
-                stack.append(
-                    DependencySetTraversalFrame(
-                        node: dependency,
-                        dependencies: dependencies,
-                        nextDependencyIndex: 0,
-                        result: Set(dependencies)
+                for dependency in frame.dependencies {
+                    stack.append(
+                        DependencySetTraversalFrame(
+                            node: dependency,
+                            dependencies: graph.dependencies[dependency] ?? [],
+                            preOrderVisit: true
+                        )
                     )
-                )
-            } else {
-                let completedFrame = stack.removeLast()
-                allTargetDependenciesCache[completedFrame.node] = completedFrame.result
-                activeDependencies.remove(completedFrame.node)
-
-                if let parentFrameIndex = stack.indices.last {
-                    stack[parentFrameIndex].nextDependencyIndex += 1
-                    stack[parentFrameIndex].result.formUnion(completedFrame.result)
                 }
+            } else {
+                var result = frame.dependencies
+                for dependency in frame.dependencies {
+                    result.formUnion(allTargetDependenciesCache[dependency] ?? [])
+                }
+
+                allTargetDependenciesCache[frame.node] = result
+                activeDependencies.remove(frame.node)
+                stack.removeLast()
             }
         }
 
@@ -665,14 +656,12 @@ public class GraphTraverser: GraphTraversing {
             return cached
         }
 
-        let directDependencies = Array(graph.dependencies[node] ?? [])
-        var activeDependencies = Set([node])
+        var activeDependencies = Set<GraphDependency>()
         var stack = [
             DependencySetTraversalFrame(
                 node: node,
-                dependencies: directDependencies,
-                nextDependencyIndex: 0,
-                result: []
+                dependencies: graph.dependencies[node] ?? [],
+                preOrderVisit: true
             ),
         ]
 
@@ -682,53 +671,52 @@ public class GraphTraverser: GraphTraversing {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
-            if frame.nextDependencyIndex < frame.dependencies.count {
-                let dependency = frame.dependencies[frame.nextDependencyIndex]
+            if frame.preOrderVisit {
+                guard
+                    linkableDependenciesSearchCache[frame.node] == nil,
+                    activeDependencies.insert(frame.node).inserted
+                else {
+                    stack.removeLast()
+                    continue
+                }
+
+                stack[frameIndex].preOrderVisit = false
                 let appHostDependency = appHostDependency(for: frame.node)
 
-                // Macro executables and other non-linkable dependencies are not part of the linking tree.
-                guard isDependencyLinkable(dependency: dependency) || dependency == appHostDependency else {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
-                }
+                for dependency in frame.dependencies {
+                    // Macro executables and other non-linkable dependencies are not part of the linking tree.
+                    guard isDependencyLinkable(dependency: dependency) || dependency == appHostDependency else {
+                        continue
+                    }
 
-                stack[frameIndex].result.insert(dependency)
-
-                if let cachedDependencies = linkableDependenciesSearchCache[dependency] {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    stack[frameIndex].result.formUnion(cachedDependencies)
-                    continue
-                }
-
-                if activeDependencies.contains(dependency) {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
-                }
-
-                activeDependencies.insert(dependency)
-                stack.append(
-                    DependencySetTraversalFrame(
-                        node: dependency,
-                        dependencies: Array(graph.dependencies[dependency] ?? []),
-                        nextDependencyIndex: 0,
-                        result: []
+                    stack.append(
+                        DependencySetTraversalFrame(
+                            node: dependency,
+                            dependencies: graph.dependencies[dependency] ?? [],
+                            preOrderVisit: true
+                        )
                     )
-                )
-            } else {
-                let completedFrame = stack.removeLast()
-                let result = finalizeLinkableDependencies(
-                    completedFrame.result,
-                    directDependencies: Set(completedFrame.dependencies)
-                )
-                linkableDependenciesSearchCache[completedFrame.node] = result
-                activeDependencies.remove(completedFrame.node)
-
-                if let parentFrameIndex = stack.indices.last {
-                    stack[parentFrameIndex].nextDependencyIndex += 1
-                    stack[parentFrameIndex].result.formUnion(result)
-                } else {
-                    return result
                 }
+            } else {
+                var collectedDependencies = Set<GraphDependency>()
+                let appHostDependency = appHostDependency(for: frame.node)
+
+                for dependency in frame.dependencies {
+                    guard isDependencyLinkable(dependency: dependency) || dependency == appHostDependency else {
+                        continue
+                    }
+
+                    collectedDependencies.insert(dependency)
+                    collectedDependencies.formUnion(linkableDependenciesSearchCache[dependency] ?? [])
+                }
+
+                let result = finalizeLinkableDependencies(
+                    collectedDependencies,
+                    directDependencies: frame.dependencies
+                )
+                linkableDependenciesSearchCache[frame.node] = result
+                activeDependencies.remove(frame.node)
+                stack.removeLast()
             }
         }
 
@@ -881,42 +869,39 @@ public class GraphTraverser: GraphTraversing {
             return cached
         }
 
-        var activeTargets = Set([target])
+        var activeTargets = Set<GraphTarget>()
         var stack = [swiftMacroTargetsTraversalFrame(for: target)]
 
         while !stack.isEmpty {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
-            if frame.nextDependencyIndex < frame.dependencies.count {
-                let dependency = frame.dependencies[frame.nextDependencyIndex]
-
-                if isLinkableTargetWithDirectSwiftMacro(dependency) {
-                    stack[frameIndex].result.insert(dependency)
-                }
-
-                if let cached = allMacroTargetsCache[dependency] {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    stack[frameIndex].result.formUnion(cached)
+            if frame.preOrderVisit {
+                guard
+                    allMacroTargetsCache[frame.target] == nil,
+                    activeTargets.insert(frame.target).inserted
+                else {
+                    stack.removeLast()
                     continue
                 }
 
-                guard !activeTargets.contains(dependency) else {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
+                stack[frameIndex].preOrderVisit = false
+                for dependency in frame.dependencies {
+                    stack.append(swiftMacroTargetsTraversalFrame(for: dependency))
                 }
-
-                activeTargets.insert(dependency)
-                stack.append(swiftMacroTargetsTraversalFrame(for: dependency))
             } else {
-                let completedFrame = stack.removeLast()
-                allMacroTargetsCache[completedFrame.target] = completedFrame.result
-                activeTargets.remove(completedFrame.target)
+                var result = Set<GraphTarget>()
+                for dependency in frame.dependencies {
+                    if isLinkableTargetWithDirectSwiftMacro(dependency) {
+                        result.insert(dependency)
+                    }
 
-                if let parentFrameIndex = stack.indices.last {
-                    stack[parentFrameIndex].nextDependencyIndex += 1
-                    stack[parentFrameIndex].result.formUnion(completedFrame.result)
+                    result.formUnion(allMacroTargetsCache[dependency] ?? [])
                 }
+
+                allMacroTargetsCache[frame.target] = result
+                activeTargets.remove(frame.target)
+                stack.removeLast()
             }
         }
 
@@ -926,11 +911,10 @@ public class GraphTraverser: GraphTraversing {
     private func swiftMacroTargetsTraversalFrame(for target: GraphTarget) -> SwiftMacroTargetsTraversalFrame {
         SwiftMacroTargetsTraversalFrame(
             target: target,
-            dependencies: Array(
+            dependencies: Set(
                 directTargetDependencies(path: target.path, name: target.target.name).map(\.graphTarget)
             ),
-            nextDependencyIndex: 0,
-            result: []
+            preOrderVisit: true
         )
     }
 
@@ -1333,13 +1317,12 @@ public class GraphTraverser: GraphTraversing {
                 continue
             }
 
-            var activeDependencies = Set([node])
+            var activeDependencies = Set<GraphDependency>()
             var stack = [
                 ConditionMapTraversalFrame(
                     node: node,
-                    dependencies: Array(graph.dependencies[node] ?? []),
-                    nextDependencyIndex: 0,
-                    result: [:]
+                    dependencies: graph.dependencies[node] ?? [],
+                    preOrderVisit: true
                 ),
             ]
 
@@ -1347,10 +1330,29 @@ public class GraphTraverser: GraphTraversing {
                 let frameIndex = stack.count - 1
                 let frame = stack[frameIndex]
 
-                if frame.nextDependencyIndex < frame.dependencies.count {
-                    let dependency = frame.dependencies[frame.nextDependencyIndex]
+                if frame.preOrderVisit {
+                    guard
+                        !completedDependencies.contains(frame.node),
+                        activeDependencies.insert(frame.node).inserted
+                    else {
+                        stack.removeLast()
+                        continue
+                    }
 
-                    if completedDependencies.contains(dependency) {
+                    stack[frameIndex].preOrderVisit = false
+                    for dependency in frame.dependencies {
+                        stack.append(
+                            ConditionMapTraversalFrame(
+                                node: dependency,
+                                dependencies: graph.dependencies[dependency] ?? [],
+                                preOrderVisit: true
+                            )
+                        )
+                    }
+                } else {
+                    var nodeResult: [GraphDependency: PlatformCondition.CombinationResult] = [:]
+
+                    for dependency in frame.dependencies {
                         let currentCondition = graph.dependencyConditions[(frame.node, dependency)]
 
                         // Capture the filters that could be applied to intermediate dependencies
@@ -1367,44 +1369,27 @@ public class GraphTraverser: GraphTraversing {
                             }
 
                             let previousResult =
-                                stack[frameIndex].result[transitiveDependency] ?? .incompatible
+                                nodeResult[transitiveDependency] ?? .incompatible
 
                             // Union our filters because multiple paths could lead to the same dependency (e.g. AVFoundation)
                             //  A --> (.ios) B --> C
                             //  A --> (.macos) D --> C
                             // C should have `[.ios, .macos]` set for filters to satisfy both paths
-                            stack[frameIndex].result[transitiveDependency] =
+                            nodeResult[transitiveDependency] =
                                 previousResult.combineWith(combinedCondition)
                         }
 
-                        stack[frameIndex].nextDependencyIndex += 1
-                        continue
                     }
 
-                    if activeDependencies.contains(dependency) {
-                        stack[frameIndex].nextDependencyIndex += 1
-                        continue
-                    }
-
-                    activeDependencies.insert(dependency)
-                    stack.append(
-                        ConditionMapTraversalFrame(
-                            node: dependency,
-                            dependencies: Array(graph.dependencies[dependency] ?? []),
-                            nextDependencyIndex: 0,
-                            result: [:]
-                        )
-                    )
-                } else {
                     for dependency in frame.dependencies {
-                        stack[frameIndex].result[dependency] =
+                        nodeResult[dependency] =
                             .condition(graph.dependencyConditions[(frame.node, dependency)])
                     }
 
-                    let completedFrame = stack.removeLast()
-                    result[completedFrame.node] = completedFrame.result
-                    completedDependencies.insert(completedFrame.node)
-                    activeDependencies.remove(completedFrame.node)
+                    result[frame.node] = nodeResult
+                    completedDependencies.insert(frame.node)
+                    activeDependencies.remove(frame.node)
+                    stack.removeLast()
                 }
             }
         }

@@ -78,9 +78,8 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
     private struct XCFrameworkDependenciesFrame {
         let path: AbsolutePath
         let dependency: GraphDependency
-        let directDependencies: [GraphDependency]
-        var nextDependencyIndex: Int
-        var result: Set<GraphDependency>
+        let directDependencies: Set<GraphDependency>
+        var preOrderVisit: Bool
     }
 
     // MARK: - Attributes
@@ -394,15 +393,13 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             return
         }
 
-        let rootDependencies = Array(graph.dependencies[graphDependency] ?? [])
-        var activePaths = Set([dependencyPath])
+        var activePaths = Set<AbsolutePath>()
         var stack = [
             XCFrameworkDependenciesFrame(
                 path: dependencyPath,
                 dependency: graphDependency,
-                directDependencies: rootDependencies,
-                nextDependencyIndex: 0,
-                result: Set(rootDependencies)
+                directDependencies: graph.dependencies[graphDependency] ?? [],
+                preOrderVisit: true
             ),
         ]
 
@@ -410,52 +407,40 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
-            if frame.nextDependencyIndex < frame.directDependencies.count {
-                let dependency = frame.directDependencies[frame.nextDependencyIndex]
-                guard case let .xcframework(xcframework) = dependency else {
-                    stack[frameIndex].nextDependencyIndex += 1
+            if frame.preOrderVisit {
+                guard
+                    visitedNodes[frame.path] == nil,
+                    activePaths.insert(frame.path).inserted
+                else {
+                    stack.removeLast()
                     continue
                 }
 
-                if let cachedDependencies = visitedNodes[xcframework.path]?.1 {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    stack[frameIndex].result.formUnion(cachedDependencies)
-                    continue
-                }
+                stack[frameIndex].preOrderVisit = false
 
-                if activePaths.contains(xcframework.path) {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
-                }
+                for case let .xcframework(xcframework) in frame.directDependencies {
+                    guard let childDependency = graph.xcframeworks[xcframework.path] else {
+                        continue
+                    }
 
-                guard let childDependency = graph.xcframeworks[xcframework.path] else {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
-                }
-
-                let childDependencies = Array(graph.dependencies[childDependency] ?? [])
-                activePaths.insert(xcframework.path)
-                stack.append(
-                    XCFrameworkDependenciesFrame(
-                        path: xcframework.path,
-                        dependency: childDependency,
-                        directDependencies: childDependencies,
-                        nextDependencyIndex: 0,
-                        result: Set(childDependencies)
+                    stack.append(
+                        XCFrameworkDependenciesFrame(
+                            path: xcframework.path,
+                            dependency: childDependency,
+                            directDependencies: graph.dependencies[childDependency] ?? [],
+                            preOrderVisit: true
+                        )
                     )
-                )
-            } else {
-                let completedFrame = stack.removeLast()
-                visitedNodes[completedFrame.path] = (
-                    completedFrame.dependency,
-                    completedFrame.result
-                )
-                activePaths.remove(completedFrame.path)
-
-                if let parentFrameIndex = stack.indices.last {
-                    stack[parentFrameIndex].nextDependencyIndex += 1
-                    stack[parentFrameIndex].result.formUnion(completedFrame.result)
                 }
+            } else {
+                var dependencies = frame.directDependencies
+                for case let .xcframework(xcframework) in frame.directDependencies {
+                    dependencies.formUnion(visitedNodes[xcframework.path]?.1 ?? [])
+                }
+
+                visitedNodes[frame.path] = (frame.dependency, dependencies)
+                activePaths.remove(frame.path)
+                stack.removeLast()
             }
         }
     }

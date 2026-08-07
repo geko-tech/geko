@@ -71,13 +71,12 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
             return cachedResult
         }
 
-        var activeDependencies = Set([dependency])
+        var activeDependencies = Set<GraphDependency>()
         var stack = [
             StaticProductsFrame(
                 dependency: dependency,
                 dependencies: dependencies(for: dependency, graphTraverser: graphTraverser),
-                nextDependencyIndex: 0,
-                results: StaticProducts()
+                preOrderVisit: true
             ),
         ]
 
@@ -85,45 +84,41 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
-            if frame.nextDependencyIndex < frame.dependencies.count {
-                let childDependency = frame.dependencies[frame.nextDependencyIndex]
-
-                if let cachedResult = cache.results(for: childDependency) {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    stack[frameIndex].results = cachedResult.merged(with: stack[frameIndex].results)
+            if frame.preOrderVisit {
+                guard
+                    cache.results(for: frame.dependency) == nil,
+                    activeDependencies.insert(frame.dependency).inserted
+                else {
+                    stack.removeLast()
                     continue
                 }
 
-                if activeDependencies.contains(childDependency) {
-                    stack[frameIndex].nextDependencyIndex += 1
-                    continue
-                }
-
-                activeDependencies.insert(childDependency)
-                stack.append(
-                    StaticProductsFrame(
-                        dependency: childDependency,
-                        dependencies: dependencies(for: childDependency, graphTraverser: graphTraverser),
-                        nextDependencyIndex: 0,
-                        results: StaticProducts()
+                stack[frameIndex].preOrderVisit = false
+                for childDependency in frame.dependencies {
+                    stack.append(
+                        StaticProductsFrame(
+                            dependency: childDependency,
+                            dependencies: dependencies(for: childDependency, graphTraverser: graphTraverser),
+                            preOrderVisit: true
+                        )
                     )
-                )
+                }
             } else {
-                let completedFrame = stack.removeLast()
+                var childResults = StaticProducts()
+                for childDependency in frame.dependencies {
+                    if let cachedResult = cache.results(for: childDependency) {
+                        childResults = cachedResult.merged(with: childResults)
+                    }
+                }
+
                 let results = finalize(
-                    results: completedFrame.results,
-                    for: completedFrame.dependency,
+                    results: childResults,
+                    for: frame.dependency,
                     graphTraverser: graphTraverser
                 )
-                cache.cache(results: results, for: completedFrame.dependency)
-                activeDependencies.remove(completedFrame.dependency)
-
-                if let parentFrameIndex = stack.indices.last {
-                    stack[parentFrameIndex].nextDependencyIndex += 1
-                    stack[parentFrameIndex].results = results.merged(with: stack[parentFrameIndex].results)
-                } else {
-                    return results
-                }
+                cache.cache(results: results, for: frame.dependency)
+                activeDependencies.remove(frame.dependency)
+                stack.removeLast()
             }
         }
 
@@ -298,8 +293,7 @@ extension StaticProductsGraphLinter {
     private struct StaticProductsFrame {
         let dependency: GraphDependency
         let dependencies: [GraphDependency]
-        var nextDependencyIndex: Int
-        var results: StaticProducts
+        var preOrderVisit: Bool
     }
 
     private struct StaticDependencyWarning: Hashable, Comparable {
