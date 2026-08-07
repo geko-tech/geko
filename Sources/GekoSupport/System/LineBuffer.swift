@@ -11,8 +11,7 @@ struct LineBuffer {
             let lineData = data[..<newLineIndex]
             data.removeSubrange(...newLineIndex)
             
-            var line = String(decoding: lineData, as: UTF8.self)
-            lines.append(line)
+            lines.append(String(decoding: lineData, as: UTF8.self))
         }
         return lines
     }
