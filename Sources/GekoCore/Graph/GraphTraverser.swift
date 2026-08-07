@@ -676,6 +676,8 @@ public class GraphTraverser: GraphTraversing {
             ),
         ]
 
+        // Collect every transitive linkable dependency in postorder so child cache entries
+        // are ready before their parents are finalized.
         while !stack.isEmpty {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
@@ -758,7 +760,10 @@ public class GraphTraverser: GraphTraversing {
         var dependenciesToRemove = Set<GraphDependency>()
         var dependenciesToAdd = Set<GraphDependency>()
 
-        // Static dependencies linked through dynamic products should not also be linked directly.
+        // Dependencies, that need to be removed from linking tree
+        // For example, if App uses static framework Framework1 transitively through
+        // dynamic framework, Framework1 should not be linked to App, because in such case
+        // Framework1 will be linked two times to App and to dynamic framework
         for dependency in result {
             guard canDependencyLinkStaticProducts(dependency: dependency) else {
                 continue
@@ -769,7 +774,9 @@ public class GraphTraverser: GraphTraversing {
                 !(isDependencyDynamic(dependency: $0) && directDependencies.contains($0))
             }
 
-            // Keep the owner of a removed static dependency so its symbols remain available.
+            // if dynamic dependency contains static dependency, which is gonna be removed,
+            // we should link such dependency, because otherwise there will be linking error
+            // telling us that linker did not find symbol from removed static dependency
             if searchResult.contains(where: { isDependencyStatic(dependency: $0) }) {
                 dependenciesToAdd.insert(dependency)
             }
@@ -778,7 +785,9 @@ public class GraphTraverser: GraphTraversing {
 
         result.subtract(dependenciesToRemove)
 
-        // SDKs and dynamic frameworks remain linkable through static dependencies.
+        // sdks and dynamic frameworks should be linked if they are used through static frameworks
+        // so we walk through each static dependency and search for dynamic dependencies and sdks
+        // (sdks are considered dynamic dependencies)
         for dependency in Array(result) {
             guard isDependencyStatic(dependency: dependency) else {
                 continue
@@ -790,7 +799,8 @@ public class GraphTraverser: GraphTraversing {
 
         result.formUnion(dependenciesToAdd)
 
-        // Restore direct dynamic dependencies if transitive pruning removed them.
+        // direct dependencies and sdks also should be added to linking, in case if we
+        // removed them in code above
         result.formUnion(directDependencies.filter { isDependencyDynamic(dependency: $0) })
         return result
     }
@@ -1343,7 +1353,8 @@ public class GraphTraverser: GraphTraversing {
                     if completedDependencies.contains(dependency) {
                         let currentCondition = graph.dependencyConditions[(frame.node, dependency)]
 
-                        // Capture filters applied by intermediate dependencies.
+                        // Capture the filters that could be applied to intermediate dependencies
+                        // A --> (.ios) B --> C : C should have the .ios filter applied due to B
                         for (transitiveDependency, transitiveCondition) in result[dependency] ?? [:] {
                             let combinedCondition: PlatformCondition.CombinationResult
                             switch transitiveCondition {
@@ -1358,7 +1369,10 @@ public class GraphTraverser: GraphTraversing {
                             let previousResult =
                                 stack[frameIndex].result[transitiveDependency] ?? .incompatible
 
-                            // Combine filters from every path that reaches the same dependency.
+                            // Union our filters because multiple paths could lead to the same dependency (e.g. AVFoundation)
+                            //  A --> (.ios) B --> C
+                            //  A --> (.macos) D --> C
+                            // C should have `[.ios, .macos]` set for filters to satisfy both paths
                             stack[frameIndex].result[transitiveDependency] =
                                 previousResult.combineWith(combinedCondition)
                         }
