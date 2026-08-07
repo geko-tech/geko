@@ -56,7 +56,6 @@ final class CacheArtifactStoringTask: CacheArchivingTask {
             
             try await group.waitForAll()
         }
-        logSpinner.stop()
-        logger.notice("Stored target: \(targetsToStore)")
+        logSpinner.stop(message: "Stored \(context.buildTargetsWithHash.count) cacheable targets. Targets: \(targetsToStore)")
     }
 }

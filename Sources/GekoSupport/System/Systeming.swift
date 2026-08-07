@@ -17,6 +17,15 @@ public protocol Systeming {
     /// - Throws: An error if the command fails
     func runShell(_ arguments: [String]) throws -> String
     
+    /// Runs a shell script command and handles standard output line by line.
+    ///
+    /// - Parameters:
+    ///   - arguments: Command arguments.
+    ///   - environment: Environment that should be used when running the task.
+    ///   - handler: Closure that is called for each standard output line.
+    /// - Throws: An error if the command or line handler fails.
+    func runShell(_ arguments: [String], environment: [String: String], handler: @escaping (String) throws -> Void) throws
+    
     /// Runs a command in the shell and redirects output based on the passed in parameter.
     ///
     /// - Parameters:
@@ -72,6 +81,7 @@ public protocol Systeming {
     /// - Returns: Standard output string.
     /// - Throws: An error if the command fails.
     func capture(_ arguments: [String], verbose: Bool, redirectStdErr: Bool, environment: [String: String]) throws -> String
+
     /// Runs a command in the shell and pass input as stdin
     ///
     /// - Parameters:
@@ -90,6 +100,15 @@ public protocol Systeming {
     /// - Returns: Standard output string.
     /// - Throws: An error if the command fails.
     func capture(_ arguments: [String], withInput input: String?, environment: [String: String]) throws -> String
+    
+    /// Runs a command in the shell and handles standard output line by line.
+    ///
+    /// - Parameters:
+    ///   - arguments: Command arguments.
+    ///   - environment: Environment that should be used when running the task.
+    ///   - handler: Closure that is called for each standard output line.
+    /// - Throws: An error if the command or line handler fails.
+    func captureStreamLines(_ arguments: [String], environment: [String: String], handler: @escaping (String) throws -> Void) throws
 
     /// Runs a command in the shell and pass input as stdin
     ///

@@ -48,12 +48,12 @@ public final class LogSpinner {
 
     public init(
         message: String = "",
-        animation: SpinnerAnimation = .geko,
+        animation: SpinnerAnimation = .classic,
         speed: Double? = nil
     ) {
         self.animation = animation
         self.message = message
-        self.speed = speed ?? animation.defaultSpeed
+        self.speed = speed ?? animation.speed
         self.stream = StdOutSpinnerStream()
         self.ciChecker = CIChecker()
         self.status = false
@@ -81,11 +81,28 @@ public final class LogSpinner {
             }
         }
     }
+    
+    public func update(message: String = "") {
+        guard !ciChecker.isCI() && !isDebug else {
+            return
+        }
+        self.message = message
+    }
 
-    public func stop() {
-        guard !ciChecker.isCI() && !isDebug else { return }
+    public func stop(message: String? = nil) {
+        guard !ciChecker.isCI() && !isDebug else {
+            if let message {
+                logger.notice(.init(stringLiteral: message))
+            }
+            return
+        }
         status = false
-        render()
+        if let message {
+            clearCurrentLine()
+            stream.write(string: message, terminator: "")
+        } else {
+            render()
+        }
         stream.write(string: "", terminator: "\n")
         stream.showCursor()
     }
@@ -103,8 +120,15 @@ public final class LogSpinner {
             .replacingOccurrences(of: "{S}", with: frame())
             .replacingOccurrences(of: "{T}", with: message)
 
-        stream.write(string: "\r", terminator: "")
+        clearCurrentLine()
         stream.write(string: spinner, terminator: "")
+    }
+    
+    private func clearCurrentLine() {
+        stream.write(
+            string: "\r\u{001B}[2K",
+            terminator: ""
+        )
     }
     
     private var isDebug: Bool {

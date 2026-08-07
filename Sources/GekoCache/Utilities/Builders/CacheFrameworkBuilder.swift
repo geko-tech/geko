@@ -55,7 +55,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
         configuration: String,
         osVersion: Version?,
         deviceName: String?,
-        into outputDirectory: AbsolutePath
+        into outputDirectory: AbsolutePath,
+        eventHandler: XcodeBuildEventHandler?
     ) async throws {
         let platform = platform(scheme: scheme)
 
@@ -68,7 +69,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
                 osVersion: osVersion,
                 deviceName: deviceName,
                 configuration: configuration,
-                derivedDataPath: outputDirectory
+                derivedDataPath: outputDirectory,
+                eventHandler: eventHandler
             )
         case .device:
             try await deviceBuild(
@@ -76,7 +78,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
                 scheme: scheme.name,
                 platform: platform,
                 configuration: configuration,
-                derivedDataPath: outputDirectory
+                derivedDataPath: outputDirectory,
+                eventHandler: eventHandler
             )
         }
 
@@ -118,7 +121,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
         osVersion: Version?,
         deviceName: String?,
         configuration: String,
-        derivedDataPath: AbsolutePath?
+        derivedDataPath: AbsolutePath?,
+        eventHandler: XcodeBuildEventHandler?
     ) async throws {
         var arguments = try await arguments(configuration: configuration)
         let destination = try await simulatorController
@@ -133,7 +137,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
             derivedDataPath: derivedDataPath,
             clean: false,
             arguments: arguments,
-            passthroughXcodeBuildArguments: []
+            passthroughXcodeBuildArguments: [],
+            eventHandler: eventHandler
         )
     }
     
@@ -142,7 +147,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
         scheme: String,
         platform: Platform,
         configuration: String,
-        derivedDataPath: AbsolutePath?
+        derivedDataPath: AbsolutePath?,
+        eventHandler: XcodeBuildEventHandler?
     ) async throws {
         var arguments = try await arguments(configuration: configuration)
         arguments.append(.sdk(platform.xcodeDeviceSDK))
@@ -155,7 +161,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
             derivedDataPath: derivedDataPath,
             clean: false,
             arguments: arguments,
-            passthroughXcodeBuildArguments: []
+            passthroughXcodeBuildArguments: [],
+            eventHandler: eventHandler
         )
     }
 

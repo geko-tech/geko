@@ -84,7 +84,7 @@ final class TargetBuilderTests: GekoUnitTestCase {
         }
 
         xcodeBuildController
-            .buildStub = { _workspace, _scheme, _destination, _rosetta, _, _clean, _buildArguments, _passthroughXcodeBuildArguments in
+            .buildStub = { _workspace, _scheme, _destination, _rosetta, _, _clean, _buildArguments, _passthroughXcodeBuildArguments, _ in
                 XCTAssertEqual(_workspace.path, workspacePath)
                 XCTAssertEqual(_scheme, scheme.name)
                 XCTAssertEqual(_destination, destination)

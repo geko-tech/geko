@@ -20,23 +20,27 @@ public final class XcodeBuildController: XcodeBuildControlling {
     private let formatter: Formatting
     private let environment: Environmenting
     private let logFileStoreHandler: LogFileStoreHandling
+    private let outputParser: XcodeBuildOutputParsing
 
     public convenience init() {
         self.init(
             formatter: Formatter(),
             environment: Environment.shared,
-            logFileStoreHandler: LogFileStoreHandler()
+            logFileStoreHandler: LogFileStoreHandler(),
+            outputParser: XcodeBuildOutputParser()
         )
     }
 
     init(
         formatter: Formatting,
         environment: Environmenting,
-        logFileStoreHandler: LogFileStoreHandling
+        logFileStoreHandler: LogFileStoreHandling,
+        outputParser: XcodeBuildOutputParsing
     ) {
         self.formatter = formatter
         self.environment = environment
         self.logFileStoreHandler = logFileStoreHandler
+        self.outputParser = outputParser
     }
 
     public func build(
@@ -47,9 +51,10 @@ public final class XcodeBuildController: XcodeBuildControlling {
         derivedDataPath: AbsolutePath?,
         clean: Bool = false,
         arguments: [XcodeBuildArgument],
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        eventHandler: XcodeBuildEventHandler?
     ) throws {
-        var command = ["NSUnbufferedIO=YES", "/usr/bin/xcrun", "xcodebuild"]
+        var command = ["/usr/bin/xcrun", "xcodebuild"]
 
         // Action
         if clean {
@@ -88,7 +93,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
             command.append(contentsOf: ["-derivedDataPath", derivedDataPath.pathString])
         }
 
-        return try runBuild(command: command)
+        return try runBuild(command: command, eventHandler: eventHandler)
     }
 
     public func test(
@@ -107,7 +112,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         testPlanConfiguration: TestPlanConfiguration?,
         passthroughXcodeBuildArguments: [String]
     ) throws {
-        var command = ["NSUnbufferedIO=YES", "/usr/bin/xcrun", "xcodebuild"]
+        var command = ["/usr/bin/xcrun", "xcodebuild"]
 
         // Action
         if clean {
@@ -208,7 +213,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         arguments: [XcodeBuildArgument],
         derivedDataPath: AbsolutePath?
     ) throws {
-        var command = ["NSUnbufferedIO=YES", "/usr/bin/xcrun", "xcodebuild"]
+        var command = ["/usr/bin/xcrun", "xcodebuild"]
 
         // Action
         if clean {
@@ -240,7 +245,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         arguments: [XcodeBuildControllerCreateXCFrameworkArgument],
         output: AbsolutePath
     ) throws {
-        var command = ["NSUnbufferedIO=YES", "/usr/bin/xcrun", "xcodebuild", "-create-xcframework"]
+        var command = ["/usr/bin/xcrun", "xcodebuild", "-create-xcframework"]
         command.append(contentsOf: arguments.flatMap(\.xcodebuildArguments))
         command.append(contentsOf: ["-output", output.pathString])
         command.append("-allow-internal-distribution")
@@ -327,42 +332,43 @@ public final class XcodeBuildController: XcodeBuildControlling {
         let _ = try System.shared.runShell(command)
     }
 
-    private func runBuild(command: [String]) throws {
+    private func runBuild(command: [String], eventHandler: XcodeBuildEventHandler? = nil) throws {
         logger.debug("Running xcodebuild command: \(command.joined(separator: " "))")
 
         let logDate = Date()
         let rawBuildLogPath = try logFileStoreHandler.createPath(logFile: .rawBuildLog, date: logDate)
-        var command = command
-        // When we add a tee command at the end of original command,
-        // we will not receive stderr output, thanks to this we will
-        // get clean output from the console and will be able to format it.
-        //
-        // Will save raw and beautify output logs on disk
-        command.append("2>&1 | tee \(rawBuildLogPath)")
-        let rawOutput = try System.shared.runShell(command)
-
+        let formattedBuildLogPath = try logFileStoreHandler.createPath(logFile: .buildLog, date: logDate)
+        
+        var environment = ProcessInfo.processInfo.environment
+        environment["NSUnbufferedIO"] = "YES"
+        
         // Collect and show only errors when build
         var errors: [String] = []
-        var output: [String] = []
 
         let outputCompletion: (String, OutputType) throws -> Void = { formattedLine, type in
             if type == .error { errors.append(formattedLine) }
-            output.append("\(formattedLine)\n")
+            try self.logFileStoreHandler.write(formattedLine, logFile: .buildLog)
         }
-
-        for line in rawOutput.components(separatedBy: .newlines) {
-            try formatter.format(line: line, output: outputCompletion)
+        
+        do {
+            try System.shared.runShell(command, environment: environment) { line in
+                try self.logFileStoreHandler.write(line, logFile: .rawBuildLog)
+                try self.formatter.format(line: line, output: outputCompletion)
+                guard let event = self.outputParser.parse(line: line) else { return }
+                eventHandler?(event)
+            }
+        } catch let error as SystemError {
+            switch error {
+            case .terminated, .signalled:
+                throw XcodeBuildError.buildFailed(
+                    errors: errors,
+                    buildLogPath: formattedBuildLogPath,
+                    rawBuildLogPath: rawBuildLogPath
+                )
+            default:
+                throw error
+            }
         }
-
-        let buildLogPath = try logFileStoreHandler.store(output.joined(), logFile: .buildLog, date: logDate)
-
-        guard !errors.isEmpty else { return }
-        // Throw build error with formatted errors output
-        throw XcodeBuildError.buildFailed(
-            errors: errors,
-            buildLogPath: buildLogPath,
-            rawBuildLogPath: rawBuildLogPath
-        )
     }
     
     private func loadBuildSettings(_ command: [String]) async throws -> String {

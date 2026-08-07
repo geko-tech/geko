@@ -10,22 +10,38 @@ public enum LogFile: String {
 
 /// Log files store handler. Has the ability to delete old logs automatically before creating new ones when the limit is exceeded
 public protocol LogFileStoreHandling {
-    /// Store content of log file on disk
-    ///
-    /// - Parameters:
-    ///   - content: Content of log file.
-    ///   - logFile: Log file type with predefinded name and extension
-    ///   - date: Date and time of log file for name and store
-    /// - Returns: Path to stored file
-    func store(_ content: String, logFile: LogFile, date: Date) throws -> AbsolutePath
-
-    /// Create AbsolutePath to selected log file type
+    /// Create AbsolutePath and FileHandle to selected log file type
     ///
     /// - Parameters:
     ///   - logFile: Log file type with predefinded name and extension
     ///   - date: Date and time of log file for name and store
     /// - Returns: Path to stored file
     func createPath(logFile: LogFile, date: Date) throws -> AbsolutePath
+    
+    /// Writes one line at a time to the selected log file.
+    ///
+    /// - Parameters:
+    ///   - line: Content for write
+    ///   - logFile: Log file type with predefinded name and extension
+    func write(_ line: String, logFile: LogFile) throws
+    
+    /// Close FileHandle for selected log file
+    func close(logFile: LogFile) throws
+}
+
+public enum LogFileStoreHandlerError: FatalError {
+    case fileHandleNotInitialized(LogFile)
+    
+    public var description: String {
+        switch self {
+        case let .fileHandleNotInitialized(logFileType):
+            "Attempted to write to an uninitialized fileHandle for file \(logFileType.rawValue). This is likely an internal error. Please report this issue."
+        }
+    }
+    
+    public var type: ErrorType {
+        return .abort
+    }
 }
 
 public final class LogFileStoreHandler: LogFileStoreHandling {
@@ -36,6 +52,8 @@ public final class LogFileStoreHandler: LogFileStoreHandling {
     private let logDirectoryProvider: LogDirectoriesProviding
     private let logDateFormatter: LogDateFormatting
     private let logRotator: LogRotating
+    
+    private var fileHandles: [LogFile: FileHandle] = [:]
 
     // MARK: - Initialization
 
@@ -50,26 +68,12 @@ public final class LogFileStoreHandler: LogFileStoreHandling {
         self.logDateFormatter = logDateFormatter
         self.logRotator = logRotator
     }
+    
+    deinit {
+        try? fileHandles.forEach { try $0.value.close() }
+    }
 
     // MARK: - LogFileStoreHandling
-
-    public func store(_ content: String, logFile: LogFile, date: Date) throws -> AbsolutePath {
-        try logRotator.clenupOutdatedLogs(logCategory: .buildLogs, maxLogs: maxLogsCount)
-        let logStorePath = try logDirectoryProvider.logDirectory(for: .buildLogs)
-        let logFolderPath = logStorePath.appending(component: logDateFormatter.dateToString(date))
-        let logFilePath = logFolderPath.appending(component: logFile.rawValue)
-
-        if !fileHandler.exists(logFolderPath) {
-            try fileHandler.createFolder(logFolderPath)
-        }
-
-        try fileHandler.write(
-            content,
-            path: logFilePath,
-            atomically: true
-        )
-        return logFilePath
-    }
 
     public func createPath(logFile: LogFile, date: Date) throws -> AbsolutePath {
         try logRotator.clenupOutdatedLogs(logCategory: .buildLogs, maxLogs: maxLogsCount)
@@ -80,6 +84,22 @@ public final class LogFileStoreHandler: LogFileStoreHandling {
         if !fileHandler.exists(logFolderPath) {
             try fileHandler.createFolder(logFolderPath)
         }
+        
+        try FileHandler.shared.touch(logFilePath)
+        
+        fileHandles[logFile] = try FileHandle(forWritingTo: logFilePath.url)
+        
         return logFilePath
+    }
+    
+    public func write(_ line: String, logFile: LogFile) throws {
+        guard let fileHandle = fileHandles[logFile] else {
+            throw LogFileStoreHandlerError.fileHandleNotInitialized(logFile)
+        }
+        try fileHandle.write(contentsOf: Data("\(line)\n".utf8))
+    }
+    
+    public func close(logFile: LogFile) throws {
+        try fileHandles[logFile]?.close()
     }
 }
