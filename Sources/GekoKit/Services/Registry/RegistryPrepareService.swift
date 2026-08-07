@@ -91,7 +91,6 @@ final class RegistryPrepareService {
             let specPath = path.appending(component: "\(package.name).json")
 
             let jsonData = try jsonEncoder.encode(package)
-
             let jsonString = String(data: jsonData, encoding: .utf8)!
 
             try fileHandler.write(jsonString, path: specPath, atomically: true)
@@ -104,15 +103,33 @@ final class RegistryPrepareService {
         for target in project.targets {
             guard target.product.isPublishable else { continue }
 
+            var moduleDependencies: [RegistryPackage.ModuleDependency] = []
+            for dep in target.dependencies {
+                switch dep {
+                // TODO: add conditions to 
+                case let .external(name, _):
+                    moduleDependencies.append(.init(
+                        name: name,
+                        type: .external
+                    ))
+                case let .target(name, _, _):
+                    moduleDependencies.append(.init(
+                        name: name,
+                        type: .local
+                    ))
+                default:
+                    fatalError("фатал ерруре: депенденси тайп \(dep) из нот эвэйлабл фор паблишд пакаджес. Target: '\(target.name)' in package '\(project.name)'")
+                }
+            }
+
             modules.append(
                 RegistryPackage.Module(
                     name: target.name,
                     product: target.product.rawValue,
-                    flavors: [
-                        "source": .init(
-                            sources: target.sources
-                        )
-                    ]
+                    dependencies: moduleDependencies.isEmpty ? nil : moduleDependencies,
+                    sources: target.sources.isEmpty ? nil : target.sources,
+                    resources: target.resources.isEmpty ? nil : target.resources,
+                    settings: target.settings
                 )
             )
         }

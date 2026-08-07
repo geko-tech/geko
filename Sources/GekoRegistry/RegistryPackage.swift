@@ -12,6 +12,7 @@ public struct RegistryPackage: Codable {
 
     public let artifact: Artifact
 
+    public let flavors: [String]?
     public let modules: [Module]
 
     public init(
@@ -19,6 +20,7 @@ public struct RegistryPackage: Codable {
         version: PackageVersion,
         dependencies: [PackageDependency],
         artifact: Artifact = .init(path: nil),
+        flavors: [String]? = nil,
         modules: [Module] = []
     ) {
         self.name = name
@@ -27,6 +29,7 @@ public struct RegistryPackage: Codable {
 
         self.artifact = artifact
 
+        self.flavors = flavors
         self.modules = modules
     }
 }
@@ -37,24 +40,54 @@ extension RegistryPackage {
     public struct Module: Codable {
         public let name: String
         public let product: String
-        public let flavors: [String: Flavor]
+
+        public let flavor: String?
+
+        public let dependencies: [ModuleDependency]?
+
+        public let sources: [SourceFiles]?
+        public let resources: [ResourceFileElement]?
+        public let settings: Settings?
 
         public init(
             name: String,
             product: String,
-            flavors: [String: Flavor]
+            flavor: String? = nil,
+            dependencies: [ModuleDependency]? = nil,
+            sources: [SourceFiles]? = nil,
+            resources: [ResourceFileElement]? = nil,
+            settings: Settings?
         ) {
             self.name = name
             self.product = product
-            self.flavors = flavors
+
+            self.flavor = flavor
+
+            self.dependencies = dependencies
+
+            self.sources = sources
+            self.resources = resources
+            self.settings = settings
         }
     }
 
-    public struct Flavor: Codable {
-        public let sources: [SourceFiles]
+    public enum ModuleDependencyType: String, Codable {
+        // external package
+        case external
+        // dependency within package
+        case local
+    }
 
-        public init(sources: [SourceFiles]) {
-            self.sources = sources
+    public struct ModuleDependency: Codable {
+        public let name: String
+        public let type: ModuleDependencyType
+
+        public init(
+            name: String,
+            type: ModuleDependencyType
+        ) {
+            self.name = name
+            self.type = type
         }
     }
 }

@@ -69,7 +69,7 @@ class DependenciesInteractor {
         )
 
         let registryResolver = try RegistryResolver(
-            dependencies: dependencies.registry!,
+            dependencies: dependencies.registry ?? .init(registries: [], dependencies: []),
             generatorPaths: generatorPaths
         )
 

@@ -36,15 +36,26 @@ final class RegistryDependenciesInstaller {
         var targets: [Target] = []
 
         for module in spec.modules {
-            guard let flavor = module.flavors["source"] else { continue }
             guard let product = Product(rawValue: module.product) else { continue }
+
+            var dependencies: [TargetDependency] = []
+            for dep in (module.dependencies ?? []) {
+                switch dep.type {
+                case .external:
+                    dependencies.append(.external(name: dep.name))
+                case .local:
+                    dependencies.append(.target(name: dep.name))
+                }
+            }
 
             let target = ProjectDescription.Target(
                 name: module.name,
                 destinations: Destinations.iOS,
                 product: product,
-                sources: SourceFilesList(globs: flavor.sources),
-                dependencies: []
+                sources: SourceFilesList(globs: module.sources ?? []),
+                resources: ResourceFileElements(resources: module.resources ?? []),
+                dependencies: dependencies,
+                settings: module.settings
             )
 
             targets.append(target)
