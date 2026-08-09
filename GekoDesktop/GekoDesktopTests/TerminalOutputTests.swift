@@ -2,6 +2,21 @@ import XCTest
 @testable import GekoDesktop
 
 final class TerminalOutputTests: XCTestCase {
+    func test_usesVerticalOverlayScroller() throws {
+        let terminalView = makeTerminalView()
+        terminalView.layoutSubtreeIfNeeded()
+
+        let scroller = try XCTUnwrap(terminalView.subviews.compactMap { $0 as? NSScroller }.first)
+        XCTAssertEqual(scroller.scrollerStyle, .overlay)
+        XCTAssertGreaterThan(scroller.frame.height, scroller.frame.width)
+        XCTAssertEqual(scroller.frame.maxX, terminalView.bounds.maxX, accuracy: 0.5)
+        XCTAssertTrue(scroller.isHidden)
+
+        terminalView.feed(byteArray: Array(String(repeating: "line\n", count: 1_000).utf8)[...])
+
+        XCTAssertFalse(scroller.isHidden)
+    }
+
     func test_preservesWhitespaceChunkBoundariesAndMissingTrailingNewline() {
         let terminalView = makeTerminalView()
         let chunks = [

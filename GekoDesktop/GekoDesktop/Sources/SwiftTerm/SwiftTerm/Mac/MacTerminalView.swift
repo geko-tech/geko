@@ -292,17 +292,14 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     
     func setupScroller()
     {
-
-        let style: NSScroller.Style = .legacy
-        let scrollerWidth = NSScroller.scrollerWidth(for: .regular, scrollerStyle: style)
-        scroller = NSScroller(frame: NSRect(x: bounds.maxX - scrollerWidth, y: 0, width: scrollerWidth, height: bounds.height))
-        scroller.autoresizingMask = [.minXMargin, .height]
-        scroller.scrollerStyle = style
+        scroller = NSScroller(frame: .zero)
+        scroller.scrollerStyle = .overlay
         scroller.knobProportion = 0.1
         scroller.isEnabled = false
         addSubview (scroller)
         scroller.action = #selector(scrollerActivated)
         scroller.target = self
+        layoutScroller()
     }
     
     /// This method sents the `nativeForegroundColor` and `nativeBackgroundColor`
@@ -363,6 +360,7 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     
     func updateScroller ()
     {
+        scroller.isHidden = !canScroll
         scroller.isEnabled = canScroll
         scroller.doubleValue = scrollPosition
         scroller.knobProportion = scrollThumbsize
@@ -423,8 +421,24 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
 
     public override func resizeSubviews(withOldSize oldSize: NSSize) {
         super.resizeSubviews(withOldSize: oldSize)
+        layoutScroller()
         updateScroller()
         selection.active = false
+    }
+
+    public override func layout() {
+        super.layout()
+        layoutScroller()
+    }
+
+    private func layoutScroller() {
+        let scrollerWidth = NSScroller.scrollerWidth(for: .regular, scrollerStyle: .overlay)
+        scroller.frame = NSRect(
+            x: bounds.maxX - scrollerWidth,
+            y: bounds.minY,
+            width: scrollerWidth,
+            height: bounds.height
+        )
     }
     
     private var _hasFocus = false

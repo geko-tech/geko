@@ -9,7 +9,7 @@ let config = Config(
             scripts: [
                 .script(name: "SwiftGen", envKeys: ["SRCROOT", "PODS_ROOT"])
             ],
-            options: .options(swiftModuleCacheEnabled: true)
+            options: .options(swiftModuleCacheEnabled: false)
         ),
         .profile(
             name: "tvos",
@@ -18,7 +18,7 @@ let config = Config(
             scripts: [
                 .script(name: "SwiftGen", envKeys: ["SRCROOT", "PODS_ROOT"])
             ],
-            options: .options(swiftModuleCacheEnabled: true)
+            options: .options(swiftModuleCacheEnabled: false)
         ),
         .profile(
             name: "all",
@@ -30,7 +30,7 @@ let config = Config(
             scripts: [
                 .script(name: "SwiftGen", envKeys: ["SRCROOT", "PODS_ROOT"])
             ],
-            options: .options(swiftModuleCacheEnabled: true)
+            options: .options(swiftModuleCacheEnabled: false)
         )
     ])
 )

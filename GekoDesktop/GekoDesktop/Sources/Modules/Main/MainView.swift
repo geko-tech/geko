@@ -20,11 +20,13 @@ struct MainView<T: IMainViewStateOutput>: View {
                 }
             }
         } detail: {
-            VSplitView {
-                container
-                if viewState.showTerminal {
-                    AnyView(terminalView)
-                }   
+            GeometryReader { geometry in
+                VSplitView {
+                    container
+                    if viewState.showTerminal {
+                        AnyView(terminalView(maxHeight: terminalMaximumHeight(for: geometry.size.height)))
+                    }
+                }
             }
             .modify { content in
                 if #available(macOS 26, *) {
@@ -146,12 +148,20 @@ struct MainView<T: IMainViewStateOutput>: View {
         .layoutPriority(1)
     }
     
-    var terminalView: any View {
-        dependencies.projectTerminalAssembly
-            .build()
+    func terminalView(maxHeight: CGFloat) -> some View {
+        AnyView(dependencies.projectTerminalAssembly
+            .build())
             .padding(4)
-            .frame(height: 300)
+            .frame(
+                minHeight: 120,
+                idealHeight: 300,
+                maxHeight: maxHeight
+            )
             .background(.terminalBackground)
+    }
+
+    func terminalMaximumHeight(for availableHeight: CGFloat) -> CGFloat {
+        max(120, min(availableHeight * 0.7, availableHeight - 120))
     }
 }
 
