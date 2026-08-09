@@ -13,12 +13,16 @@ enum LogLevel {
 
 
 protocol ILogger {
-    func log(_ level: LogLevel, info: String, additionalInfo: [String: String])
+    func log(_ level: LogLevel, info: String, additionalInfo: [String: String], sendToTerminal: Bool)
 }
 
 extension ILogger {
     func log(_ level: LogLevel, info: String) {
-        log(level, info: info, additionalInfo: [:])
+        log(level, info: info, additionalInfo: [:], sendToTerminal: true)
+    }
+
+    func log(_ level: LogLevel, info: String, additionalInfo: [String: String]) {
+        log(level, info: info, additionalInfo: additionalInfo, sendToTerminal: true)
     }
 }
 
@@ -45,23 +49,27 @@ final class Logger: ILogger {
     }
     
     
-    func log(_ level: LogLevel, info: String, additionalInfo: [String: String] = [:]) {
+    func log(_ level: LogLevel, info: String, additionalInfo: [String: String], sendToTerminal: Bool) {
         Task {
             switch level {
             case .trace:
-                if applicationSettingsService.showTrace {
+                if sendToTerminal, applicationSettingsService.showTrace {
                     await terminalStateHolder.sendCommand(level, message: info)
                 }
             case .debug:
-                if Constants.debugMode {
+                if sendToTerminal, Constants.debugMode {
                     await terminalStateHolder.sendCommand(level, message: info)
                 }
             case .info, .notice, .warning:
-                await terminalStateHolder.sendCommand(level, message: info)
+                if sendToTerminal {
+                    await terminalStateHolder.sendCommand(level, message: info)
+                }
             case .critical, .error:
                 let totalInfo: [String: AnyCodable] = baseDict().merging(additionalInfo.mapValues { AnyCodable($0) }, uniquingKeysWith: { $1 })
                 try logWritter.write(error: LogError(errorMessage: info, additionalInfo: totalInfo))
-                await terminalStateHolder.sendCommand(level, message: info)
+                if sendToTerminal {
+                    await terminalStateHolder.sendCommand(level, message: info)
+                }
             }
         }
     }

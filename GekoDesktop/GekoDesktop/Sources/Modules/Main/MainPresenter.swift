@@ -119,13 +119,13 @@ final class MainPresenter: IMainPresenter {
 }
 
 extension MainPresenter: ISessionServiceDelegate {
-    func output(_ str: String) {
+    func output(_ data: Data) {
         if !terminalStateHolder.showTerminal {
             changeTerminalState(true)
         }
         Task {
             await terminalStateHolder.changeTerminalState(true)
-            logger.log(.info, info: str)
+            await terminalStateHolder.sendTerminalOutput(data)
         }
     }
     
@@ -174,6 +174,7 @@ extension MainPresenter: ITerminalStateHolderDelegate {
 
     func didResetSession() {}
     func didSendNewCommand(_ logLevel: LogLevel, message: String) {}
+    func didReceiveTerminalOutput(_ data: Data) {}
 }
 
 extension MainPresenter: IProjectsProviderDelegate {

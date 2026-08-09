@@ -6,6 +6,7 @@ protocol IProjectTerminalViewStateOutput: ObservableObject {
 
 protocol IProjectTerminalViewStateInput: AnyObject {
     func feed(_ command: String)
+    func feed(_ data: Data)
     func reset()
 }
 
@@ -23,7 +24,8 @@ final class ProjectTerminalViewState: IProjectTerminalViewStateInput & IProjectT
         self.presenter = presenter
         terminalView = TerminalView()
         terminal = terminalView.getTerminal()
-        terminal.options = TerminalOptions(scrollback: 5000)
+        terminal.options = TerminalOptions(convertEol: true, scrollback: 5000)
+        terminal.resetToInitialState()
         terminalViewWrapper = TerminalViewWrapper(terminalView: terminalView)
     }
     
@@ -31,6 +33,10 @@ final class ProjectTerminalViewState: IProjectTerminalViewStateInput & IProjectT
     
     func feed(_ command: String) {
         terminalView.feed(text: command)
+    }
+
+    func feed(_ data: Data) {
+        terminalView.feed(byteArray: Array(data)[...])
     }
     
     func reset() {

@@ -3,6 +3,7 @@ import Foundation
 protocol ITerminalStateHolderDelegate: AnyObject {
     func didChangeTerminalState(_ newState: Bool)
     func didSendNewCommand(_ logLevel: LogLevel, message: String)
+    func didReceiveTerminalOutput(_ data: Data)
     func didResetSession()
 }
 
@@ -17,6 +18,9 @@ protocol ITerminalStateHolder: AnyObject {
     
     @MainActor
     func sendCommand(_ logLevel: LogLevel, message: String)
+
+    @MainActor
+    func sendTerminalOutput(_ data: Data)
     
     @MainActor
     func resetSession()
@@ -48,6 +52,13 @@ final class TerminalStateHolder: ITerminalStateHolder {
     func sendCommand(_ logLevel: LogLevel, message: String) {
         subscriptions.makeIterator().forEach {
             $0.didSendNewCommand(logLevel, message: message)
+        }
+    }
+
+    @MainActor
+    func sendTerminalOutput(_ data: Data) {
+        subscriptions.makeIterator().forEach {
+            $0.didReceiveTerminalOutput(data)
         }
     }
 

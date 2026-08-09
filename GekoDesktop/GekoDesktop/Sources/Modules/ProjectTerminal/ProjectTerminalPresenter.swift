@@ -35,6 +35,10 @@ extension ProjectTerminalPresenter: ITerminalStateHolderDelegate {
             view?.feed(message.red)
         }
     }
+
+    func didReceiveTerminalOutput(_ data: Data) {
+        view?.feed(data)
+    }
     
     func didResetSession() {
         sessionCommands = []

@@ -54,7 +54,7 @@ enum ResponseTypeError: FatalError {
 }
 
 protocol ISessionServiceDelegate: AnyObject {
-    func output(_ str: String)
+    func output(_ data: Data)
     func sessionDidReset()
 }
 
@@ -90,6 +90,7 @@ final class SessionService: ISessionService {
     private let lock: NSLocking = NSRecursiveLock()
     private var errorData: Data = Data()
     private let logger: ILogger
+    private let outputQueue = DispatchQueue(label: "SessionService.output")
     
     init(logger: ILogger) {
         self.logger = logger
@@ -101,7 +102,7 @@ final class SessionService: ISessionService {
     
     func exec(_ command: ShellCommand) throws -> ShellCommand.ShellCommandResult {
         if command.logInput {
-            output("user: \(command.arguments.joined(separator: " "))")
+            output("user: \(command.arguments.joined(separator: " "))\r\n")
         }
         do {
             switch command.resultType {
@@ -233,7 +234,7 @@ private extension SessionService {
         )
         let cancel = AnyCancellable { [weak self] in
             if !command.silence {
-                self?.output("\(command.arguments.joined(separator: " ")) killed")
+                self?.output("\(command.arguments.joined(separator: " ")) killed\r\n")
             }
             process.signal(9) // SIGKILL
         }
@@ -256,33 +257,13 @@ private extension SessionService {
 
 private extension SessionService {
     func output(_ data: Data) {
-        guard let str = String(data: data, encoding: .utf8) else {
-            output("Data decoding error")
-            return
+        outputQueue.async { [weak self] in
+            self?.subscritpions.forEach { $0.output(data) }
         }
-        output(str)
     }
     
     func output(_ str: String) {
-        print(str)
-        var tmpStr = str
-        if tmpStr.contains(eraseLineSymbol) {
-            tmpStr.replace(eraseLineSymbol, with: "\n")
-            tmpStr.replace("\n", with: "\r\n")
-        } else {
-            tmpStr = tmpStr.replacingOccurrences(of: "\r", with: "")
-            tmpStr = tmpStr.replacingOccurrences(of: "\n", with: "")
-            if tmpStr.contains("𓆌") || tmpStr.contains("𓆊") {
-                tmpStr.append("\r")
-            } else {
-                tmpStr.append("\r\n")
-            }
-        }
-        subscritpions.forEach { $0.output(tmpStr) }
-    }
-    
-    var eraseLineSymbol: String {
-        "\u{1B}[2K\r"
+        output(Data(str.utf8))
     }
 }
 
@@ -378,24 +359,34 @@ private extension SessionService {
 
             let outputHandle = outputPipe.fileHandleForReading
             let errorHandle = errorPipe.fileHandleForReading
+            let pipeGroup = DispatchGroup()
 
-            let outputQueue = DispatchQueue(label: "outputQueue", qos: .userInitiated)
-            let errorQueue = DispatchQueue(label: "errorQueue", qos: .userInitiated)
-
+            pipeGroup.enter()
             outputHandle.readabilityHandler = { [weak self] handle in
                 let data = handle.availableData
-                guard !data.isEmpty else { return }
-                outputQueue.async {
-                    self?.output(data)
+                guard !data.isEmpty else {
+                    handle.readabilityHandler = nil
+                    pipeGroup.leave()
+                    return
+                }
+                self?.outputQueue.async {
+                    self?.subscritpions.forEach { $0.output(data) }
+                    subscriber.send(.standardOutput(data))
                 }
             }
 
+            pipeGroup.enter()
             errorHandle.readabilityHandler = { [weak self] handle in
                 let data = handle.availableData
-                guard !data.isEmpty else { return }
-                errorQueue.async {
+                guard !data.isEmpty else {
+                    handle.readabilityHandler = nil
+                    pipeGroup.leave()
+                    return
+                }
+                self?.outputQueue.async {
                     self?.errorData.append(data)
-                    self?.output(data)
+                    self?.subscritpions.forEach { $0.output(data) }
+                    subscriber.send(.standardError(data))
                 }
             }
             
@@ -406,14 +397,22 @@ private extension SessionService {
                 } catch {
                     self?.setLastFailedCommands(arguments)
                     subscriber.send(completion: .failure(error))
+                    outputHandle.readabilityHandler = nil
+                    errorHandle.readabilityHandler = nil
+                    return
                 }
 
-                outputHandle.readabilityHandler = nil
-                errorHandle.readabilityHandler = nil
+                pipeGroup.wait()
+                self?.outputQueue.sync {}
                 
                 Task {
                     if let data = self?.errorData, !data.isEmpty, let errorInfo = String(data: data, encoding: .utf8) {
-                        self?.logger.log(.error, info: errorInfo, additionalInfo: ["Commands": arguments.joined(separator: "\r\n")])
+                        self?.logger.log(
+                            .error,
+                            info: errorInfo,
+                            additionalInfo: ["Commands": arguments.joined(separator: "\r\n")],
+                            sendToTerminal: false
+                        )
                     }
                 }
                 subscriber.send(completion: .finished)

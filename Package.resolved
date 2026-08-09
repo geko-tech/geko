@@ -163,6 +163,24 @@
       }
     },
     {
+      "identity" : "swift-tools-support-core",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-tools-support-core.git",
+      "state" : {
+        "revision" : "3b13e439a341bbbfe0f710c7d1be37221745ef1a",
+        "version" : "0.6.1"
+      }
+    },
+    {
+      "identity" : "swiftshell",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kareman/SwiftShell",
+      "state" : {
+        "revision" : "99680b2efc7c7dbcace1da0b3979d266f02e213c",
+        "version" : "5.1.0"
+      }
+    },
+    {
       "identity" : "xcbeautify",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/cpisciotta/xcbeautify",
