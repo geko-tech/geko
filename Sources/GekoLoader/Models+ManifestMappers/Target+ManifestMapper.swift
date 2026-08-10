@@ -141,7 +141,7 @@ extension Target {
     }
 
     /// Applies fixes to properties of Target
-    ///
+    ///po
     /// - moves playgrounds from sources and resources to `playgrounds`
     /// - moves xcdatamodeld from `resources` to `coreDataModels`
     /// - TODO: moves headers from `sources` to `headers`
