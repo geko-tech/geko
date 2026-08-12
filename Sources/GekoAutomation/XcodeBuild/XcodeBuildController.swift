@@ -67,7 +67,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         command.append(contentsOf: arguments.flatMap(\.arguments))
 
         // Passthrough arguments
-        command.append(contentsOf: passthroughXcodeBuildArguments)
+        command.append(contentsOf: passthroughXcodeBuildArguments.map { $0.spm_shellEscaped() })
 
         // Destination
         switch destination {
@@ -132,7 +132,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         command.append(contentsOf: arguments.flatMap(\.arguments))
 
         // Passthrough arguments
-        command.append(contentsOf: passthroughXcodeBuildArguments)
+        command.append(contentsOf: passthroughXcodeBuildArguments.map { $0.spm_shellEscaped() })
 
         // Retry On Failure
         if retryCount > 0 {

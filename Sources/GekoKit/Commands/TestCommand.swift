@@ -230,9 +230,7 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
             }
         }
 
-        if let firstPassthroughArgument = passthroughXcodeBuildArguments.first,
-           xcodeBuildActionVerbs.contains(firstPassthroughArgument)
-        {
+        if let firstPassthroughArgument = passthroughXcodeBuildArguments.first(where: { xcodeBuildActionVerbs.contains($0) }) {
             throw GekoTestFlagError.passthroughActionVerbConflict(firstPassthroughArgument)
         }
 
