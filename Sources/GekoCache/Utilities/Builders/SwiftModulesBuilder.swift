@@ -393,7 +393,6 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             return
         }
 
-        var activePaths = Set<AbsolutePath>()
         var stack = [
             XCFrameworkDependenciesFrame(
                 path: dependencyPath,
@@ -408,14 +407,14 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             let frame = stack[frameIndex]
 
             if frame.preOrderVisit {
-                guard
-                    visitedNodes[frame.path] == nil,
-                    activePaths.insert(frame.path).inserted
-                else {
+                guard visitedNodes[frame.path] == nil else {
                     stack.removeLast()
                     continue
                 }
 
+                // Store an empty placeholder before visiting dependencies to avoid processing
+                // the same node again. The final result overwrites it in postorder.
+                visitedNodes[frame.path] = (frame.dependency, [])
                 stack[frameIndex].preOrderVisit = false
 
                 for case let .xcframework(xcframework) in frame.directDependencies {
@@ -439,7 +438,6 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
                 }
 
                 visitedNodes[frame.path] = (frame.dependency, dependencies)
-                activePaths.remove(frame.path)
                 stack.removeLast()
             }
         }
