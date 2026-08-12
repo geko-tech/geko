@@ -5,24 +5,6 @@ import ProjectDescription
 
 // swiftlint:disable type_body_length
 public class GraphTraverser: GraphTraversing {
-    private struct DependencySetTraversalFrame {
-        let node: GraphDependency
-        let dependencies: Set<GraphDependency>
-        var preOrderVisit: Bool
-    }
-
-    private struct ConditionMapTraversalFrame {
-        let node: GraphDependency
-        let dependencies: Set<GraphDependency>
-        var preOrderVisit: Bool
-    }
-
-    private struct SwiftMacroTargetsTraversalFrame {
-        let target: GraphTarget
-        let dependencies: Set<GraphTarget>
-        var preOrderVisit: Bool
-    }
-
     public var name: String { graph.name }
     public var path: AbsolutePath { graph.path }
     public var workspace: Workspace { graph.workspace }
@@ -140,6 +122,12 @@ public class GraphTraverser: GraphTraversing {
     private let allTargetDependenciesLock = NSLock()
 
     public func allTargetDependencies(path: AbsolutePath, name: String) -> Set<GraphTarget> {
+        struct DependencySetTraversalFrame {
+            let node: GraphDependency
+            let dependencies: Set<GraphDependency>
+            var preOrderVisit: Bool
+        }
+
         let targetGraphDependency = GraphDependency.target(name: name, path: path)
 
         allTargetDependenciesLock.lock()
@@ -652,6 +640,12 @@ public class GraphTraverser: GraphTraversing {
 
     // WARNING: do not use without locking `linkableDependenciesSearchCacheLock` first
     private func linkableDependenciesSearch(from node: GraphDependency) -> Set<GraphDependency> {
+        struct DependencySetTraversalFrame {
+            let node: GraphDependency
+            let dependencies: Set<GraphDependency>
+            var preOrderVisit: Bool
+        }
+
         if let cached = linkableDependenciesSearchCache[node] {
             return cached
         }
@@ -860,6 +854,28 @@ public class GraphTraverser: GraphTraversing {
     /// Returns linkable targets that directly depend on Swift macro targets, including those reached transitively.
     /// The macro targets themselves are not included.
     public func allSwiftMacroTargets(path: AbsolutePath, name: String) -> Set<GraphTarget> {
+        struct SwiftMacroTargetsTraversalFrame {
+            let target: GraphTarget
+            let dependencies: Set<GraphTarget>
+            var preOrderVisit: Bool
+
+            static func make(
+                for target: GraphTarget,
+                graphTraverser: GraphTraverser
+            ) -> SwiftMacroTargetsTraversalFrame {
+                SwiftMacroTargetsTraversalFrame(
+                    target: target,
+                    dependencies: Set(
+                        graphTraverser.directTargetDependencies(
+                            path: target.path,
+                            name: target.target.name
+                        ).map(\.graphTarget)
+                    ),
+                    preOrderVisit: true
+                )
+            }
+        }
+
         allMacroTargetsLock.lock()
         defer { allMacroTargetsLock.unlock() }
 
@@ -870,7 +886,7 @@ public class GraphTraverser: GraphTraversing {
         }
 
         var activeTargets = Set<GraphTarget>()
-        var stack = [swiftMacroTargetsTraversalFrame(for: target)]
+        var stack = [SwiftMacroTargetsTraversalFrame.make(for: target, graphTraverser: self)]
 
         while !stack.isEmpty {
             let frameIndex = stack.count - 1
@@ -887,7 +903,7 @@ public class GraphTraverser: GraphTraversing {
 
                 stack[frameIndex].preOrderVisit = false
                 for dependency in frame.dependencies {
-                    stack.append(swiftMacroTargetsTraversalFrame(for: dependency))
+                    stack.append(.make(for: dependency, graphTraverser: self))
                 }
             } else {
                 var result = Set<GraphTarget>()
@@ -906,16 +922,6 @@ public class GraphTraverser: GraphTraversing {
         }
 
         return allMacroTargetsCache[target] ?? []
-    }
-
-    private func swiftMacroTargetsTraversalFrame(for target: GraphTarget) -> SwiftMacroTargetsTraversalFrame {
-        SwiftMacroTargetsTraversalFrame(
-            target: target,
-            dependencies: Set(
-                directTargetDependencies(path: target.path, name: target.target.name).map(\.graphTarget)
-            ),
-            preOrderVisit: true
-        )
     }
 
     private func isLinkableTargetWithDirectSwiftMacro(_ target: GraphTarget) -> Bool {
@@ -1308,6 +1314,12 @@ public class GraphTraverser: GraphTraversing {
     }
 
     private func calculateCombinedConditionMap() {
+        struct ConditionMapTraversalFrame {
+            let node: GraphDependency
+            let dependencies: Set<GraphDependency>
+            var preOrderVisit: Bool
+        }
+
         var result: [GraphDependency: [GraphDependency: PlatformCondition.CombinationResult]] = [:]
         var completedDependencies = Set<GraphDependency>()
 

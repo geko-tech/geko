@@ -75,13 +75,6 @@ public protocol SwiftModulesBuilding {
 }
 
 public final class SwiftModulesBuilder: SwiftModulesBuilding {
-    private struct XCFrameworkDependenciesFrame {
-        let path: AbsolutePath
-        let dependency: GraphDependency
-        let directDependencies: Set<GraphDependency>
-        var preOrderVisit: Bool
-    }
-
     // MARK: - Attributes
     private let xcframeworkMetadataProvider: XCFrameworkMetadataProviding
     private let swiftinterfaceMetadataProvider: SwiftInterfaceMetadataProviding
@@ -386,6 +379,13 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
         graph: Graph,
         visitedNodes: inout [AbsolutePath: (GraphDependency, Set<GraphDependency>)]
     ) {
+        struct XCFrameworkDependenciesFrame {
+            let path: AbsolutePath
+            let dependency: GraphDependency
+            let directDependencies: Set<GraphDependency>
+            var preOrderVisit: Bool
+        }
+
         guard
             visitedNodes[dependencyPath] == nil,
             let graphDependency = graph.xcframeworks[dependencyPath]

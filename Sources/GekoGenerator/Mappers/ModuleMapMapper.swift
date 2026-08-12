@@ -67,12 +67,6 @@ public final class ModuleMapMapper: GraphMapping {
         let target: GraphTarget
     }
 
-    private struct DependenciesModuleMapsFrame {
-        let target: GraphTarget
-        var resolvedDependencies: [ResolvedDependency]
-        var preOrderVisit: Bool
-    }
-
     public init() {}
 
     // swiftlint:disable function_body_length
@@ -156,6 +150,12 @@ public final class ModuleMapMapper: GraphMapping {
         target: GraphTarget,
         targetToDependenciesMetadata: inout [TargetID: Set<DependencyMetadata>]
     ) throws {
+        struct DependenciesModuleMapsFrame {
+            let target: GraphTarget
+            var resolvedDependencies: [ResolvedDependency]
+            var preOrderVisit: Bool
+        }
+
         let rootTargetID = targetID(for: target)
         if targetToDependenciesMetadata[rootTargetID] != nil {
             // already computed

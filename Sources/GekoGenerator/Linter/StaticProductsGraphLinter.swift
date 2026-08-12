@@ -67,6 +67,12 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
         graphTraverser: GraphTraversing,
         cache: Cache
     ) -> StaticProducts {
+        struct StaticProductsFrame {
+            let dependency: GraphDependency
+            let dependencies: [GraphDependency]
+            var preOrderVisit: Bool
+        }
+
         if let cachedResult = cache.results(for: dependency) {
             return cachedResult
         }
@@ -290,12 +296,6 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
 // MARK: - Helper Types
 
 extension StaticProductsGraphLinter {
-    private struct StaticProductsFrame {
-        let dependency: GraphDependency
-        let dependencies: [GraphDependency]
-        var preOrderVisit: Bool
-    }
-
     private struct StaticDependencyWarning: Hashable, Comparable {
         var staticProduct: GraphDependency
         var linkingDependencies: [GraphDependency]
