@@ -13,6 +13,7 @@ enum TestServiceError: FatalError, Equatable {
     case testIdentifierInvalid(value: String)
     case duplicatedTestTargets(Set<TestIdentifier>)
     case nothingToSkip(skipped: [TestIdentifier], included: [TestIdentifier])
+    case actionInvalid
 
     // Error description
     var description: String {
@@ -43,6 +44,8 @@ enum TestServiceError: FatalError, Equatable {
             return "The target identifier cannot be specified both in --test-targets and --skip-test-targets (were specified: \(targets.map(\.description).joined(separator: ", ")))"
         case let .nothingToSkip(skippedTargets, includedTargets):
             return "Some of the targets specified in --skip-test-targets (\(skippedTargets.map(\.description).joined(separator: ", "))) will always be skipped as they are not included in the targets specified (\(includedTargets.map(\.description).joined(separator: ", ")))"
+        case .actionInvalid:
+            return "Cannot specify both --build-only and --without-building"
         }
     }
 
@@ -50,7 +53,7 @@ enum TestServiceError: FatalError, Equatable {
     var type: ErrorType {
         switch self {
         case .schemeNotFound, .schemeWithoutTestableTargets, .testPlanNotFound, .testIdentifierInvalid, .duplicatedTestTargets,
-             .nothingToSkip:
+                .nothingToSkip, .actionInvalid:
             return .abort
         }
     }
@@ -160,6 +163,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
         deviceName: String?,
         platform: String?,
         osVersion: String?,
+        action: XcodeBuildTestAction,
         rosetta: Bool,
         skipUITests: Bool,
         resultBundlePath: AbsolutePath?,
@@ -170,7 +174,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
         testPlanConfiguration: TestPlanConfiguration?,
         validateTestTargetsParameters: Bool = true,
         generator: Generating? = nil,
-        generateOnly: Bool
+        generateOnly: Bool,
+        passthroughXcodeBuildArguments: [String]
     ) async throws {
         if validateTestTargetsParameters {
             try validateParameters(
@@ -239,6 +244,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
             }
 
             switch (testPlanConfiguration?.testPlan, scheme.testAction?.targets.isEmpty, scheme.testAction?.testPlans?.isEmpty) {
+            case (_, false, _), (_, _, false):
+                break
             case (nil, true, _), (nil, nil, _):
                 logger.log(level: .info, "The scheme \(schemeName)'s test action has no tests to run, finishing early.")
                 return
@@ -260,13 +267,15 @@ public final class TestService { // swiftlint:disable:this type_body_length
                     version: version,
                     deviceName: deviceName,
                     platform: platform,
+                    action: action,
                     rosetta: rosetta,
                     resultBundlePath: resultBundlePath,
                     derivedDataPath: derivedDataPath,
                     retryCount: retryCount,
                     testTargets: testTargets,
                     skipTestTargets: skipTestTargets,
-                    testPlanConfiguration: testPlanConfiguration
+                    testPlanConfiguration: testPlanConfiguration,
+                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
                 )
             }
         } else {
@@ -289,13 +298,15 @@ public final class TestService { // swiftlint:disable:this type_body_length
                     version: version,
                     deviceName: deviceName,
                     platform: platform,
+                    action: action,
                     rosetta: rosetta,
                     resultBundlePath: resultBundlePath,
                     derivedDataPath: derivedDataPath,
                     retryCount: retryCount,
                     testTargets: testTargets,
                     skipTestTargets: skipTestTargets,
-                    testPlanConfiguration: testPlanConfiguration
+                    testPlanConfiguration: testPlanConfiguration,
+                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
                 )
             }
         }
@@ -314,13 +325,15 @@ public final class TestService { // swiftlint:disable:this type_body_length
         version: Version?,
         deviceName: String?,
         platform: String?,
+        action: XcodeBuildTestAction,
         rosetta: Bool,
         resultBundlePath: AbsolutePath?,
         derivedDataPath: AbsolutePath?,
         retryCount: Int,
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
-        testPlanConfiguration: TestPlanConfiguration?
+        testPlanConfiguration: TestPlanConfiguration?,
+        passthroughXcodeBuildArguments: [String]
     ) async throws {
         logger.log(level: .notice, "Testing scheme \(scheme.name)", metadata: .section)
         if let testPlan = testPlanConfiguration?.testPlan, let testPlans = scheme.testAction?.testPlans,
@@ -337,7 +350,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
             testPlan: testPlanConfiguration?.testPlan,
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
-            graphTraverser: graphTraverser
+            graphTraverser: graphTraverser,
+            action: action
         ) else {
             throw TestServiceError.schemeWithoutTestableTargets(scheme: scheme.name, testPlan: testPlanConfiguration?.testPlan)
         }
@@ -350,21 +364,28 @@ public final class TestService { // swiftlint:disable:this type_body_length
             buildPlatform = try buildableTarget.target.servicePlatform
         }
 
-        let destination = try await XcodeBuildDestination.find(
-            for: buildableTarget.target,
-            on: buildPlatform,
-            scheme: scheme,
-            version: version,
-            deviceName: deviceName,
-            graphTraverser: graphTraverser,
-            simulatorController: simulatorController
-        )
+        let destination: XcodeBuildDestination?
+
+        if passthroughXcodeBuildArguments.contains("-destination") {
+            destination = nil
+        } else {
+            destination = try await XcodeBuildDestination.find(
+                for: buildableTarget.target,
+                on: buildPlatform,
+                scheme: scheme,
+                version: version,
+                deviceName: deviceName,
+                graphTraverser: graphTraverser,
+                simulatorController: simulatorController
+            )
+        }
 
         try xcodebuildController.test(
             .workspace(graphTraverser.workspace.xcWorkspacePath),
             scheme: scheme.name,
             clean: clean,
             destination: destination,
+            action: action,
             rosetta: rosetta,
             derivedDataPath: derivedDataPath,
             resultBundlePath: resultBundlePath,
@@ -377,7 +398,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
             retryCount: retryCount,
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
-            testPlanConfiguration: testPlanConfiguration
+            testPlanConfiguration: testPlanConfiguration,
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
         )
     }
 }

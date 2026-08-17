@@ -33,7 +33,8 @@ public protocol BuildGraphInspecting {
         testPlan: String?,
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
-        graphTraverser: GraphTraversing
+        graphTraverser: GraphTraversing,
+        action: XcodeBuildTestAction
     ) -> GraphTarget?
 
     /// Given a graphTraverser, it returns a list of buildable schemes.
@@ -122,7 +123,8 @@ public final class BuildGraphInspector: BuildGraphInspecting {
         testPlan: String?,
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
-        graphTraverser: GraphTraversing
+        graphTraverser: GraphTraversing,
+        action: XcodeBuildTestAction
     ) -> GraphTarget? {
         func isIncluded(_ testTarget: TestableTarget) -> Bool {
             if testTarget.isSkipped {
@@ -137,6 +139,14 @@ public final class BuildGraphInspector: BuildGraphInspecting {
         if let testPlanName = testPlan,
            let testPlan = scheme.testAction?.testPlans?.first(where: { $0.name == testPlanName }),
            let target = testPlan.testTargets.first(where: { isIncluded($0) })?.target
+        {
+            return graphTraverser.target(path: target.projectPath!, name: target.name)
+        } else if action == .build, let testPlans = scheme.testAction?.testPlans,
+                  let target = testPlans.flatMap(\.testTargets).first(where: { isIncluded($0) })?.target
+        {
+            return graphTraverser.target(path: target.projectPath!, name: target.name)
+        } else if let defaultTestPlan = scheme.testAction?.testPlans?.first(where: { $0.isDefault }),
+                  let target = defaultTestPlan.testTargets.first(where: { isIncluded($0) })?.target
         {
             return graphTraverser.target(path: target.projectPath!, name: target.name)
         } else if let testTarget = scheme.testAction?.targets.first {

@@ -4,6 +4,62 @@ import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoSupport
 
+public enum XcodeBuildPassthroughArgumentError: FatalError, Equatable {
+      case alreadyHandled(String)
+
+      public var description: String {
+          switch self {
+          case let .alreadyHandled(argument):
+              "The argument \(argument) added after the terminator (--) cannot be passed through to xcodebuild because it is handled by Geko."
+          }
+      }
+
+      public var type: ErrorType {
+          switch self {
+          case .alreadyHandled:
+              .abort
+          }
+      }
+  }
+
+enum GekoTestFlagError: FatalError, Equatable {
+      case invalidCombination([String])
+      case passthroughActionVerbConflict(String)
+
+      var description: String {
+          switch self {
+          case let .invalidCombination(arguments):
+              "The arguments \(arguments.joined(separator: ", ")) are mutually exclusive, only of them can be used."
+          case let .passthroughActionVerbConflict(verb):
+              "The xcodebuild action '\(verb)' cannot be passed after the terminator (--). 'geko test' already picks the action based on its flags: 'test' by default, 'build-for-testing' with --build-only, and 'test-without-building' with --without-building. Drop '\(verb)' from the passthrough arguments, and use --build-only or --without-building if you need a different action."
+          }
+      }
+
+      var type: ErrorType {
+          switch self {
+          case .invalidCombination, .passthroughActionVerbConflict:
+              .abort
+          }
+      }
+  }
+
+  private let notAllowedPassthroughXcodeBuildArguments = [
+      "-scheme",
+      "-workspace",
+      "-project",
+      "-testPlan",
+      "-skip-test-configuration",
+      "-only-test-configuration",
+      "-only-testing",
+      "-skip-testing",
+  ]
+
+  private let xcodeBuildActionVerbs: Set<String> = [
+      "test",
+      "build-for-testing",
+      "test-without-building",
+  ]
+
 /// Command that tests a target from the project in the current directory.
 public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     public init() {}
@@ -23,7 +79,7 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     var scheme: String?
 
     @Flag(
-        help: "Force the generation of the project before testing."
+        help: "[Deprecated] Force the generation of the project before testing."
     )
     var generate: Bool = false
 
@@ -82,13 +138,13 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     var resultBundlePath: String?
 
     @Option(
-        help: "Overrides the folder that should be used for derived data when testing a project."
+        help: "[Deprecated] Overrides the folder that should be used for derived data when testing a project."
     )
     var derivedDataPath: String?
 
     @Option(
         name: .long,
-        help: "Tests will retry <number> of times until success. Example: if 1 is specified, the test will be retried at most once, hence it will run up to 2 times."
+        help: "[Deprecated] Tests will retry <number> of times until success. Example: if 1 is specified, the test will be retried at most once, hence it will run up to 2 times."
     )
     var retryCount: Int = 0
 
@@ -130,14 +186,37 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
 
     @Flag(
         name: .long,
-        help: "When passed, it generates the project and skips testing. This is useful for debugging purposes."
+        help: "[Deprecated] When passed, it generates the project and skips testing. This is useful for debugging purposes."
     )
     var generateOnly: Bool = false
+
+    @Flag(
+        name: .long,
+        help: "When passed, run the tests without building."
+    )
+    var withoutBuilding: Bool = false
+
+    @Flag(
+        name: .long,
+        help: "When passed, build the tests, but don't run them"
+    )
+    var buildOnly: Bool = false
+
+    @Argument(
+        parsing: .postTerminator,
+        help:
+            "Arguments that will be passed through to xcodebuild. Use -- followed by xcodebuild arguments. Example: geko test -- -destination 'platform=iOS Simulator,name=iPhone 15' -parallel-testing-enabled YES"
+    )
+    var passthroughXcodeBuildArguments: [String] = []
 
     @OptionGroup
     var manifestOptions: ManifestOptions
 
     public func validate() throws {
+        if withoutBuilding, buildOnly {
+            throw TestServiceError.actionInvalid
+        }
+
         try TestService().validateParameters(
             testTargets: testTargets,
             skipTestTargets: skipTestTargets
@@ -145,6 +224,23 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     }
 
     public func run() async throws {
+        try notAllowedPassthroughXcodeBuildArguments.forEach {
+            if passthroughXcodeBuildArguments.contains($0) {
+                throw XcodeBuildPassthroughArgumentError.alreadyHandled($0)
+            }
+        }
+
+        if let firstPassthroughArgument = passthroughXcodeBuildArguments.first(where: { xcodeBuildActionVerbs.contains($0) }) {
+            throw GekoTestFlagError.passthroughActionVerbConflict(firstPassthroughArgument)
+        }
+
+        if let derivedDataPath {
+            logger.warning("--derivedDataPath is deprecated please use -derivedDataPath \(derivedDataPath) after the terminator (--) instead to passthrough parameters to xcodebuild")
+        }
+        if retryCount > 0 {
+            logger.warning("--retryCount is deprecated please use -retry-tests-on-failure -test-iterations \(retryCount + 1) after the terminator (--) instead to passthrough parameters to xcodebuild")
+        }
+
         try ManifestOptionsService()
             .load(options: manifestOptions, path: nil)
 
@@ -156,6 +252,14 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
             absolutePath = FileHandler.shared.currentPath
         }
 
+        let action: XcodeBuildTestAction = if buildOnly {
+            .build
+        } else if withoutBuilding {
+            .testWithoutBuilding
+        } else {
+            .test
+        }
+
         try await TestService().run(
             schemeName: scheme,
             generate: generate,
@@ -165,6 +269,7 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
             deviceName: device,
             platform: platform,
             osVersion: os,
+            action: action,
             rosetta: rosetta,
             skipUITests: skipUITests,
             resultBundlePath: resultBundlePath.map {
@@ -185,7 +290,8 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
                 )
             },
             validateTestTargetsParameters: false,
-            generateOnly: generateOnly
+            generateOnly: generateOnly,
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
         )
     }
 }

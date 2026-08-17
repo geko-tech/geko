@@ -19,7 +19,7 @@ public struct BuildCommand: AsyncParsableCommand {
     var scheme: String?
 
     @Flag(
-        help: "Force the generation of the project before building."
+        help: "[Deprecated] Force the generation of the project before building."
     )
     var generate: Bool = false
 
@@ -72,20 +72,44 @@ public struct BuildCommand: AsyncParsableCommand {
     var buildOutputPath: String?
 
     @Option(
-        help: "Overrides the folder that should be used for derived data when building the project."
+        help: "[Deprecated] Overrides the folder that should be used for derived data when building the project."
     )
     var derivedDataPath: String?
 
     @Flag(
         name: .long,
-        help: "When passed, it generates the project and skips building. This is useful for debugging purposes."
+        help: "[Deprecated] When passed, it generates the project and skips building. This is useful for debugging purposes."
     )
     var generateOnly: Bool = false
+
+    @Argument(
+        parsing: .postTerminator,
+        help: "Arguments that will be passed through to xcodebuild"
+    )
+    var passthroughXcodeBuildArguments: [String] = []
 
     @OptionGroup
     var manifestOptions: ManifestOptions
 
+    private var notAllowedPassthroughXcodeBuildArguments = [
+        "-scheme",
+        "-workspace",
+        "-project",
+    ]
+
     public func run() async throws {
+        // Check if passthrough arguments are already handled by Geko
+        try notAllowedPassthroughXcodeBuildArguments.forEach {
+            if passthroughXcodeBuildArguments.contains($0) {
+                throw XcodeBuildPassthroughArgumentError.alreadyHandled($0)
+            }
+        }
+
+        // Suggest the user to use passthrough arguments if already supported by xcodebuild
+        if let derivedDataPath = derivedDataPath {
+            logger.warning("--derivedDataPath is deprecated please use -derivedDataPath \(derivedDataPath) after the terminator (--) instead to passthrough parameters to xcodebuild")
+        }
+
         try ManifestOptionsService()
             .load(options: manifestOptions, path: nil)
 
@@ -108,7 +132,8 @@ public struct BuildCommand: AsyncParsableCommand {
             platform: platform,
             osVersion: os,
             rosetta: rosetta,
-            generateOnly: generateOnly
+            generateOnly: generateOnly,
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
         )
     }
 }

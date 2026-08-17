@@ -50,16 +50,17 @@ public final class MockBuildGraphInspector: BuildGraphInspecting {
         }
     }
 
-    public var testableTargetStub: ((Scheme, String?, [TestIdentifier], [TestIdentifier], GraphTraversing) -> GraphTarget?)?
+    public var testableTargetStub: ((Scheme, String?, [TestIdentifier], [TestIdentifier], GraphTraversing, XcodeBuildTestAction) -> GraphTarget?)?
     public func testableTarget(
         scheme: Scheme,
         testPlan: String?,
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
-        graphTraverser: GraphTraversing
+        graphTraverser: GraphTraversing,
+        action: XcodeBuildTestAction
     ) -> GraphTarget? {
         if let testableTargetStub {
-            return testableTargetStub(scheme, testPlan, testTargets, skipTestTargets, graphTraverser)
+            return testableTargetStub(scheme, testPlan, testTargets, skipTestTargets, graphTraverser, action)
         } else {
             return GraphTarget.test()
         }

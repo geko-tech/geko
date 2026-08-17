@@ -355,7 +355,8 @@ final class PluginArchiveService {
             arguments: [
                 .configuration(configuration.xcodebuildConfiguration),
                 .destination("generic/platform=macOS")
-            ]
+            ],
+            passthroughXcodeBuildArguments: []
         )
 
         let componentsToBuild = ["Build", "Products", configuration.xcodebuildConfiguration]

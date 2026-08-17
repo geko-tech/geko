@@ -12,7 +12,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         Bool,
         AbsolutePath?,
         Bool,
-        [XcodeBuildArgument]
+        [XcodeBuildArgument],
+        [String]
     ) -> [SystemEvent<XcodeBuildOutput>])?
 
     func build(
@@ -22,7 +23,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         rosetta _: Bool,
         derivedDataPath _: AbsolutePath?,
         clean _: Bool,
-        arguments _: [GekoCore.XcodeBuildArgument]
+        arguments _: [GekoCore.XcodeBuildArgument],
+        passthroughXcodeBuildArguments: [String]
     ) throws {}
 
     var testStub: (
@@ -30,7 +32,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
             XcodeBuildTarget,
             String,
             Bool,
-            XcodeBuildDestination,
+            XcodeBuildDestination?,
+            XcodeBuildTestAction,
             Bool,
             AbsolutePath?,
             AbsolutePath?,
@@ -38,7 +41,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
             Int,
             [TestIdentifier],
             [TestIdentifier],
-            TestPlanConfiguration?
+            TestPlanConfiguration?,
+            [String]
         )
             -> Void
     )?
@@ -47,7 +51,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         _ target: GekoCore.XcodeBuildTarget,
         scheme: String,
         clean: Bool,
-        destination: GekoCore.XcodeBuildDestination,
+        destination: GekoCore.XcodeBuildDestination?,
+        action: XcodeBuildTestAction,
         rosetta: Bool,
         derivedDataPath: AbsolutePath?,
         resultBundlePath: AbsolutePath?,
@@ -55,7 +60,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         retryCount: Int,
         testTargets: [GekoCore.TestIdentifier],
         skipTestTargets: [GekoCore.TestIdentifier],
-        testPlanConfiguration: GekoCore.TestPlanConfiguration?
+        testPlanConfiguration: GekoCore.TestPlanConfiguration?,
+        passthroughXcodeBuildArguments: [String]
     ) throws {
         if let testStub {
             testStub(
@@ -63,6 +69,7 @@ final class MockXcodeBuildController: XcodeBuildControlling {
                 scheme,
                 clean,
                 destination,
+                action,
                 rosetta,
                 derivedDataPath,
                 resultBundlePath,
@@ -70,7 +77,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
                 retryCount,
                 testTargets,
                 skipTestTargets,
-                testPlanConfiguration
+                testPlanConfiguration,
+                passthroughXcodeBuildArguments
             )
             if let testErrorStub {
                 throw testErrorStub
@@ -103,7 +111,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         rosetta: Bool,
         derivedDataPath: AbsolutePath?,
         clean: Bool,
-        arguments: [XcodeBuildArgument]
+        arguments: [XcodeBuildArgument],
+        passthroughXcodeBuildArguments: [String]
     ) -> AsyncThrowingStream<SystemEvent<XcodeBuildOutput>, Error> {
         if let buildStub {
             return buildStub(
@@ -113,7 +122,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
                 rosetta,
                 derivedDataPath,
                 clean,
-                arguments
+                arguments,
+                passthroughXcodeBuildArguments
             ).asAsyncThrowingStream()
         } else {
             return AsyncThrowingStream {

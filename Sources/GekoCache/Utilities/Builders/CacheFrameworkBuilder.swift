@@ -132,7 +132,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
             rosetta: false,
             derivedDataPath: derivedDataPath,
             clean: false,
-            arguments: arguments
+            arguments: arguments,
+            passthroughXcodeBuildArguments: []
         )
     }
     
@@ -153,7 +154,8 @@ public final class CacheFrameworkBuilder: CacheArtifactBuilding {
             rosetta: false,
             derivedDataPath: derivedDataPath,
             clean: false,
-            arguments: arguments
+            arguments: arguments,
+            passthroughXcodeBuildArguments: []
         )
     }
 
