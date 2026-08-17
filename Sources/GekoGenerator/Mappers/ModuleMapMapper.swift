@@ -56,7 +56,7 @@ public final class ModuleMapMapper: GraphMapping {
         let projectPath: AbsolutePath
         let targetName: String
     }
-    
+
     private struct DependencyMetadata: Hashable {
         let moduleMapPath: AbsolutePath?
         let headerSearchPaths: [String]
@@ -162,7 +162,6 @@ public final class ModuleMapMapper: GraphMapping {
             return
         }
 
-        var activeTargetIDs = Set<TargetID>()
         var stack = [
             DependenciesModuleMapsFrame(
                 target: target,
@@ -182,10 +181,6 @@ public final class ModuleMapMapper: GraphMapping {
                     continue
                 }
 
-                guard activeTargetIDs.insert(frameTargetID).inserted else {
-                    throw GraphError.unexpectedCycle
-                }
-
                 let resolvedDependencies = try frame.target.target.dependencies.compactMap { dependency in
                     try resolve(
                         dependency: dependency,
@@ -195,6 +190,7 @@ public final class ModuleMapMapper: GraphMapping {
                     )
                 }
 
+                targetToDependenciesMetadata[frameTargetID] = []
                 stack[frameIndex].resolvedDependencies = resolvedDependencies
                 stack[frameIndex].preOrderVisit = false
 
@@ -217,7 +213,6 @@ public final class ModuleMapMapper: GraphMapping {
 
                 let frameTargetID = targetID(for: frame.target)
                 targetToDependenciesMetadata[frameTargetID] = dependenciesMetadata
-                activeTargetIDs.remove(frameTargetID)
                 stack.removeLast()
             }
         }

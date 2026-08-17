@@ -78,4 +78,17 @@ final class GraphAlgorithmsTests: XCTestCase {
 
         XCTAssertNil(result)
     }
+
+    func test_findCycle_handlesLongCyclicChainsWithoutRecursion() {
+        let nodeCount = 20_000
+
+        let result = findCycle([0]) { node in
+            node + 1 < nodeCount ? [node + 1] : [0]
+        }
+
+        let expectedCycle = (0 ..< nodeCount).map { $0 }
+
+        XCTAssertTrue(result?.path == [])
+        XCTAssertTrue(result?.cycle == expectedCycle)
+    }
 }

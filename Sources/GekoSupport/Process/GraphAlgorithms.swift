@@ -13,12 +13,6 @@ public enum GraphError: Error {
     case unexpectedCycle
 }
 
-private struct GraphTraversalFrame<Node> {
-    let node: Node
-    let successors: [Node]
-    var nextSuccessorIndex: Int
-}
-
 /// Compute the transitive closure of an input node set.
 ///
 /// - Note: The relation is *not* assumed to be reflexive; i.e. the result will
@@ -29,6 +23,9 @@ public func transitiveClosure<T>(
 ) rethrows -> Set<T> {
     var result = Set<T>()
 
+    // The queue of items to recursively visit.
+    //
+    // We add items post-collation to avoid unnecessary queue operations.
     var queue = nodes
     while let node = queue.popLast() {
         for succ in try successors(node) {
@@ -65,49 +62,44 @@ public func topologicalSort<T: Hashable>(
     var active = Set<T>()
     var result: [T] = []
 
-    for node in nodes {
-        guard visited.insert(node).inserted else {
-            continue
-        }
+    var stack: [(node: T, preOrderVisit: Bool)] = []
+    // populate stack in the reverse order to keep original ordering
+    for i in stride(from: nodes.count - 1, through: 0, by: -1) {
+        stack.append((
+            node: nodes[i],
+            preOrderVisit: true
+        ))
+    }
 
-        active.insert(node)
-        var stack = [
-            GraphTraversalFrame(
-                node: node,
-                successors: try successors(node),
-                nextSuccessorIndex: 0
-            ),
-        ]
+    // for node in nodes {
+    while !stack.isEmpty {
+        let frameIndex = stack.count - 1
+        let frame = stack[frameIndex]
 
-        while !stack.isEmpty {
-            let frameIndex = stack.count - 1
-            let frame = stack[frameIndex]
+        if frame.preOrderVisit {
+            guard visited.insert(frame.node).inserted else {
+                stack.removeLast()
+                continue
+            }
 
-            if frame.nextSuccessorIndex < frame.successors.count {
-                let successor = frame.successors[frame.nextSuccessorIndex]
-                stack[frameIndex].nextSuccessorIndex += 1
+            stack[frameIndex].preOrderVisit = false
+            active.insert(frame.node)
 
+            let successors = try successors(frame.node)
+            // add successors to stack in reverse order to keep tree traversing order the same as successor list
+            for i in stride(from: successors.count - 1, through: 0, by: -1) {
                 // An edge to an active node closes a cycle in the current DFS path.
-                if active.contains(successor) {
+                if active.contains(successors[i]) {
                     throw GraphError.unexpectedCycle
                 }
 
-                if visited.insert(successor).inserted {
-                    active.insert(successor)
-                    stack.append(
-                        GraphTraversalFrame(
-                            node: successor,
-                            successors: try successors(successor),
-                            nextSuccessorIndex: 0
-                        )
-                    )
-                }
-            } else {
-                // Append in postorder to preserve the ordering of the recursive implementation.
-                result.append(frame.node)
-                active.remove(frame.node)
-                stack.removeLast()
+                stack.append((node: successors[i], preOrderVisit: true))
             }
+        } else {
+            // Append in postorder to preserve the ordering of the recursive implementation.
+            result.append(frame.node)
+            active.remove(frame.node)
+            stack.removeLast()
         }
     }
 
@@ -129,30 +121,36 @@ public func findCycle<T: Hashable>(
     successors: (T) throws -> [T]
 ) rethrows -> (path: [T], cycle: [T])? {
     var validNodes = Set<T>()
+    var path: [T] = []
+    // Mirrors `path` and provides the cycle start index when a back edge is found.
+    var activeNodeIndices: [T: Int] = [:]
 
-    for node in nodes {
-        guard !validNodes.contains(node) else {
-            continue
-        }
+    var stack: [(node: T, preOrderVisit: Bool)] = []
+    // populate stack in the reverse order to keep original ordering
+    for i in stride(from: nodes.count - 1, through: 0, by: -1) {
+        stack.append((
+            node: nodes[i],
+            preOrderVisit: true
+        ))
+    }
 
-        var path = [node]
-        // Mirrors `path` and provides the cycle start index when a back edge is found.
-        var activeNodeIndices = [node: 0]
-        var stack = [
-            GraphTraversalFrame(
-                node: node,
-                successors: try successors(node),
-                nextSuccessorIndex: 0
-            ),
-        ]
+    while !stack.isEmpty {
+        let frameIndex = stack.count - 1
+        let frame = stack[frameIndex]
 
-        while !stack.isEmpty {
-            let frameIndex = stack.count - 1
-            let frame = stack[frameIndex]
+        if frame.preOrderVisit {
+            guard !validNodes.contains(frame.node) else {
+                stack.removeLast()
+                continue
+            }
 
-            if frame.nextSuccessorIndex < frame.successors.count {
-                let successor = frame.successors[frame.nextSuccessorIndex]
-                stack[frameIndex].nextSuccessorIndex += 1
+            stack[frameIndex].preOrderVisit = false
+            activeNodeIndices[frame.node] = path.count
+            path.append(frame.node)
+
+            let successors = try successors(frame.node)
+            for i in stride(from: successors.count - 1, through: 0, by: -1) {
+                let successor = successors[i]
 
                 if let cycleStartIndex = activeNodeIndices[successor] {
                     return (
@@ -161,25 +159,15 @@ public func findCycle<T: Hashable>(
                     )
                 }
 
-                guard !validNodes.contains(successor) else {
-                    continue
-                }
+                guard !validNodes.contains(successor) else { continue }
 
-                activeNodeIndices[successor] = path.count
-                path.append(successor)
-                stack.append(
-                    GraphTraversalFrame(
-                        node: successor,
-                        successors: try successors(successor),
-                        nextSuccessorIndex: 0
-                    )
-                )
-            } else {
-                validNodes.insert(frame.node)
-                activeNodeIndices.removeValue(forKey: frame.node)
-                path.removeLast()
-                stack.removeLast()
+                stack.append((node: successor, preOrderVisit: true))
             }
+        } else {
+            validNodes.insert(frame.node)
+            activeNodeIndices.removeValue(forKey: frame.node)
+            path.removeLast()
+            stack.removeLast()
         }
     }
 

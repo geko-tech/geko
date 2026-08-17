@@ -25,16 +25,16 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
         config: Config
     ) -> Set<StaticDependencyWarning> {
         var warnings = Set<StaticDependencyWarning>()
-        let cache = Cache()
+        var cache: [GraphDependency: StaticProducts] = [:]
         for dependency in dependencies {
             // Skip already evaluated nodes
-            guard cache.results(for: dependency) == nil else {
+            guard cache[dependency] == nil else {
                 continue
             }
             let results = buildStaticProductsMap(
                 visiting: dependency,
                 graphTraverser: graphTraverser,
-                cache: cache
+                cache: &cache
             )
 
             warnings.formUnion( results.linked.flatMap {
@@ -65,83 +65,68 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
     private func buildStaticProductsMap(
         visiting dependency: GraphDependency,
         graphTraverser: GraphTraversing,
-        cache: Cache
+        cache: inout [GraphDependency: StaticProducts]
     ) -> StaticProducts {
-        struct StaticProductsFrame {
-            let dependency: GraphDependency
-            let dependencies: [GraphDependency]
-            var preOrderVisit: Bool
-        }
-
-        if let cachedResult = cache.results(for: dependency) {
+        if let cachedResult = cache[dependency] {
             return cachedResult
         }
 
-        var activeDependencies = Set<GraphDependency>()
-        var stack = [
-            StaticProductsFrame(
-                dependency: dependency,
-                dependencies: dependencies(for: dependency, graphTraverser: graphTraverser),
-                preOrderVisit: true
-            ),
-        ]
+        var stack = [(
+            dependency: dependency,
+            dependencies: dependencies(for: dependency, graphTraverser: graphTraverser),
+            preOrderVisit: true
+        )]
 
         while !stack.isEmpty {
             let frameIndex = stack.count - 1
             let frame = stack[frameIndex]
 
             if frame.preOrderVisit {
-                guard
-                    cache.results(for: frame.dependency) == nil,
-                    activeDependencies.insert(frame.dependency).inserted
-                else {
+                guard cache[frame.dependency] == nil else {
                     stack.removeLast()
                     continue
                 }
 
                 stack[frameIndex].preOrderVisit = false
+                cache[frame.dependency] = .init()
+
                 for childDependency in frame.dependencies {
-                    stack.append(
-                        StaticProductsFrame(
-                            dependency: childDependency,
-                            dependencies: dependencies(for: childDependency, graphTraverser: graphTraverser),
-                            preOrderVisit: true
-                        )
-                    )
+                    stack.append((
+                        dependency: childDependency,
+                        dependencies: dependencies(for: childDependency, graphTraverser: graphTraverser),
+                        preOrderVisit: true
+                    ))
                 }
             } else {
-                var childResults = StaticProducts()
+                var results = StaticProducts()
                 for childDependency in frame.dependencies {
-                    if let cachedResult = cache.results(for: childDependency) {
-                        childResults = cachedResult.merged(with: childResults)
+                    if let cachedResult = cache[childDependency] {
+                        results = cachedResult.merged(with: results)
                     }
                 }
 
-                let results = finalize(
-                    results: childResults,
+                finalize(
+                    results: &results,
                     for: frame.dependency,
                     graphTraverser: graphTraverser
                 )
-                cache.cache(results: results, for: frame.dependency)
-                activeDependencies.remove(frame.dependency)
+                cache[frame.dependency] = results
                 stack.removeLast()
             }
         }
 
-        return cache.results(for: dependency) ?? StaticProducts()
+        return cache[dependency] ?? StaticProducts()
     }
 
     private func finalize(
-        results: StaticProducts,
+        results: inout StaticProducts,
         for dependency: GraphDependency,
         graphTraverser: GraphTraversing
-    ) -> StaticProducts {
-        var results = results
-
+    ) {
         // Static node case
         if isStaticProduct(dependency, graphTraverser: graphTraverser) {
             results.unlinked.insert(dependency)
-            return results
+            return
         }
 
         // Linking node case
@@ -149,14 +134,12 @@ class StaticProductsGraphLinter: StaticProductsGraphLinting {
               let dependencyTarget = graphTraverser.target(path: targetPath, name: targetName),
               dependencyTarget.target.canLinkStaticProducts()
         else {
-            return results
+            return
         }
 
         while let staticProduct = results.unlinked.popFirst() {
             results.linked[staticProduct, default: Set()].insert(dependency)
         }
-
-        return results
     }
 
     private func staticDependencyWarning(
@@ -331,21 +314,6 @@ extension StaticProductsGraphLinter {
                 unlinked: unlinked.union(other.unlinked),
                 linked: linked.merging(other.linked, uniquingKeysWith: { $0.union($1) })
             )
-        }
-    }
-
-    private class Cache {
-        private var cachedResults: [GraphDependency: StaticProducts] = [:]
-
-        func results(for dependency: GraphDependency) -> StaticProducts? {
-            cachedResults[dependency]
-        }
-
-        func cache(
-            results: StaticProducts,
-            for dependency: GraphDependency
-        ) {
-            cachedResults[dependency] = results
         }
     }
 }

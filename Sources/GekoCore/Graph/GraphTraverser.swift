@@ -122,12 +122,6 @@ public class GraphTraverser: GraphTraversing {
     private let allTargetDependenciesLock = NSLock()
 
     public func allTargetDependencies(path: AbsolutePath, name: String) -> Set<GraphTarget> {
-        struct DependencySetTraversalFrame {
-            let node: GraphDependency
-            let dependencies: Set<GraphDependency>
-            var preOrderVisit: Bool
-        }
-
         let targetGraphDependency = GraphDependency.target(name: name, path: path)
 
         allTargetDependenciesLock.lock()
@@ -144,14 +138,11 @@ public class GraphTraverser: GraphTraversing {
             }
         }
 
-        var activeDependencies = Set<GraphDependency>()
-        var stack = [
-            DependencySetTraversalFrame(
-                node: targetGraphDependency,
-                dependencies: graph.dependencies[targetGraphDependency] ?? [],
-                preOrderVisit: true
-            ),
-        ]
+        var stack = [(
+            node: targetGraphDependency,
+            dependencies: graph.dependencies[targetGraphDependency] ?? [],
+            preOrderVisit: true
+        )]
 
         while !stack.isEmpty {
             let frameIndex = stack.count - 1
@@ -159,23 +150,21 @@ public class GraphTraverser: GraphTraversing {
 
             if frame.preOrderVisit {
                 guard
-                    allTargetDependenciesCache[frame.node] == nil,
-                    activeDependencies.insert(frame.node).inserted
+                    allTargetDependenciesCache[frame.node] == nil
                 else {
                     stack.removeLast()
                     continue
                 }
 
                 stack[frameIndex].preOrderVisit = false
+                allTargetDependenciesCache[frame.node] = []
 
                 for dependency in frame.dependencies {
-                    stack.append(
-                        DependencySetTraversalFrame(
-                            node: dependency,
-                            dependencies: graph.dependencies[dependency] ?? [],
-                            preOrderVisit: true
-                        )
-                    )
+                    stack.append((
+                        node: dependency,
+                        dependencies: graph.dependencies[dependency] ?? [],
+                        preOrderVisit: true
+                    ))
                 }
             } else {
                 var result = frame.dependencies
@@ -184,7 +173,6 @@ public class GraphTraverser: GraphTraversing {
                 }
 
                 allTargetDependenciesCache[frame.node] = result
-                activeDependencies.remove(frame.node)
                 stack.removeLast()
             }
         }
@@ -285,7 +273,7 @@ public class GraphTraverser: GraphTraversing {
         guard let target = graph.targets[path]?[name] else { return [] }
         guard target.supportsResources else { return [] }
         let targetGraphDependency: GraphDependency = .target(name: name, path: path)
-        
+
         let canHostResources: (GraphDependency) -> Bool = {
             switch $0 {
             case let .xcframework(xcframework):
@@ -298,20 +286,20 @@ public class GraphTraverser: GraphTraversing {
                 return self.target(from: $0)?.target.supportsResources == true
             }
         }
-        
+
         resourceBundleDependenciesLock.lock()
         if let cached = resourceBundleDependenciesCache[targetGraphDependency] {
             resourceBundleDependenciesLock.unlock()
             return cached
         }
         resourceBundleDependenciesLock.unlock()
-        
+
         let bundles: Set<GraphDependency> = bundlesSearch(
             rootDependency: targetGraphDependency,
             test: { isSpmTarget in !isSpmTarget },
             skip: canHostResources
         )
-        
+
         let spmBundles: Set<GraphDependency>
         if canDependencyEmbedBundles(dependency: targetGraphDependency) {
             spmBundles = bundlesSearch(
@@ -322,22 +310,22 @@ public class GraphTraverser: GraphTraversing {
         } else {
             spmBundles = []
         }
-        
+
         let result = Set(
             bundles.union(spmBundles)
                 .compactMap { dependencyReference(to: $0, from: .target(name: name, path: path)) }
         )
-        
+
         resourceBundleDependenciesLock.lock()
         resourceBundleDependenciesCache[targetGraphDependency] = result
         resourceBundleDependenciesLock.unlock()
-        
+
         return result
     }
-    
+
     private var resourceBundleDependenciesCache: [GraphDependency: Set<GraphDependencyReference>] = [:]
     private let resourceBundleDependenciesLock = NSLock()
-    
+
     private func bundlesSearch(
         rootDependency: GraphDependency,
         test: (_ isSpmTarget: Bool) -> Bool,
@@ -382,10 +370,10 @@ public class GraphTraverser: GraphTraversing {
                 stack.append((dependency, dependencyIsSpm))
             }
         }
-        
+
         return result
     }
-    
+
     public func target(from dependency: GraphDependency) -> GraphTarget? {
         guard case let GraphDependency.target(name, path, _) = dependency else {
             return nil
@@ -515,22 +503,15 @@ public class GraphTraverser: GraphTraversing {
     }
 
     public func searchablePathDependencies(path: AbsolutePath, name: String) throws -> Set<GraphDependencyReference> {
-        let deps = try linkableDependencies(
-            path: path,
-            name: name,
-            shouldExcludeNonLinkableDependencies: false
-        )
+        let deps = try linkableDependencies(path: path, name: name, shouldExcludeNonLinkableDependencies: false)
 
         if let target = target(path: path, name: name),
-           target.target.product == .unitTests || target.target.product == .uiTests,
-           let appHostTarget = unitTestHost(path: path, name: name)
+            target.target.product == .unitTests || target.target.product == .uiTests,
+            let appHostTarget = unitTestHost(path: path, name: name)
         {
             // Unit and UI tests can use the same dependencies as their host app without linking them.
             return deps.union(
-                try searchablePathDependencies(
-                    path: appHostTarget.path,
-                    name: appHostTarget.target.name
-                )
+                try searchablePathDependencies(path: appHostTarget.path, name: appHostTarget.target.name)
             )
         }
 
@@ -632,24 +613,15 @@ public class GraphTraverser: GraphTraversing {
 
     // WARNING: do not use without locking `linkableDependenciesSearchCacheLock` first
     private func linkableDependenciesSearch(from node: GraphDependency) -> Set<GraphDependency> {
-        struct DependencySetTraversalFrame {
-            let node: GraphDependency
-            let dependencies: Set<GraphDependency>
-            var preOrderVisit: Bool
-        }
-
         if let cached = linkableDependenciesSearchCache[node] {
             return cached
         }
 
-        var activeDependencies = Set<GraphDependency>()
-        var stack = [
-            DependencySetTraversalFrame(
-                node: node,
-                dependencies: graph.dependencies[node] ?? [],
-                preOrderVisit: true
-            ),
-        ]
+        var stack = [(
+            node: node,
+            dependencies: graph.dependencies[node] ?? [],
+            preOrderVisit: true
+        )]
 
         // Collect every transitive linkable dependency in postorder so child cache entries
         // are ready before their parents are finalized.
@@ -659,14 +631,17 @@ public class GraphTraverser: GraphTraversing {
 
             if frame.preOrderVisit {
                 guard
-                    linkableDependenciesSearchCache[frame.node] == nil,
-                    activeDependencies.insert(frame.node).inserted
+                    linkableDependenciesSearchCache[frame.node] == nil
                 else {
                     stack.removeLast()
                     continue
                 }
 
+                // Store an empty placeholder before visiting dependencies to avoid processing
+                // the same node again. The final result overwrites it in postorder.
+                linkableDependenciesSearchCache[frame.node] = []
                 stack[frameIndex].preOrderVisit = false
+
                 let appHostDependency = appHostDependency(for: frame.node)
 
                 for dependency in frame.dependencies {
@@ -675,13 +650,11 @@ public class GraphTraverser: GraphTraversing {
                         continue
                     }
 
-                    stack.append(
-                        DependencySetTraversalFrame(
-                            node: dependency,
-                            dependencies: graph.dependencies[dependency] ?? [],
-                            preOrderVisit: true
-                        )
-                    )
+                    stack.append((
+                        node: dependency,
+                        dependencies: graph.dependencies[dependency] ?? [],
+                        preOrderVisit: true
+                    ))
                 }
             } else {
                 var collectedDependencies = Set<GraphDependency>()
@@ -701,7 +674,6 @@ public class GraphTraverser: GraphTraversing {
                     directDependencies: frame.dependencies
                 )
                 linkableDependenciesSearchCache[frame.node] = collectedDependencies
-                activeDependencies.remove(frame.node)
                 stack.removeLast()
             }
         }
@@ -738,9 +710,8 @@ public class GraphTraverser: GraphTraversing {
         // dynamic framework, Framework1 should not be linked to App, because in such case
         // Framework1 will be linked two times to App and to dynamic framework
         for dependency in collectedDependencies {
-            guard canDependencyLinkStaticProducts(dependency: dependency) else {
-                continue
-            }
+            // process only dynamic dependencies
+            guard canDependencyLinkStaticProducts(dependency: dependency) else { continue }
 
             var searchResult = linkableDependenciesSearchCache[dependency] ?? []
             searchResult = searchResult.filter {
@@ -762,9 +733,7 @@ public class GraphTraverser: GraphTraversing {
         // so we walk through each static dependency and search for dynamic dependencies and sdks
         // (sdks are considered dynamic dependencies)
         for dependency in collectedDependencies {
-            guard isDependencyStatic(dependency: dependency) else {
-                continue
-            }
+            guard isDependencyStatic(dependency: dependency) else { continue }
 
             let searchResult = linkableDependenciesSearchCache[dependency] ?? []
             collectedDependencies.formUnion(searchResult.filter { isDependencyDynamic(dependency: $0) })
@@ -839,7 +808,7 @@ public class GraphTraverser: GraphTraversing {
     }
 
     private var allMacroTargetsCache: [GraphTarget: Set<GraphTarget>] = [:]
-    private var allMacroTargetsLock = NSRecursiveLock()
+    private var allMacroTargetsLock = NSLock()
 
     /// Returns linkable targets that directly depend on Swift macro targets, including those reached transitively.
     /// The macro targets themselves are not included.
@@ -859,7 +828,7 @@ public class GraphTraverser: GraphTraversing {
                         graphTraverser.directTargetDependencies(
                             path: target.path,
                             name: target.target.name
-                        ).map(\.graphTarget)
+                        ).map { $0.graphTarget }
                     ),
                     preOrderVisit: true
                 )
@@ -875,7 +844,6 @@ public class GraphTraverser: GraphTraversing {
             return cached
         }
 
-        var activeTargets = Set<GraphTarget>()
         var stack = [SwiftMacroTargetsTraversalFrame.make(for: target, graphTraverser: self)]
 
         while !stack.isEmpty {
@@ -883,15 +851,16 @@ public class GraphTraverser: GraphTraversing {
             let frame = stack[frameIndex]
 
             if frame.preOrderVisit {
-                guard
-                    allMacroTargetsCache[frame.target] == nil,
-                    activeTargets.insert(frame.target).inserted
-                else {
+                guard allMacroTargetsCache[frame.target] == nil else {
                     stack.removeLast()
                     continue
                 }
 
+                // Store an empty placeholder before visiting dependencies to avoid processing
+                // the same node again. The final result overwrites it in postorder.
+                allMacroTargetsCache[frame.target] = []
                 stack[frameIndex].preOrderVisit = false
+
                 for dependency in frame.dependencies {
                     stack.append(.make(for: dependency, graphTraverser: self))
                 }
@@ -906,7 +875,6 @@ public class GraphTraverser: GraphTraversing {
                 }
 
                 allMacroTargetsCache[frame.target] = result
-                activeTargets.remove(frame.target)
                 stack.removeLast()
             }
         }
@@ -1335,6 +1303,7 @@ public class GraphTraverser: GraphTraversing {
                 // the same node again. The final result overwrites it in postorder.
                 result[frame.node] = [:]
                 stack[frameIndex].preOrderVisit = false
+
                 for dependency in frame.dependencies {
                     stack.append(
                         ConditionMapTraversalFrame(
@@ -1373,7 +1342,6 @@ public class GraphTraverser: GraphTraversing {
                         // C should have `[.ios, .macos]` set for filters to satisfy both paths
                         nodeResult[transitiveDependency] = previousResult.combineWith(combinedCondition)
                     }
-
                 }
 
                 for dependency in frame.dependencies {
@@ -1396,32 +1364,28 @@ public class GraphTraverser: GraphTraversing {
             (target: $0, parentPlatforms: $0.target.supportedPlatforms)
         }
 
-        while let item = stack.popLast() {
-            let dependencies = directTargetDependencies(
-                path: item.target.path,
-                name: item.target.target.name
-            )
+        while let (target, parentPlatforms) = stack.popLast() {
+            let dependencies = directTargetDependencies(path: target.path, name: target.target.name)
 
             for dependencyTargetReference in dependencies {
                 var platformsToInsert: Set<Platform>?
                 let dependencyTarget = dependencyTargetReference.graphTarget
                 let inheritedPlatforms =
                     dependencyTarget.target.product == .macro
-                        ? Set<Platform>([.macOS]) : item.parentPlatforms
+                        ? Set<Platform>([.macOS]) : parentPlatforms
 
                 if let dependencyCondition = dependencyTargetReference.condition,
-                   let platformIntersection = PlatformCondition.when(item.target.target.dependencyPlatformFilters)?
-                       .intersection(dependencyCondition)
+                    let platformIntersection = PlatformCondition.when(target.target.dependencyPlatformFilters)?
+                        .intersection(dependencyCondition)
                 {
                     switch platformIntersection {
                     case .incompatible:
                         break
                     case let .condition(condition):
                         if let condition {
-                            platformsToInsert = Set(
-                                condition.platformFilters
-                                    .compactMap(\.platform)
-                            ).intersection(inheritedPlatforms)
+                            platformsToInsert = inheritedPlatforms.intersection(
+                                condition.platformFilters.compactMap(\.platform)
+                            )
                         }
                     }
                 } else {
@@ -1430,9 +1394,7 @@ public class GraphTraverser: GraphTraversing {
                     )
                 }
 
-                guard let platformsToInsert else {
-                    continue
-                }
+                guard let platformsToInsert else { continue }
 
                 var existingPlatforms = platforms[dependencyTarget, default: Set()]
                 let continueTraversing = !platformsToInsert.isSubset(of: existingPlatforms)

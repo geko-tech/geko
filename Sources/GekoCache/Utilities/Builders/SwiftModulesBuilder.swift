@@ -110,10 +110,16 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             }
         }
 
-        let xcframeworksDependencies = transitiveXCFrameworkDependencies(
-            dependencyPaths: Array(filteredXCFrameworks.keys),
-            graph: graph
-        )
+        /// Collects direct and transitive dependencies for every XCFramework
+        /// reachable from the supplied roots.
+        var xcframeworksDependencies = [AbsolutePath: (GraphDependency, Set<GraphDependency>)]()
+        for dependencyPath in filteredXCFrameworks.keys {
+            transitiveXCFrameworkDependencies(
+                dependencyPath: dependencyPath,
+                graph: graph,
+                visitedNodes: &xcframeworksDependencies
+            )
+        }
 
         // Parse all needed for build metadata
         for (platform, sdkPath) in sdks {
@@ -357,35 +363,11 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
         })
     }
 
-    /// Collects direct and transitive dependencies for every XCFramework
-    /// reachable from the supplied roots.
     func transitiveXCFrameworkDependencies(
-        dependencyPaths: [AbsolutePath],
-        graph: Graph
-    ) -> [AbsolutePath: (GraphDependency, Set<GraphDependency>)] {
-        var result = [AbsolutePath: (GraphDependency, Set<GraphDependency>)]()
-        for dependencyPath in dependencyPaths {
-            transitiveXCFrameworkDependencies(
-                dependencyPath: dependencyPath,
-                graph: graph,
-                visitedNodes: &result
-            )
-        }
-        return result
-    }
-
-    private func transitiveXCFrameworkDependencies(
         dependencyPath: AbsolutePath,
         graph: Graph,
         visitedNodes: inout [AbsolutePath: (GraphDependency, Set<GraphDependency>)]
     ) {
-        struct XCFrameworkDependenciesFrame {
-            let path: AbsolutePath
-            let dependency: GraphDependency
-            let directDependencies: Set<GraphDependency>
-            var preOrderVisit: Bool
-        }
-
         guard
             visitedNodes[dependencyPath] == nil,
             let graphDependency = graph.xcframeworks[dependencyPath]
@@ -393,14 +375,12 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             return
         }
 
-        var stack = [
-            XCFrameworkDependenciesFrame(
-                path: dependencyPath,
-                dependency: graphDependency,
-                directDependencies: graph.dependencies[graphDependency] ?? [],
-                preOrderVisit: true
-            ),
-        ]
+        var stack = [(
+            path: dependencyPath,
+            dependency: graphDependency,
+            directDependencies: graph.dependencies[graphDependency] ?? [],
+            preOrderVisit: true
+        )]
 
         while !stack.isEmpty {
             let frameIndex = stack.count - 1
@@ -422,14 +402,12 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
                         continue
                     }
 
-                    stack.append(
-                        XCFrameworkDependenciesFrame(
-                            path: xcframework.path,
-                            dependency: childDependency,
-                            directDependencies: graph.dependencies[childDependency] ?? [],
-                            preOrderVisit: true
-                        )
-                    )
+                    stack.append((
+                        path: xcframework.path,
+                        dependency: childDependency,
+                        directDependencies: graph.dependencies[childDependency] ?? [],
+                        preOrderVisit: true
+                    ))
                 }
             } else {
                 var dependencies = frame.directDependencies

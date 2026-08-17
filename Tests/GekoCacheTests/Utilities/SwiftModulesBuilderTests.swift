@@ -37,9 +37,11 @@ final class SwiftModulesBuilderTests: XCTestCase {
         )
 
         // When
-        let result = SwiftModulesBuilder().transitiveXCFrameworkDependencies(
-            dependencyPaths: [pathA],
-            graph: graph
+        var result: [AbsolutePath: (GraphDependency, Set<GraphDependency>)] = [:]
+        SwiftModulesBuilder().transitiveXCFrameworkDependencies(
+            dependencyPath: pathA,
+            graph: graph,
+            visitedNodes: &result
         )
 
         // Then
@@ -78,10 +80,14 @@ final class SwiftModulesBuilderTests: XCTestCase {
         )
 
         // When
-        let result = SwiftModulesBuilder().transitiveXCFrameworkDependencies(
-            dependencyPaths: [pathA, pathB],
-            graph: graph
-        )
+        var result: [AbsolutePath: (GraphDependency, Set<GraphDependency>)] = [:]
+        [pathA, pathB].forEach {
+            SwiftModulesBuilder().transitiveXCFrameworkDependencies(
+                dependencyPath: $0,
+                graph: graph,
+                visitedNodes: &result
+            )
+        }
 
         // Then
         XCTAssertEqual(result[pathA]?.1, Set([sharedXCFramework, library]))
