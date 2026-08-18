@@ -121,7 +121,7 @@ final class TargetBuilderTests: GekoUnitTestCase {
         let workspacePath = try AbsolutePath(validating: "/path/to/project.xcworkspace")
         let graphTraverser = MockGraphTraverser()
 
-        xcodeBuildController.buildStub = { _, _, _, _, _, _, _, _ in
+        xcodeBuildController.buildStub = { _, _, _, _, _, _, _, _, _ in
             [.standardOutput(.init(raw: "success"))]
         }
 
@@ -173,7 +173,7 @@ final class TargetBuilderTests: GekoUnitTestCase {
         let workspacePath = try AbsolutePath(validating: "/path/to/project.xcworkspace")
         let graphTraverser = MockGraphTraverser()
 
-        xcodeBuildController.buildStub = { _, _, _, _, _, _, _, _ in
+        xcodeBuildController.buildStub = { _, _, _, _, _, _, _, _, _ in
             [.standardOutput(.init(raw: "success"))]
         }
 
