@@ -71,7 +71,6 @@ public func topologicalSort<T: Hashable>(
         ))
     }
 
-    // for node in nodes {
     while !stack.isEmpty {
         let frameIndex = stack.count - 1
         let frame = stack[frameIndex]
