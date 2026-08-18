@@ -110,11 +110,12 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
             }
         }
 
-        // XCFrawework with transitive dependencies
+        /// Collects direct and transitive dependencies for every XCFramework
+        /// reachable from the supplied roots.
         var xcframeworksDependencies = [AbsolutePath: (GraphDependency, Set<GraphDependency>)]()
-        for (path, _) in filteredXCFrameworks {
+        for dependencyPath in filteredXCFrameworks.keys {
             transitiveXCFrameworkDependencies(
-                dependencyPath: path,
+                dependencyPath: dependencyPath,
                 graph: graph,
                 visitedNodes: &xcframeworksDependencies
             )
@@ -362,26 +363,62 @@ public final class SwiftModulesBuilder: SwiftModulesBuilding {
         })
     }
 
-    /// Method will recursively find all transitive dependencies for the passed xcframeworks
-    private func transitiveXCFrameworkDependencies(
+    func transitiveXCFrameworkDependencies(
         dependencyPath: AbsolutePath,
         graph: Graph,
         visitedNodes: inout [AbsolutePath: (GraphDependency, Set<GraphDependency>)]
     ) {
-        if visitedNodes[dependencyPath] != nil { return }
-        guard let graphDependency = graph.xcframeworks[dependencyPath] else { return }
-        let directDependencies = graph.dependencies[graphDependency] ?? []
-        let transitiveDependencies = directDependencies.reduce(into: Set<GraphDependency>()) { acc, graphDependency in
-            if case let .xcframework(xcframework) = graphDependency {
-                transitiveXCFrameworkDependencies(
-                    dependencyPath: xcframework.path,
-                    graph: graph,
-                    visitedNodes: &visitedNodes
-                )
-                acc.formUnion(visitedNodes[xcframework.path]?.1 ?? [])
+        guard
+            visitedNodes[dependencyPath] == nil,
+            let graphDependency = graph.xcframeworks[dependencyPath]
+        else {
+            return
+        }
+
+        var stack = [(
+            path: dependencyPath,
+            dependency: graphDependency,
+            directDependencies: graph.dependencies[graphDependency] ?? [],
+            preOrderVisit: true
+        )]
+
+        while !stack.isEmpty {
+            let frameIndex = stack.count - 1
+            let frame = stack[frameIndex]
+
+            if frame.preOrderVisit {
+                guard visitedNodes[frame.path] == nil else {
+                    stack.removeLast()
+                    continue
+                }
+
+                // Store an empty placeholder before visiting dependencies to avoid processing
+                // the same node again. The final result overwrites it in postorder.
+                visitedNodes[frame.path] = (frame.dependency, [])
+                stack[frameIndex].preOrderVisit = false
+
+                for case let .xcframework(xcframework) in frame.directDependencies {
+                    guard let childDependency = graph.xcframeworks[xcframework.path] else {
+                        continue
+                    }
+
+                    stack.append((
+                        path: xcframework.path,
+                        dependency: childDependency,
+                        directDependencies: graph.dependencies[childDependency] ?? [],
+                        preOrderVisit: true
+                    ))
+                }
+            } else {
+                var dependencies = frame.directDependencies
+                for case let .xcframework(xcframework) in frame.directDependencies {
+                    dependencies.formUnion(visitedNodes[xcframework.path]?.1 ?? [])
+                }
+
+                visitedNodes[frame.path] = (frame.dependency, dependencies)
+                stack.removeLast()
             }
         }
-        visitedNodes[dependencyPath] = (graphDependency, directDependencies.union(transitiveDependencies))
     }
 
     private func parseSwiftInterface(

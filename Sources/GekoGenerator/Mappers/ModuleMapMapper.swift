@@ -56,10 +56,15 @@ public final class ModuleMapMapper: GraphMapping {
         let projectPath: AbsolutePath
         let targetName: String
     }
-    
+
     private struct DependencyMetadata: Hashable {
         let moduleMapPath: AbsolutePath?
         let headerSearchPaths: [String]
+    }
+
+    private struct ResolvedDependency {
+        let project: Project
+        let target: GraphTarget
     }
 
     public init() {}
@@ -74,6 +79,7 @@ public final class ModuleMapMapper: GraphMapping {
         for target in graphTraverser.allTargets().filter({ $0.project.projectType != .cocoapods }) {
             try dependenciesModuleMaps(
                 graph: graph,
+                graphTraverser: graphTraverser,
                 target: target,
                 targetToDependenciesMetadata: &targetToDependenciesMetadata
             )
@@ -140,83 +146,158 @@ public final class ModuleMapMapper: GraphMapping {
     /// The `targetToDependenciesMetadata` is also used as cache to avoid recomputing the set for already computed targets.
     private func dependenciesModuleMaps( // swiftlint:disable:this function_body_length
         graph: Graph,
+        graphTraverser: GraphTraverser,
         target: GraphTarget,
         targetToDependenciesMetadata: inout [TargetID: Set<DependencyMetadata>]
     ) throws {
-        let targetID = TargetID(projectPath: target.path, targetName: target.target.name)
-        if targetToDependenciesMetadata[targetID] != nil {
+        struct DependenciesModuleMapsFrame {
+            let target: GraphTarget
+            var resolvedDependencies: [ResolvedDependency]
+            var preOrderVisit: Bool
+        }
+
+        let rootTargetID = targetID(for: target)
+        if targetToDependenciesMetadata[rootTargetID] != nil {
             // already computed
             return
         }
-        let graphTraverser = GraphTraverser(graph: graph)
 
-        var dependenciesMetadata: Set<DependencyMetadata> = []
-        for dependency in target.target.dependencies {
-            let dependentProject: Project
-            let dependentTarget: GraphTarget
-            switch dependency {
-            case let .target(name, _, _):
-                guard let dependentTargetFromName = graphTraverser.target(path: target.path, name: name) else {
-                    throw ModuleMapMapperError.invalidTargetDependency(
-                        sourceProject: target.project.path,
-                        sourceTarget: target.target.name,
-                        dependentTarget: name
+        var stack = [
+            DependenciesModuleMapsFrame(
+                target: target,
+                resolvedDependencies: [],
+                preOrderVisit: true
+            ),
+        ]
+
+        while !stack.isEmpty {
+            let frameIndex = stack.count - 1
+            let frame = stack[frameIndex]
+
+            if frame.preOrderVisit {
+                let frameTargetID = targetID(for: frame.target)
+                guard targetToDependenciesMetadata[frameTargetID] == nil else {
+                    stack.removeLast()
+                    continue
+                }
+
+                let resolvedDependencies = try frame.target.target.dependencies.compactMap { dependency in
+                    try resolve(
+                        dependency: dependency,
+                        from: frame.target,
+                        graph: graph,
+                        graphTraverser: graphTraverser
                     )
                 }
 
-                guard dependentTargetFromName.project.projectType != .cocoapods else { continue }
-                dependentProject = target.project
-                dependentTarget = dependentTargetFromName
-            case let .project(name, path, _, _):
-                guard let dependentProjectFromPath = graph.projects[path],
-                      let dependentTargetFromName = graphTraverser.target(path: path, name: name)
-                else {
-                    throw ModuleMapMapperError.invalidProjectTargetDependency(
-                        sourceProject: target.project.path,
-                        sourceTarget: target.target.name,
-                        dependentProject: path,
-                        dependentTarget: name
+                targetToDependenciesMetadata[frameTargetID] = []
+                stack[frameIndex].resolvedDependencies = resolvedDependencies
+                stack[frameIndex].preOrderVisit = false
+
+                for resolvedDependency in resolvedDependencies.reversed() {
+                    stack.append(
+                        DependenciesModuleMapsFrame(
+                            target: resolvedDependency.target,
+                            resolvedDependencies: [],
+                            preOrderVisit: true
+                        )
                     )
                 }
-                guard dependentTargetFromName.project.projectType != .cocoapods else { continue }
-                dependentProject = dependentProjectFromPath
-                dependentTarget = dependentTargetFromName
-            case .framework, .xcframework, .library, .sdk, .xctest, .bundle, .external, .local:
-                continue
-            }
-
-            try dependenciesModuleMaps(
-                graph: graph,
-                target: dependentTarget,
-                targetToDependenciesMetadata: &targetToDependenciesMetadata
-            )
-
-            // direct dependency module map
-            let dependencyModuleMapPath: AbsolutePath?
-
-            if case let .string(dependencyModuleMap) = dependentTarget.target.settings?.base[Self.modulemapFileSetting], dependentTarget.project.projectType == .spm {
-                let pathString = dependentProject.path.pathString
-                dependencyModuleMapPath = try AbsolutePath(
-                    validating: dependencyModuleMap
-                        .replacingOccurrences(of: "$(PROJECT_DIR)", with: pathString)
-                        .replacingOccurrences(of: "$(SRCROOT)", with: pathString)
-                        .replacingOccurrences(of: "$(SOURCE_ROOT)", with: pathString)
-                )
             } else {
-                dependencyModuleMapPath = nil
-            }
+                var dependenciesMetadata = Set<DependencyMetadata>()
+                for resolvedDependency in frame.resolvedDependencies {
+                    let dependencyTargetID = targetID(for: resolvedDependency.target)
+                    dependenciesMetadata.formUnion(targetToDependenciesMetadata[dependencyTargetID] ?? [])
+                    dependenciesMetadata.insert(try dependencyMetadata(for: resolvedDependency))
+                }
 
-            var headerSearchPaths: [String]
-            switch dependentTarget.target.settings?.base[Self.headerSearchPaths] ?? .array([]) {
-            case let .array(values):
-                headerSearchPaths = values
-            case let .string(value):
-                headerSearchPaths = [value]
+                let frameTargetID = targetID(for: frame.target)
+                targetToDependenciesMetadata[frameTargetID] = dependenciesMetadata
+                stack.removeLast()
             }
+        }
+    }
 
-            headerSearchPaths = headerSearchPaths.map {
-                let pathString = dependentProject.path.pathString
-                return (
+    private func targetID(for target: GraphTarget) -> TargetID {
+        TargetID(projectPath: target.path, targetName: target.target.name)
+    }
+
+    private func resolve(
+        dependency: TargetDependency,
+        from target: GraphTarget,
+        graph: Graph,
+        graphTraverser: GraphTraverser
+    ) throws -> ResolvedDependency? {
+        let dependentProject: Project
+        let dependentTarget: GraphTarget
+
+        switch dependency {
+        case let .target(name, _, _):
+            guard let resolvedTarget = graphTraverser.target(path: target.path, name: name) else {
+                throw ModuleMapMapperError.invalidTargetDependency(
+                    sourceProject: target.project.path,
+                    sourceTarget: target.target.name,
+                    dependentTarget: name
+                )
+            }
+            dependentProject = target.project
+            dependentTarget = resolvedTarget
+
+        case let .project(name, path, _, _):
+            guard
+                let resolvedProject = graph.projects[path],
+                let resolvedTarget = graphTraverser.target(path: path, name: name)
+            else {
+                throw ModuleMapMapperError.invalidProjectTargetDependency(
+                    sourceProject: target.project.path,
+                    sourceTarget: target.target.name,
+                    dependentProject: path,
+                    dependentTarget: name
+                )
+            }
+            dependentProject = resolvedProject
+            dependentTarget = resolvedTarget
+
+        case .framework, .xcframework, .library, .sdk, .xctest, .bundle, .external, .local:
+            return nil
+        }
+
+        guard dependentTarget.project.projectType != .cocoapods else {
+            return nil
+        }
+
+        return ResolvedDependency(project: dependentProject, target: dependentTarget)
+    }
+
+    private func dependencyMetadata(for dependency: ResolvedDependency) throws -> DependencyMetadata {
+        let dependencyModuleMapPath: AbsolutePath?
+        let pathString = dependency.project.path.pathString
+
+        if case let .string(dependencyModuleMap) = dependency.target.target.settings?.base[Self.modulemapFileSetting],
+           dependency.target.project.projectType == .spm
+        {
+            dependencyModuleMapPath = try AbsolutePath(
+                validating: dependencyModuleMap
+                    .replacingOccurrences(of: "$(PROJECT_DIR)", with: pathString)
+                    .replacingOccurrences(of: "$(SRCROOT)", with: pathString)
+                    .replacingOccurrences(of: "$(SOURCE_ROOT)", with: pathString)
+            )
+        } else {
+            dependencyModuleMapPath = nil
+        }
+
+        let headerSearchPaths: [String]
+        switch dependency.target.target.settings?.base[Self.headerSearchPaths] ?? .array([]) {
+        case let .array(values):
+            headerSearchPaths = values
+        case let .string(value):
+            headerSearchPaths = [value]
+        }
+
+        return DependencyMetadata(
+            moduleMapPath: dependencyModuleMapPath,
+            headerSearchPaths: headerSearchPaths.map {
+                (
                     try? AbsolutePath(
                         validating: $0
                             .replacingOccurrences(of: "$(PROJECT_DIR)", with: pathString)
@@ -225,22 +306,7 @@ public final class ModuleMapMapper: GraphMapping {
                     ).pathString
                 ) ?? $0
             }
-
-            // indirect dependency module maps
-            let dependentTargetID = TargetID(projectPath: dependentProject.path, targetName: dependentTarget.target.name)
-            if let indirectDependencyMetadata = targetToDependenciesMetadata[dependentTargetID] {
-                dependenciesMetadata.formUnion(indirectDependencyMetadata)
-            }
-
-            dependenciesMetadata.insert(
-                DependencyMetadata(
-                    moduleMapPath: dependencyModuleMapPath,
-                    headerSearchPaths: headerSearchPaths
-                )
-            )
-        }
-
-        targetToDependenciesMetadata[targetID] = dependenciesMetadata
+        )
     }
 
     private func updatedHeaderSearchPaths(

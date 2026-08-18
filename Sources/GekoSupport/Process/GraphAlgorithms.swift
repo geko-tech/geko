@@ -58,42 +58,48 @@ public func transitiveClosure<T>(
 public func topologicalSort<T: Hashable>(
     _ nodes: [T], successors: (T) throws -> [T]
 ) throws -> [T] {
-    // Implements a topological sort via recursion and reverse postorder DFS.
-    func visit(_ node: T,
-               _ stack: inout OrderedSet<T>, _ visited: inout Set<T>, _ result: inout [T],
-               _ successors: (T) throws -> [T]) throws {
-        // Mark this node as visited -- we are done if it already was.
-        if !visited.insert(node).inserted {
-            return
-        }
+    var visited = Set<T>()
+    var active = Set<T>()
+    var result: [T] = []
 
-        // Otherwise, visit each adjacent node.
-        for succ in try successors(node) {
-            guard stack.append(succ) else {
-                // If the successor is already in this current stack, we have found a cycle.
-                //
-                // FIXME: We could easily include information on the cycle we found here.
-                throw GraphError.unexpectedCycle
-            }
-            try visit(succ, &stack, &visited, &result, successors)
-            let popped = stack.removeLast()
-            assert(popped == succ)
-        }
-
-        // Add to the result.
-        result.append(node)
+    var stack: [(node: T, preOrderVisit: Bool)] = []
+    // populate stack in the reverse order to keep original ordering
+    for i in stride(from: nodes.count - 1, through: 0, by: -1) {
+        stack.append((
+            node: nodes[i],
+            preOrderVisit: true
+        ))
     }
 
-    // FIXME: This should use a stack not recursion.
-    var visited = Set<T>()
-    var result = [T]()
-    var stack = OrderedSet<T>()
-    for node in nodes {
-        precondition(stack.isEmpty)
-        stack.append(node)
-        try visit(node, &stack, &visited, &result, successors)
-        let popped = stack.removeLast()
-        assert(popped == node)
+    while !stack.isEmpty {
+        let frameIndex = stack.count - 1
+        let frame = stack[frameIndex]
+
+        if frame.preOrderVisit {
+            guard visited.insert(frame.node).inserted else {
+                stack.removeLast()
+                continue
+            }
+
+            stack[frameIndex].preOrderVisit = false
+            active.insert(frame.node)
+
+            let successors = try successors(frame.node)
+            // add successors to stack in reverse order to keep tree traversing order the same as successor list
+            for i in stride(from: successors.count - 1, through: 0, by: -1) {
+                // An edge to an active node closes a cycle in the current DFS path.
+                if active.contains(successors[i]) {
+                    throw GraphError.unexpectedCycle
+                }
+
+                stack.append((node: successors[i], preOrderVisit: true))
+            }
+        } else {
+            // Append in postorder to preserve the ordering of the recursive implementation.
+            result.append(frame.node)
+            active.remove(frame.node)
+            stack.removeLast()
+        }
     }
 
     return result.reversed()
@@ -113,38 +119,56 @@ public func findCycle<T: Hashable>(
     _ nodes: [T],
     successors: (T) throws -> [T]
 ) rethrows -> (path: [T], cycle: [T])? {
-    // Ordered set to hold the current traversed path.
-    var path = OrderedSet<T>()
     var validNodes = Set<T>()
+    var path: [T] = []
+    // Mirrors `path` and provides the cycle start index when a back edge is found.
+    var activeNodeIndices: [T: Int] = [:]
 
-    // Function to visit nodes recursively.
-    // FIXME: Convert to stack.
-    func visit(_ node: T, _ successors: (T) throws -> [T]) rethrows -> (path: [T], cycle: [T])? {
-        if validNodes.contains(node) { return nil }
-        
-        // If this node is already in the current path then we have found a cycle.
-        if !path.append(node) {
-            let index = path.firstIndex(of: node)!
-            return (Array(path[path.startIndex..<index]), Array(path[index..<path.endIndex]))
-        }
+    var stack: [(node: T, preOrderVisit: Bool)] = []
+    // populate stack in the reverse order to keep original ordering
+    for i in stride(from: nodes.count - 1, through: 0, by: -1) {
+        stack.append((
+            node: nodes[i],
+            preOrderVisit: true
+        ))
+    }
 
-        for succ in try successors(node) {
-            if let cycle = try visit(succ, successors) {
-                return cycle
+    while !stack.isEmpty {
+        let frameIndex = stack.count - 1
+        let frame = stack[frameIndex]
+
+        if frame.preOrderVisit {
+            guard !validNodes.contains(frame.node) else {
+                stack.removeLast()
+                continue
             }
+
+            stack[frameIndex].preOrderVisit = false
+            activeNodeIndices[frame.node] = path.count
+            path.append(frame.node)
+
+            let successors = try successors(frame.node)
+            for i in stride(from: successors.count - 1, through: 0, by: -1) {
+                let successor = successors[i]
+
+                if let cycleStartIndex = activeNodeIndices[successor] {
+                    return (
+                        path: Array(path[..<cycleStartIndex]),
+                        cycle: Array(path[cycleStartIndex...])
+                    )
+                }
+
+                guard !validNodes.contains(successor) else { continue }
+
+                stack.append((node: successor, preOrderVisit: true))
+            }
+        } else {
+            validNodes.insert(frame.node)
+            activeNodeIndices.removeValue(forKey: frame.node)
+            path.removeLast()
+            stack.removeLast()
         }
-        // No cycle found for this node, remove it from the path.
-        let item = path.removeLast()
-        assert(item == node)
-        validNodes.insert(node)
-        return nil
     }
 
-    for node in nodes {
-        if let cycle = try visit(node, successors) {
-            return cycle
-        }
-    }
-    // Couldn't find any cycle in the graph.
     return nil
 }

@@ -2724,6 +2724,54 @@ final class GraphTraverserTests: GekoUnitTestCase {
         )
     }
 
+    func test_linkableDependencies_handlesLongDynamicDependencyChainWithoutRecursion() throws {
+        // Given
+        let path: AbsolutePath = "/project"
+        let frameworkCount = 20_000
+        let app = Target.test(name: "App", product: .app)
+        let frameworks = (0 ..< frameworkCount).map {
+            Target.test(name: "Framework\($0)", product: .framework)
+        }
+        let targets = [app] + frameworks
+        let project = Project.test(path: path, targets: targets)
+        let frameworkDependencies = frameworks.map {
+            GraphDependency.target(name: $0.name, path: path)
+        }
+
+        var dependencies: [GraphDependency: Set<GraphDependency>] = [
+            .target(name: app.name, path: path): [frameworkDependencies[0]],
+            frameworkDependencies[frameworkCount - 1]: [],
+        ]
+        for index in 0 ..< frameworkCount - 1 {
+            dependencies[frameworkDependencies[index]] = [frameworkDependencies[index + 1]]
+        }
+
+        let subject = GraphTraverser(
+            graph: .test(
+                path: path,
+                projects: [path: project],
+                targets: [
+                    path: Dictionary(uniqueKeysWithValues: targets.map { ($0.name, $0) }),
+                ],
+                dependencies: dependencies
+            )
+        )
+
+        // When
+        let result = try subject.linkableDependencies(path: path, name: app.name)
+
+        // Then
+        XCTAssertEqual(
+            result,
+            [
+                .product(
+                    target: frameworks[0].name,
+                    productName: frameworks[0].productNameWithExtension
+                ),
+            ]
+        )
+    }
+
     func test_linkableDependencies_transitiveDynamicLibrariesOneStaticHop() throws {
         // Given
         let staticFramework = Target.test(
@@ -5328,6 +5376,53 @@ final class GraphTraverserTests: GekoUnitTestCase {
         ])
     }
 
+    func test_allSwiftMacroTargets_handlesLongDependencyChainWithoutRecursion() {
+        // Given
+        let path: AbsolutePath = "/project"
+        let targetCount = 20_000
+        let macroTargetIndex = targetCount - 1
+        let targetWithMacroIndex = macroTargetIndex - 1
+        let targets = (0 ..< targetCount).map { index in
+            Target.test(
+                name: "Target\(index)",
+                product: index == macroTargetIndex ? .macro : .staticFramework
+            )
+        }
+        let project = Project.test(path: path, targets: targets)
+        let graphTargets = Dictionary(uniqueKeysWithValues: targets.map { ($0.name, $0) })
+        let dependencies = Dictionary(uniqueKeysWithValues: (0 ..< targetCount).map { index in
+            let dependency = GraphDependency.target(name: targets[index].name, path: path)
+            let directDependencies: Set<GraphDependency> = index == macroTargetIndex
+                ? []
+                : [.target(name: targets[index + 1].name, path: path)]
+            return (dependency, directDependencies)
+        })
+        let subject = GraphTraverser(
+            graph: .test(
+                path: path,
+                projects: [path: project],
+                targets: [path: graphTargets],
+                dependencies: dependencies
+            )
+        )
+
+        // When
+        let result = subject.allSwiftMacroTargets(path: path, name: targets[0].name)
+
+        // Then
+        // The method returns the linkable target that directly depends on the macro target.
+        XCTAssertEqual(
+            result,
+            Set([
+                GraphTarget(
+                    path: path,
+                    target: targets[targetWithMacroIndex],
+                    project: project
+                ),
+            ])
+        )
+    }
+
     func test_directTargetDependenciesWithConditions() throws {
         // Given
         let app = Target.test(name: "App", destinations: [.iPhone], product: .app)
@@ -6057,6 +6152,87 @@ final class GraphTraverserTests: GekoUnitTestCase {
             if case let .project(_, path, _, _) = dep { return path.pathString == unusedProjectPath.pathString }
             return false
         })
+    }
+
+    func test_warmup_handlesLongDependencyChainWithoutRecursion() {
+        // Given
+        let path: AbsolutePath = "/project"
+        let nodeCount = 1_000
+        let nodes = (0 ..< nodeCount).map {
+            GraphDependency.target(name: "Target\($0)", path: path)
+        }
+        var dependencies: [GraphDependency: Set<GraphDependency>] = [
+            nodes[nodeCount - 1]: [],
+        ]
+        for index in 0 ..< nodeCount - 1 {
+            dependencies[nodes[index]] = [nodes[index + 1]]
+        }
+        let subject = GraphTraverser(
+            graph: .test(
+                path: path,
+                dependencies: dependencies
+            )
+        )
+
+        // When
+        subject.warmup()
+
+        // Then
+        XCTAssertEqual(
+            subject.combinedCondition(to: nodes[nodeCount - 1], from: nodes[0]),
+            .condition(nil)
+        )
+    }
+
+    func test_allTargetDependencies_returnsAllReachableTargetsInBranchingGraph() {
+        // Given
+        let path: AbsolutePath = "/project"
+        let root = Target.test(name: "Root")
+        let featureA = Target.test(name: "FeatureA")
+        let featureB = Target.test(name: "FeatureB")
+        let shared = Target.test(name: "Shared")
+        let leaf = Target.test(name: "Leaf")
+        let targets = [root, featureA, featureB, shared, leaf]
+        let project = Project.test(path: path, targets: targets)
+
+        let rootDependency = GraphDependency.target(name: root.name, path: path)
+        let featureADependency = GraphDependency.target(name: featureA.name, path: path)
+        let featureBDependency = GraphDependency.target(name: featureB.name, path: path)
+        let sharedDependency = GraphDependency.target(name: shared.name, path: path)
+        let leafDependency = GraphDependency.target(name: leaf.name, path: path)
+        let precompiledDependency = GraphDependency.testFramework(path: "/Precompiled.framework")
+
+        let subject = GraphTraverser(
+            graph: .test(
+                path: path,
+                projects: [path: project],
+                targets: [
+                    path: Dictionary(uniqueKeysWithValues: targets.map { ($0.name, $0) }),
+                ],
+                dependencies: [
+                    rootDependency: [featureADependency, featureBDependency, precompiledDependency],
+                    featureADependency: [sharedDependency],
+                    featureBDependency: [sharedDependency],
+                    sharedDependency: [leafDependency],
+                    leafDependency: [],
+                    precompiledDependency: [],
+                ]
+            )
+        )
+
+        // When
+        let result = subject.allTargetDependencies(path: path, name: root.name)
+
+        // Then
+        XCTAssertEqual(
+            result,
+            Set([
+                GraphTarget(path: path, target: featureA, project: project),
+                GraphTarget(path: path, target: featureB, project: project),
+                GraphTarget(path: path, target: shared, project: project),
+                GraphTarget(path: path, target: leaf, project: project),
+            ])
+        )
     }
 
     // MARK: - Helpers

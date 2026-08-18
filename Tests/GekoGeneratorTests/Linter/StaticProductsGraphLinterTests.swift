@@ -1130,6 +1130,55 @@ class StaticProductsGraphLinterTests: XCTestCase {
         XCTAssertEqual(results, [])
     }
 
+    func test_lint_whenLongDependencyChainDoesNotRecurse() {
+        // Given
+        let path: AbsolutePath = "/project"
+        let frameworkCount = 20_000
+        let app = Target.test(name: "App")
+        let frameworks = (0 ..< frameworkCount).map {
+            Target.test(name: "Framework\($0)", product: .framework)
+        }
+        let staticFramework = Target.test(name: "StaticFramework", product: .staticFramework)
+        let targets = [app] + frameworks + [staticFramework]
+        let project = Project.test(path: path, targets: targets)
+
+        let appDependency = GraphDependency.target(name: app.name, path: path)
+        let frameworkDependencies = frameworks.map {
+            GraphDependency.target(name: $0.name, path: path)
+        }
+        let staticFrameworkDependency = GraphDependency.target(name: staticFramework.name, path: path)
+
+        var dependencies: [GraphDependency: Set<GraphDependency>] = [
+            appDependency: [frameworkDependencies[0]],
+            staticFrameworkDependency: [],
+        ]
+        for index in 0 ..< frameworkCount {
+            dependencies[frameworkDependencies[index]] = [
+                index + 1 < frameworkCount
+                    ? frameworkDependencies[index + 1]
+                    : staticFrameworkDependency,
+            ]
+        }
+
+        let graph = Graph.test(
+            path: path,
+            projects: [path: project],
+            targets: [
+                path: Dictionary(uniqueKeysWithValues: targets.map { ($0.name, $0) }),
+            ],
+            dependencies: dependencies
+        )
+
+        // When
+        let results = subject.lint(
+            graphTraverser: GraphTraverser(graph: graph),
+            config: .test()
+        )
+
+        // Then
+        XCTAssertEqual(results, [])
+    }
+
     // MARK: - Helpers
 
     private func warning(product node: String, type: String = "Target", linkedBy: [GraphDependency]) -> LintingIssue {
