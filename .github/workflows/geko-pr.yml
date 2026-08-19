@@ -34,7 +34,11 @@ jobs:
         if: steps.only_docs_changes.outputs.run == 'true'
         run: |
           set -o pipefail
-          SWIFTPM_TEST_RUNNER_PROGRESS_BAR=lit xcrun swift test --parallel --enable-code-coverage \
+          SWIFTPM_TEST_RUNNER_PROGRESS_BAR=lit xcrun swift test --parallel --skip GekoAcceptanceTests \
+            | tee /dev/stderr \
+            | xcbeautify --renderer github-actions --is-ci
+
+          SWIFTPM_TEST_RUNNER_PROGRESS_BAR=lit xcrun swift test --parallel --skip-build --filter GekoAcceptanceTests \
             | tee /dev/stderr \
             | xcbeautify --renderer github-actions --is-ci
 
