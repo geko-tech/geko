@@ -13,7 +13,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         AbsolutePath?,
         Bool,
         [XcodeBuildArgument],
-        [String]
+        [String],
+        XcodeBuildEventHandler?
     ) -> [SystemEvent<XcodeBuildOutput>])?
 
     func build(
@@ -24,7 +25,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         derivedDataPath _: AbsolutePath?,
         clean _: Bool,
         arguments _: [GekoCore.XcodeBuildArgument],
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        eventHandler: XcodeBuildEventHandler?
     ) throws {}
 
     var testStub: (
@@ -112,7 +114,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         derivedDataPath: AbsolutePath?,
         clean: Bool,
         arguments: [XcodeBuildArgument],
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        eventHandler: XcodeBuildEventHandler?
     ) -> AsyncThrowingStream<SystemEvent<XcodeBuildOutput>, Error> {
         if let buildStub {
             return buildStub(
@@ -123,7 +126,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
                 derivedDataPath,
                 clean,
                 arguments,
-                passthroughXcodeBuildArguments
+                passthroughXcodeBuildArguments,
+                eventHandler
             ).asAsyncThrowingStream()
         } else {
             return AsyncThrowingStream {

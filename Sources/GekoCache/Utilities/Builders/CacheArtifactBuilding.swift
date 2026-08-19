@@ -6,11 +6,14 @@ public protocol CacheArtifactBuilding {
     /// Builds a given target and outputs the cacheable artifact into the given directory.
     ///
     /// - Parameters:
+    ///   - graph: Project graph
+    ///   - scheme: The chosen scheme for the build
     ///   - projectTarget: Build target whether .xcworkspace or .xcodeproj
     ///   - configuration: The configuration that will be used when compiling the given target.
     ///   - osVersion: The specific version of the OS that will be used when compiling the given target.
     ///   - deviceName: The specific device that will be used when compiling the given target.
     ///   - into: The directory into which the output artifacts will be copied.
+    ///   - eventHandler: Closure for catching xcodebuild handled events
     func build(
         graph: Graph,
         scheme: Scheme,
@@ -20,7 +23,8 @@ public protocol CacheArtifactBuilding {
         configuration: String,
         osVersion: Version?,
         deviceName: String?,
-        into outputDirectory: AbsolutePath
+        into outputDirectory: AbsolutePath,
+        eventHandler: XcodeBuildEventHandler?
     ) async throws
 }
 

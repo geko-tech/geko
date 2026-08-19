@@ -89,8 +89,9 @@ public enum XcodeBuildError: FatalError {
         switch self {
         case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
             return """
+                \n
                 Build failed.
-                \(errors.joined(separator: "\n"))
+                \(errors.isEmpty ? "Xcodebuild exited with a non-zero exit code.\n" : errors.joined(separator: "\n"))
                 More information in build logs:
                 Beautified: cat \(buildLogPath.pathString)
                 Raw: open \(rawBuildLogPath.pathString)
@@ -103,6 +104,8 @@ public enum XcodeBuildError: FatalError {
     }
 }
 
+public typealias XcodeBuildEventHandler = (XcodeBuildEvent) -> Void
+
 public protocol XcodeBuildControlling {
     /// Returns an observable to build the given project using xcodebuild.
     /// - Parameters:
@@ -112,6 +115,7 @@ public protocol XcodeBuildControlling {
     ///   to determine the destination.
     ///   - clean: True if xcodebuild should clean the project before building.
     ///   - arguments: Extra xcodebuild arguments.
+    ///   - eventHandler: Closure for catching xcodebuild handled events
     func build(
         _ target: XcodeBuildTarget,
         scheme: String,
@@ -120,7 +124,8 @@ public protocol XcodeBuildControlling {
         derivedDataPath: AbsolutePath?,
         clean: Bool,
         arguments: [XcodeBuildArgument],
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        eventHandler: XcodeBuildEventHandler?
     ) throws
 
     /// Returns an observable to test the given project using xcodebuild.

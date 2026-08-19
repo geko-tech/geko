@@ -38,7 +38,8 @@ public final class MockCacheArtifactBuilder: CacheArtifactBuilding {
         configuration _: String,
         osVersion _: Version?,
         deviceName _: String?,
-        into outputDirectory: AbsolutePath
+        into outputDirectory: AbsolutePath,
+        eventHandler: GekoCore.XcodeBuildEventHandler?
     ) throws {
         invokedBuildSchemeProject = true
         invokedBuildSchemeProjectCount += 1

@@ -76,7 +76,7 @@ public final class SwiftModuleCachingTask: CacheTask {
             cacheOutputType: context.outputType,
             cacheDestination: context.destination
         )
-        logSpiner.stop()
+        logSpiner.stop(message: "Swiftmodule frameworks hashed")
 
         // Replace swiftinterface with already cached swiftmodules
         try await replaceSwiftInterfaces(
@@ -120,7 +120,7 @@ public final class SwiftModuleCachingTask: CacheTask {
                 hashedXCFrameworks: hashedXCFrameworks,
                 into: outputDirectory
             )
-            self.logSpiner.stop()
+            self.logSpiner.stop(message: "Swiftmodules built")
 
             self.logSpiner.start(message: "Storing swiftmodules")
             try await self.store(
@@ -128,7 +128,7 @@ public final class SwiftModuleCachingTask: CacheTask {
                 outputDirectory: outputDirectory,
                 cacheProfile: profile
             )
-            self.logSpiner.stop()
+            self.logSpiner.stop(message: "Swiftmodules stored")
         }
     }
 

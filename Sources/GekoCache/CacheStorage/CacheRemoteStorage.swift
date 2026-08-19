@@ -32,6 +32,7 @@ public final class CacheRemoteStorage: CacheStoring {
     private let cacheCloud: CacheCloudServicing
     private let cacheLatestPathStore: CacheLatestPathStoring
     private let cacheContextFolderProvider: CacheContextFolderProviding
+    private let clearingLogger: ClearingLogger = ClearingLogger()
 
     // MARK: - Init
     
@@ -92,7 +93,7 @@ public final class CacheRemoteStorage: CacheStoring {
     public func fetch(name: String, hash: String) async throws -> AbsolutePath {
         let filePath = try await cacheCloud.download(hash: hash, name: name, contextFolder: cacheContextFolderProvider.contextFolderName())
         let unzipPath = try unzip(downloadedArchive: filePath, name: name, hash: hash)
-        logger.info("Cache artifact downloaded for target \(name) with hash \(hash).")
+        clearingLogger.info("Cache artifact downloaded for target \(name) with hash \(hash).")
         return unzipPath
     }
 

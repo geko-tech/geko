@@ -27,6 +27,6 @@ final class CacheBundleBuilderTask: CacheArchivingTask {
             outputDirectory: context.workDirectory,
             cacheableTarget: context.buildTargetsWithHash.map { $0.0 }
         )
-        logSpinner.stop()
+        logSpinner.stop(message: "Bundles prepared")
     }
 }

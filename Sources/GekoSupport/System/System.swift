@@ -139,6 +139,15 @@ public final class System: Systeming {
         let command = [try currentShell(), "-c", arguments.joined(separator: " ")]
         return try capture(command)
     }
+    
+    public func runShell(
+        _ arguments: [String],
+        environment: [String: String],
+        handler: @escaping (String) throws -> Void
+    ) throws {
+        let command = [try currentShell(), "-c", arguments.joined(separator: " ")]
+        try captureStreamLines(command, environment: environment, handler: handler)
+    }
 
     public func capture(_ arguments: [String]) throws -> String {
         try capture(arguments, verbose: false, environment: env)
@@ -254,6 +263,54 @@ public final class System: Systeming {
         group.wait()
 
         return String(data: result, encoding: .utf8)!
+    }
+    
+    public func captureStreamLines(
+        _ arguments: [String],
+        environment: [String: String],
+        handler: @escaping (String) throws -> Void
+    ) throws {
+        var lineBuffer = LineBuffer()
+        var handlerError: Error?
+        
+        let process = Process(
+            arguments: arguments,
+            environment: environment,
+            outputRedirection: .stream(
+                stdout: { bytes in
+                    guard handlerError == nil else { return }
+                    
+                    do {
+                        for line in lineBuffer.append(bytes) {
+                            try handler(line)
+                        }
+                    } catch {
+                        handlerError = error
+                    }
+                },
+                stderr: { _ in },
+                redirectStderr: true
+            ),
+            startNewProcessGroup: false
+        )
+        
+        try process.launch()
+        let result = try process.waitUntilExit()
+        
+        // Handle final line if exist
+        if handlerError == nil, let line = lineBuffer.finish() {
+            do {
+                try handler(line)
+            } catch {
+                handlerError = error
+            }
+        }
+        
+        if let handlerError {
+            throw handlerError
+        }
+        
+        try result.throwIfErrored()
     }
 
     public func runAndPrint(_ arguments: [String]) throws {

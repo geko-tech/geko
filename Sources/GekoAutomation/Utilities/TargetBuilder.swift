@@ -125,7 +125,8 @@ public final class TargetBuilder: TargetBuilding {
                 derivedDataPath: derivedDataPath,
                 clean: clean,
                 arguments: buildArguments,
-                passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+                passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+                eventHandler: nil
             )
 
         if let buildOutputPath {

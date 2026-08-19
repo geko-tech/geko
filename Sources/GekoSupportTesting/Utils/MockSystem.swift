@@ -47,6 +47,10 @@ public final class MockSystem: Systeming {
     public func runShell(_ arguments: [String]) throws -> String {
         try capture(arguments)
     }
+    
+    public func runShell(_ arguments: [String], environment: [String : String], handler: @escaping (String) throws -> Void) throws {
+        _ = try capture(arguments)
+    }
 
     public func capture(_ arguments: [String]) throws -> String {
         try capture(arguments, verbose: false, environment: env)
@@ -91,6 +95,10 @@ public final class MockSystem: Systeming {
     public func capture(_ arguments: [String], withInput: String?) throws -> String {
         withInputStub?(withInput)
         return try capture(arguments, verbose: false, environment: env)
+    }
+    
+    public func captureStreamLines(_ arguments: [String], environment: [String : String], handler: @escaping (String) throws -> Void) throws {
+        _ = try capture(arguments, verbose: false, environment: env)
     }
 
     public func capture(_ arguments: [String], withInput _: String?, environment _: [String: String]) throws -> String {

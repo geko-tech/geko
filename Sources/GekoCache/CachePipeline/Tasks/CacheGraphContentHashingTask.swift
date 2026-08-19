@@ -35,6 +35,6 @@ public final class CacheGraphContentHashingTask: CacheTask {
         context.hashesByCacheableTarget = hashesByCacheableTarget
         
         CacheAnalytics.currentHashableBuildTargetsCount = hashesByCacheableTarget.keys.count
-        logSpinner.stop()
+        logSpinner.stop(message: "Cacheable targets hashed")
     }
 }

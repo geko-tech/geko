@@ -103,6 +103,7 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
             .compactMap(context: config.projectGenerationContext) { project -> ProjectDescriptor in
                 try projectDescriptorGenerator.generate(project: project, graphTraverser: graphTraverser)
             }
+        clearingLogger.info("All projects generated")
 
         logger.info("\nGenerating cross project links", metadata: .subsection)
         try CrossProjectLinkGenerator().generateLinks(
