@@ -101,5 +101,6 @@ public final class LogFileStoreHandler: LogFileStoreHandling {
     
     public func close(logFile: LogFile) throws {
         try fileHandles[logFile]?.close()
+        fileHandles[logFile] = nil
     }
 }
