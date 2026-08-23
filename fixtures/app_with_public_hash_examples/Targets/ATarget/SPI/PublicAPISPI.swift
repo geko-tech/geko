@@ -1,6 +1,6 @@
 import Foundation
 
-// Expected:
+// Expected: I think this is more of an unsafe
 //
 //  @_spi(Internal)
 //  public func spiInternalFunction() -> Int
@@ -8,7 +8,7 @@ import Foundation
 @_spi(Internal)
 public func spiInternalFunction() -> Int { 2 }
 
-// Expected:
+// Expected: I think this is more of an unsafe
 //
 //  @_spi(Internal)
 //  public let spiProperty: Int

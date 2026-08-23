@@ -52,7 +52,7 @@ public final class PublicMethodDerivedCase: PublicMethodBaseCase {
 //  }
 //
 public struct PublicMutatingMethodCase {
-    public private(set) var value = 0
+    public private(set) var value: Int = 0
     public init() {}
     public mutating func increment() { value += 1 }
     public var nonmutatingValue: Int {
