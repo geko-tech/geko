@@ -3,6 +3,7 @@ import GekoCore
 import GekoCache
 import GekoGenerator
 import GekoLoader
+import GekoSupport
 import ProjectDescription
 
 final class CacheAPIAnalyzerService {
@@ -35,11 +36,21 @@ final class CacheAPIAnalyzerService {
     // MARK: - Public
     
     func run(
-        path: AbsolutePath
+        path: AbsolutePath,
+        apiMacroNames: Set<String>,
+        jsonOutputPath: AbsolutePath?
     ) async throws {
         let (graph, _, _, _) = try await manifestGraphLoader.load(path: path)
-        
-        try ProjectAPIAnalyzer().analyze(graph: graph)
+        let report = try ProjectAPIAnalyzer(macroNames: apiMacroNames).analyze(graph: graph)
+
+        logger.notice("\(APIAnalyzeReportRenderer.text(report))")
+        if let jsonOutputPath {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            let data = try encoder.encode(UnsafeApiDiagnosticsReport(diagnostics: report.diagnostics))
+            guard let json = String(data: data, encoding: .utf8) else { return }
+            try FileHandler.shared.write(json, path: jsonOutputPath, atomically: true)
+        }
     }
     
 }

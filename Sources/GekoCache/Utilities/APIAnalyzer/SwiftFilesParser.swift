@@ -51,6 +51,7 @@ final class SwiftFilesParser {
                 nonPublicTypeNames: nonPublicTypeNames,
                 macroNames: macroNames
             )
+            visitor.walk(item.tree)
             let reasons = visitor.reasons
             analyzedFiles.modify { value in
                 value[index] = FileAnalyzeReport(

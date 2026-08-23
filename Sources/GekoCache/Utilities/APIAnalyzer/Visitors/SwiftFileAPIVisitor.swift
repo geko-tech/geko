@@ -125,7 +125,7 @@ final class SwiftFileAPIVisitor: SyntaxVisitor {
                 line: location.line,
                 column: location.column,
                 reason: reason,
-                declaration: text
+                declaration: String(text.prefix(240))
             )
         )
     }

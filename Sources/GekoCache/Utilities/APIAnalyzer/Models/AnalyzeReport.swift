@@ -22,3 +22,19 @@ struct ModuleReport {
     public let containsUnsafeAPI: Bool
     public let files: [FileAnalyzeReport]
 }
+
+public struct APIAnalyzeSummary {
+    public let modules: Int
+    public let modulesWithSwiftSources: Int
+    public let unsafeModules: Int
+    public let unsafeModuleRatio: Double
+    public let apiFiles: Int
+    public let unsafeApiFiles: Int
+    public let unsafeApiRatio: Double
+    public let unsafeReasons: [UnsafeApiReason: Int]
+}
+
+public struct APIAnalyzeReport {
+    public let summary: APIAnalyzeSummary
+    public let diagnostics: [UnsafeApiDiagnostic]
+}
