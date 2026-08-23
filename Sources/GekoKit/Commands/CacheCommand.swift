@@ -9,6 +9,7 @@ struct CacheCommand: ParsableCommand {
             abstract: "A set of utilities related to the caching of targets.",
             subcommands: [
                 CacheUploadCommand.self,
+                CachePublicAPIAnalyzerCommand.self,
             ]
         )
     }
