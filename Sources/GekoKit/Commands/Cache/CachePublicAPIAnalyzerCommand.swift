@@ -19,6 +19,18 @@ struct CachePublicAPIAnalyzerCommand: AsyncParsableCommand {
         completion: .directory
     )
     var path: String?
+
+    @Option(
+        name: .customLong("api-macro"),
+        help: "An API-affecting macro attribute name. May be specified multiple times."
+    )
+    var apiMacros: [String] = []
+
+    @Option(
+        name: .customLong("json-output"),
+        help: "Writes unsafe diagnostics to a JSON file."
+    )
+    var jsonOutput: String?
     
     @OptionGroup
     var manifestOptions: ManifestOptions
@@ -26,6 +38,13 @@ struct CachePublicAPIAnalyzerCommand: AsyncParsableCommand {
     func run() async throws {
         try ManifestOptionsService().load(options: manifestOptions, path: path)
         let path = try path.map { try AbsolutePath(validatingAbsolutePath: $0) } ?? FileHandler.shared.currentPath
-        try await CacheAPIAnalyzerService().run(path: path)
+        let jsonOutputPath = try jsonOutput.map {
+            try AbsolutePath(validating: $0, relativeTo: FileHandler.shared.currentPath)
+        }
+        try await CacheAPIAnalyzerService().run(
+            path: path,
+            apiMacroNames: Set(apiMacros),
+            jsonOutputPath: jsonOutputPath
+        )
     }
 }
