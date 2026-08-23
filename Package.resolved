@@ -154,6 +154,15 @@
       }
     },
     {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
+      }
+    },
+    {
       "identity" : "swift-system",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-system.git",
@@ -167,8 +176,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/mattt/swift-toml",
       "state" : {
-        "revision" : "827506c90475e82d5a7f191f950fb3025cbdc0d6",
-        "version" : "2.0.0"
+        "revision" : "8227201d741c82183c9b0531a7d9ec7fa9240a2f",
+        "version" : "2.1.0"
       }
     },
     {
@@ -176,8 +185,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/toon-format/toon-swift.git",
       "state" : {
-        "revision" : "b519ede235854489e1fbfe05d171c69a3bf558e5",
-        "version" : "0.4.0"
+        "revision" : "e16f6b163085bea46ce0ffa230b43d25b7b91737",
+        "version" : "0.5.1"
       }
     },
     {

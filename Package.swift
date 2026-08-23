@@ -8,6 +8,8 @@ let yamsDependency: Target.Dependency = .product(name: "Yams", package: "Yams")
 let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "project-description")
 let zipFoundationDependency: Target.Dependency = .product(name: "ZIPFoundation", package: "ZIPFoundation")
 let xcsiftCoreDependency: Target.Dependency = .product(name: "XCSiftCore", package: "xcsift")
+let swiftParserDependency: Target.Dependency = .product(name: "SwiftParser", package: "swift-syntax")
+let swiftSyntaxDependency: Target.Dependency = .product(name: "SwiftSyntax", package: "swift-syntax")
 
 var targets: [Target] = [
     .target(
@@ -237,6 +239,8 @@ var targets: [Target] = [
             "GekoCloud",
             "GekoAnalytics",
             "GekoInspect",
+            swiftParserDependency,
+            swiftSyntaxDependency,
         ]
     ),
     .target(
@@ -822,6 +826,7 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.3"),
         .package(url: "https://github.com/apple/swift-log", from: "1.5.3"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.1.4"),
