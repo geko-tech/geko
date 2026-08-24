@@ -110,11 +110,11 @@ public final class System: Systeming {
     // swiftlint:disable force_try
 
     /// Regex expression used to get the Swift version (for example, 5.7) from the output of the 'swift --version' command.
-    private static var swiftVersionRegex = try! NSRegularExpression(pattern: "(Apple )?Swift version\\s(.+)\\s\\(.+\\)", options: [])
+    private static var swiftVersionRegex = try! Regex("(Apple )?Swift version\\s(.+)\\s\\(.+\\)", as: (Substring, Substring?, Substring).self)
 
     /// Regex expression used to get the Swiftlang version (for example, 5.7.0.127.4) from the output of the 'swift --version'
     /// command.
-    private static var swiftlangVersion = try! NSRegularExpression(pattern: "swiftlang-(.+)\\sclang", options: [])
+    private static var swiftlangVersion = try! Regex("swiftlang-(.+)\\sclang", as: (Substring, Substring).self)
 
     // swiftlint:enable force_try
 
@@ -376,11 +376,10 @@ public final class System: Systeming {
 #else
         let output = try capture(["swift", "--version"])
 #endif
-        let range = NSRange(location: 0, length: output.count)
-        guard let match = System.swiftVersionRegex.firstMatch(in: output, options: [], range: range) else {
+        guard let match = try System.swiftVersionRegex.firstMatch(in: output) else {
             throw SystemError.parseSwiftVersion(output)
         }
-        cachedSwiftVersion = NSString(string: output).substring(with: match.range(at: 2)).spm_chomp()
+        cachedSwiftVersion = String(match.2).spm_chomp()
         return cachedSwiftVersion!
     }
 
@@ -393,11 +392,10 @@ public final class System: Systeming {
 #else
         let output = try capture(["swift", "--version"])
 #endif
-        let range = NSRange(location: 0, length: output.count)
-        guard let match = System.swiftlangVersion.firstMatch(in: output, options: [], range: range) else {
+        guard let match = try System.swiftlangVersion.firstMatch(in: output) else {
             throw SystemError.parseSwiftVersion(output)
         }
-        cachedSwiftlangVersion = NSString(string: output).substring(with: match.range(at: 1)).spm_chomp()
+        cachedSwiftlangVersion = String(match.1).spm_chomp()
         return cachedSwiftlangVersion!
     }
 
