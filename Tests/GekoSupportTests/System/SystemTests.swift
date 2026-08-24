@@ -22,3 +22,43 @@ final class ProcessResultTests: GekoUnitTestCase {
         XCTAssertEqual(got, "swiftc")
     }
 }
+
+final class SystemTests: GekoUnitTestCase {
+    #if os(macOS)
+    private let output = """
+        swift-driver version: 1.148.6 Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)
+        Target: arm64-apple-macosx26.0
+        """
+    #else
+    private let output = """
+        Swift version 6.3.3 (swift-6.3.3-RELEASE)
+        Target: x86_64-unknown-linux-gnu
+        """
+    #endif
+
+    func test_parseSwiftVersion() throws {
+        // Given
+        let system = System()
+
+        // When
+        let result = try system.parseSwiftVersion(from: output)
+
+        // Then
+        XCTAssertEqual(result, "6.3.3")
+    }
+
+    func test_parseSwiftlangVersion() throws {
+        // Given
+        let system = System()
+
+        // When
+        let result = try system.parseSwiftlangVersion(from: output)
+
+        // Then
+        #if os(macOS)
+        XCTAssertEqual(result, "6.3.3.1.3")
+        #else
+        XCTAssertEqual(result, "swift-6.3.3-RELEASE")
+        #endif
+    }
+}
