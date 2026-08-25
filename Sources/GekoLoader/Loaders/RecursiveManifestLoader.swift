@@ -75,11 +75,10 @@ public class RecursiveManifestLoader: RecursiveManifestLoading {
         var paths = Set(paths)
         while !paths.isEmpty {
             paths.subtract(cache.keys)
-            let projects = try Array(paths).map(context: ExecutionContext.concurrent) {
-                try manifestLoader.loadProject(at: $0)
-            }
+            let wavePaths = paths.sorted()
+            let projects = try manifestLoader.loadProjects(at: wavePaths)
             var newDependenciesPaths = Set<AbsolutePath>()
-            for (path, project) in zip(paths, projects) {
+            for (path, project) in projects {
                 cache[path] = project
                 newDependenciesPaths.formUnion(try dependencyPaths(for: project, path: path))
             }

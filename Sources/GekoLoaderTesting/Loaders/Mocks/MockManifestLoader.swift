@@ -11,6 +11,10 @@ public final class MockManifestLoader: ManifestLoading {
     public var loadProjectCount: UInt = 0
     public var loadProjectStub: ((AbsolutePath) throws -> Project)?
 
+    public var loadProjectsCount: UInt = 0
+    public var loadProjectsPaths: [[AbsolutePath]] = []
+    public var loadProjectsStub: (([AbsolutePath]) throws -> [AbsolutePath: Project])?
+
     public var loadWorkspaceCount: UInt = 0
     public var loadWorkspaceStub: ((AbsolutePath) throws -> Workspace)?
 
@@ -38,7 +42,19 @@ public final class MockManifestLoader: ManifestLoading {
     public init() {}
 
     public func loadProject(at path: AbsolutePath) throws -> Project {
-        try loadProjectStub?(path) ?? Project.manifestTest()
+        loadProjectCount += 1
+        return try loadProjectStub?(path) ?? Project.manifestTest()
+    }
+
+    public func loadProjects(at paths: [AbsolutePath]) throws -> [AbsolutePath: Project] {
+        loadProjectsCount += 1
+        loadProjectsPaths.append(paths)
+        if let loadProjectsStub {
+            return try loadProjectsStub(paths)
+        }
+        return try Dictionary(uniqueKeysWithValues: paths.map { path in
+            (path, try loadProject(at: path))
+        })
     }
 
     public func loadWorkspace(at path: AbsolutePath) throws -> Workspace {

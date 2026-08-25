@@ -62,6 +62,10 @@ public protocol ManifestLoading {
     /// - Parameter path: Path to the directory that contains the Project.swift.
     func loadProject(at path: AbsolutePath) throws -> ProjectDescription.Project
 
+    /// Loads multiple project manifests in one batch when supported by the loader.
+    /// - Parameter paths: Paths to directories that contain Project.swift files.
+    func loadProjects(at paths: [AbsolutePath]) throws -> [AbsolutePath: ProjectDescription.Project]
+
     /// Loads the Workspace.swift in the given directory.
     /// - Parameter path: Path to the directory that contains the Workspace.swift
     func loadWorkspace(at path: AbsolutePath) throws -> ProjectDescription.Workspace
@@ -96,4 +100,13 @@ public protocol ManifestLoading {
     
     /// Deletes old manifests.
     func cleanupOldManifests() throws -> [SideEffectDescriptor]
+}
+
+public extension ManifestLoading {
+    func loadProjects(at paths: [AbsolutePath]) throws -> [AbsolutePath: ProjectDescription.Project] {
+        let projects = try paths.map(context: ExecutionContext.concurrent) {
+            try loadProject(at: $0)
+        }
+        return Dictionary(uniqueKeysWithValues: zip(paths, projects))
+    }
 }
