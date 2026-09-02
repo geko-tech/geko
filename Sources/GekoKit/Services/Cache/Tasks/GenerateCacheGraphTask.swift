@@ -26,13 +26,13 @@ final class GenerateCacheGraphTask: CacheTask {
     }
     
     func run(context: inout CacheContext) async throws {
-        guard let graph = context.graph else {
+        guard let graph = context.graph, let sideTable = context.sideTable else {
             throw CacheTaskError.cacheContextValueUninitialized
         }
         
         let generator = try generatorFactory.default(config: context.config)
-        let (workspacePath, buildGraph) = try await generator.generateGraph(graph, sideEffects: [])
-        
+        let (workspacePath, buildGraph) = try await generator.generateGraph(graph, sideTable: sideTable, sideEffects: [])
+
         context.graph = buildGraph
         context.workspacePath = workspacePath
         

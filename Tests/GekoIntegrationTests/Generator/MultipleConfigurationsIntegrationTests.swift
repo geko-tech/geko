@@ -351,7 +351,7 @@ final class MultipleConfigurationsIntegrationTests: GekoUnitTestCase {
         let graph = try graphLoader.loadWorkspace(workspace: models.workspace, projects: models.projects)
         let graphTraverser = GraphTraverser(graph: graph)
         try linter.lint(graphTraverser: graphTraverser, config: config).printAndThrowErrorsIfNeeded()
-        let descriptor = try subject.generateWorkspace(graphTraverser: graphTraverser)
+        let descriptor = try subject.generateWorkspace(graphTraverser: graphTraverser, sideTable: GraphSideTable())
         try writer.write(workspace: descriptor)
     }
 

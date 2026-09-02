@@ -21,7 +21,7 @@ final class MockDescriptorGenerator: DescriptorGenerating {
     }
 
     var generateWorkspaceStub: ((GraphTraversing) throws -> WorkspaceDescriptor)?
-    func generateWorkspace(graphTraverser: GraphTraversing) throws -> WorkspaceDescriptor {
+    func generateWorkspace(graphTraverser: GraphTraversing, sideTable: GraphSideTable) throws -> WorkspaceDescriptor {
         guard let generateWorkspaceStub else {
             throw MockError.stubNotImplemented
         }
