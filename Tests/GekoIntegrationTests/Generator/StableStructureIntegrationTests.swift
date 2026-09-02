@@ -40,7 +40,7 @@ final class StableXcodeProjIntegrationTests: GekoTestCase {
             let graph = try modelGenerator.generate()
             let graphTraverser = GraphTraverser(graph: graph)
 
-            let workspaceDescriptor = try subject.generateWorkspace(graphTraverser: graphTraverser)
+            let workspaceDescriptor = try subject.generateWorkspace(graphTraverser: graphTraverser, sideTable: GraphSideTable())
 
             // Note: While we already have access to the `XcodeProj` models in `workspaceDescriptor`
             // unfortunately they are not equatable, however once serialized & deserialized back they are

@@ -636,7 +636,8 @@ extension TestService {
         skipTestTargets: [TestIdentifier] = [],
         testPlanConfiguration: TestPlanConfiguration? = nil,
         generateOnly: Bool = false,
-        passthroughXcodeBuildArguments: [String] = []
+        passthroughXcodeBuildArguments: [String] = [],
+        editTestPlan: Bool = false
     ) async throws {
         try await run(
             schemeName: schemeName,
@@ -657,7 +658,8 @@ extension TestService {
             skipTestTargets: skipTestTargets,
             testPlanConfiguration: testPlanConfiguration,
             generateOnly: generateOnly,
-            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+            editTestPlan: editTestPlan
         )
     }
 }

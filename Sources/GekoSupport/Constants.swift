@@ -33,6 +33,7 @@ public enum Constants {
     public enum GekoUserCacheDirectory {
         public static let name = ".geko"
         public static let versionsDir = "Versions"
+        public static let generateMetadataName = "generateMetadata.json"
     }
 
     public enum DependenciesDirectory {
@@ -58,6 +59,7 @@ public enum Constants {
         public static let entitlements = "Entitlements"
         public static let moduleMaps = "ModuleMaps"
         public static let sources = "Sources"
+        public static let testPlans = "TestPlans"
         public static let resources = "Resources"
         public static let signingKeychain = "signing.keychain"
         public static let dependenciesDerivedDirectory = "geko-derived"

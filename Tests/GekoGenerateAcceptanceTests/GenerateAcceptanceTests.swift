@@ -892,6 +892,32 @@ final class GenerateAcceptanceTestCocoapodsWorkspaceWithFolderReferences: GekoAc
     }
 }
 
+final class GenerateAcceptanceTestAppWithGeneratedTestPlan: GekoAcceptanceTestCase {
+    func test_app_with_generated_test_plan() async throws {
+        try setUpFixture(.iosAppWithGeneratedTestPlan)
+        try await run(GenerateCommand.self)
+
+        let generatedTestPlanPath = fixturePath.appending(components: ["TestPlans", "Geko", "GeneratedTestPlan.xctestplan"])
+        if !FileHandler.shared.exists(generatedTestPlanPath) {
+            XCTFail("GeneratedPlan.xctestplan not found - '\(generatedTestPlanPath)'.")
+        }
+
+        let xcodeproj = try XcodeProj(
+            pathString: fixturePath.appending(component: "MainApp.xcodeproj").pathString
+        )
+        let scheme = try XCTUnwrap(
+            xcodeproj.sharedData?.schemes.first { $0.name == "MainApp" }
+        )
+        let planReferences = try XCTUnwrap(scheme.testAction?.testPlans)
+        XCTAssertEqual(
+            planReferences.map(\.reference),
+            [
+                "container:TestPlans/Geko/GeneratedTestPlan.xctestplan"
+            ]
+        )
+    }
+}
+
 extension GekoAcceptanceTestCase {
     private func resourcePath(
         for productName: String,
