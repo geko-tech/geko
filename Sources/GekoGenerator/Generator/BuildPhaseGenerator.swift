@@ -535,7 +535,9 @@ final class BuildPhaseGenerator: BuildPhaseGenerating {
             )
         }
 
-        guard !pbxBuildFiles.isEmpty else { return }
+        if pbxBuildFiles.isEmpty && target.buildableFolders.isEmpty {
+            return
+        }
 
         let resourcesBuildPhase = PBXResourcesBuildPhase()
         pbxproj.add(object: resourcesBuildPhase)
