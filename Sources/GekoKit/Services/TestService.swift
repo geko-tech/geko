@@ -14,6 +14,9 @@ enum TestServiceError: FatalError, Equatable {
     case duplicatedTestTargets(Set<TestIdentifier>)
     case nothingToSkip(skipped: [TestIdentifier], included: [TestIdentifier])
     case actionInvalid
+    case generateMetadataNotFound(path: String)
+    case testTargetNotExist(target: String)
+    case testTargetWasNotAddedToFocus(target: String)
 
     // Error description
     var description: String {
@@ -46,6 +49,12 @@ enum TestServiceError: FatalError, Equatable {
             return "Some of the targets specified in --skip-test-targets (\(skippedTargets.map(\.description).joined(separator: ", "))) will always be skipped as they are not included in the targets specified (\(includedTargets.map(\.description).joined(separator: ", ")))"
         case .actionInvalid:
             return "Cannot specify both --build-only and --without-building"
+        case let .generateMetadataNotFound(path):
+            return "Couldn't find file 'generateMetadata.json'. You need to regenerate the project. Path - \(path)"
+        case let .testTargetNotExist(target):
+            return "Test target with name '\(target)' does not exist."
+        case let .testTargetWasNotAddedToFocus(target):
+            return "The test target '\(target)' exists in the project, but it was not added to the focus list when generating the project."
         }
     }
 
@@ -53,7 +62,7 @@ enum TestServiceError: FatalError, Equatable {
     var type: ErrorType {
         switch self {
         case .schemeNotFound, .schemeWithoutTestableTargets, .testPlanNotFound, .testIdentifierInvalid, .duplicatedTestTargets,
-                .nothingToSkip, .actionInvalid:
+                .nothingToSkip, .actionInvalid, .generateMetadataNotFound, .testTargetNotExist, .testTargetWasNotAddedToFocus:
             return .abort
         }
     }
@@ -68,6 +77,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
 
     private let testsCacheTemporaryDirectory: TemporaryDirectory
     private let cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring
+    private let logDirectoryProvider: LogDirectoriesProviding
 
     public convenience init(
         testsCacheTemporaryDirectory: TemporaryDirectory
@@ -92,7 +102,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
         buildGraphInspector: BuildGraphInspecting = BuildGraphInspector(),
         simulatorController: SimulatorControlling = SimulatorController(),
         contentHasher: ContentHashing = ContentHasher(),
-        cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory()
+        cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory(),
+        logDirectoryProvider: LogDirectoriesProviding = LogDirectoriesProvider(),
     ) {
         self.testsCacheTemporaryDirectory = testsCacheTemporaryDirectory
         self.generatorFactory = generatorFactory
@@ -101,6 +112,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
         self.simulatorController = simulatorController
         self.contentHasher = contentHasher
         self.cacheDirectoryProviderFactory = cacheDirectoryProviderFactory
+        self.logDirectoryProvider = logDirectoryProvider
     }
 
     public func validateParameters(
@@ -175,7 +187,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
         validateTestTargetsParameters: Bool = true,
         generator: Generating? = nil,
         generateOnly: Bool,
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        editTestPlan: Bool,
     ) async throws {
         if validateTestTargetsParameters {
             try validateParameters(
@@ -234,6 +247,24 @@ public final class TestService { // swiftlint:disable:this type_body_length
             )
         }
 
+        let generateMetadata = try loadGenerateMetadata()
+
+        if !testTargets.isEmpty {
+            let allTestTargetsNames = graphTraverser.allInternalTargets()
+                .filter(\.target.product.testsBundle)
+                .map(\.target.name)
+
+            for testTarget in testTargets {
+                if !allTestTargetsNames.contains(testTarget.target) {
+                    throw TestServiceError.testTargetNotExist(target: testTarget.target)
+                }
+
+                if generateMetadata.cacheEnabled && !generateMetadata.focusedTargets.contains(testTarget.target) {
+                    throw TestServiceError.testTargetWasNotAddedToFocus(target: testTarget.target)
+                }
+            }
+        }
+
         if let schemeName {
             guard let scheme = testableSchemes.first(where: { $0.name == schemeName })
             else {
@@ -275,7 +306,9 @@ public final class TestService { // swiftlint:disable:this type_body_length
                     testTargets: testTargets,
                     skipTestTargets: skipTestTargets,
                     testPlanConfiguration: testPlanConfiguration,
-                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+                    generateMetadata: generateMetadata,
+                    editTestPlan: editTestPlan
                 )
             }
         } else {
@@ -306,7 +339,9 @@ public final class TestService { // swiftlint:disable:this type_body_length
                     testTargets: testTargets,
                     skipTestTargets: skipTestTargets,
                     testPlanConfiguration: testPlanConfiguration,
-                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+                    generateMetadata: generateMetadata,
+                    editTestPlan: editTestPlan
                 )
             }
         }
@@ -333,18 +368,26 @@ public final class TestService { // swiftlint:disable:this type_body_length
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
         testPlanConfiguration: TestPlanConfiguration?,
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        generateMetadata: GenerateMetadata,
+        editTestPlan: Bool
     ) async throws {
         logger.log(level: .notice, "Testing scheme \(scheme.name)", metadata: .section)
-        if let testPlan = testPlanConfiguration?.testPlan, let testPlans = scheme.testAction?.testPlans,
-           !testPlans.contains(where: { $0.name == testPlan })
-        {
-            throw TestServiceError.testPlanNotFound(
-                scheme: scheme.name,
-                testPlan: testPlan,
-                existing: testPlans.map(\.name)
-            )
+
+        if let testPlan = testPlanConfiguration?.testPlan, let testPlans = scheme.testAction?.testPlans {
+            guard let foundedTestPlan = testPlans.first(where: { $0.name == testPlan }) else {
+                throw TestServiceError.testPlanNotFound(
+                    scheme: scheme.name,
+                    testPlan: testPlan,
+                    existing: testPlans.map(\.name)
+                )
+            }
+
+            if editTestPlan {
+                try processEditTestPlan(scheme: scheme, graphTraverser: graphTraverser, testTargets: testTargets, testPlan: foundedTestPlan, generateMetadata: generateMetadata)
+            }
         }
+
         guard let buildableTarget = buildGraphInspector.testableTarget(
             scheme: scheme,
             testPlan: testPlanConfiguration?.testPlan,
@@ -401,5 +444,38 @@ public final class TestService { // swiftlint:disable:this type_body_length
             testPlanConfiguration: testPlanConfiguration,
             passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
         )
+    }
+
+    private func loadGenerateMetadata() throws -> GenerateMetadata {
+        let generateMetadataPath = try logDirectoryProvider
+            .logDirectory(for: .generateMetadata)
+            .appending(component: Constants.GekoUserCacheDirectory.generateMetadataName)
+
+        if !FileHandler.shared.exists(generateMetadataPath) {
+            throw TestServiceError.generateMetadataNotFound(path: generateMetadataPath.pathString)
+        }
+
+        return try JSONRepository<GenerateMetadata>(url: generateMetadataPath.asURL).fetch()
+    }
+
+    private func processEditTestPlan(
+        scheme: Scheme,
+        graphTraverser: GraphTraversing,
+        testTargets: [TestIdentifier],
+        testPlan: TestPlan,
+        generateMetadata: GenerateMetadata
+    ) throws {
+        let autogeneratedXCTestPlanRepo = JSONRepository<AutogeneratedXCTestPlan>(url: testPlan.path.asURL)
+        var autogeneratedXCTestPlan = try autogeneratedXCTestPlanRepo.fetch()
+
+        if testTargets.isEmpty {
+            autogeneratedXCTestPlan.testTargets = generateMetadata.allTestTargets
+        } else {
+            autogeneratedXCTestPlan.testTargets = generateMetadata.allTestTargets.filter { availableTestTarget in
+                testTargets.contains { $0.target == availableTestTarget.target.name }
+            }
+        }
+
+        try autogeneratedXCTestPlanRepo.save(autogeneratedXCTestPlan)
     }
 }

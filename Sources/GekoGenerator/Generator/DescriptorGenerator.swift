@@ -29,7 +29,7 @@ public protocol DescriptorGenerating {
     ///   - graphTraverser: Graph traverser.
     ///
     /// - Seealso: `GraphLoader`
-    func generateWorkspace(graphTraverser: GraphTraversing) throws -> WorkspaceDescriptor
+    func generateWorkspace(graphTraverser: GraphTraversing, sideTable: GraphSideTable) throws -> WorkspaceDescriptor
 }
 
 // MARK: -
@@ -78,7 +78,7 @@ public final class DescriptorGenerator: DescriptorGenerating {
         try projectDescriptorGenerator.generate(project: project, graphTraverser: graphTraverser)
     }
 
-    public func generateWorkspace(graphTraverser: GraphTraversing) throws -> WorkspaceDescriptor {
-        try workspaceDescriptorGenerator.generate(graphTraverser: graphTraverser)
+    public func generateWorkspace(graphTraverser: GraphTraversing, sideTable: GraphSideTable) throws -> WorkspaceDescriptor {
+        try workspaceDescriptorGenerator.generate(graphTraverser: graphTraverser, sideTable: sideTable)
     }
 }

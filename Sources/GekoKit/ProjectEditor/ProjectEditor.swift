@@ -183,7 +183,7 @@ final class ProjectEditor: ProjectEditing {
         )
 
         let graphTraverser = GraphTraverser(graph: graph)
-        let descriptor = try generator.generateWorkspace(graphTraverser: graphTraverser)
+        let descriptor = try generator.generateWorkspace(graphTraverser: graphTraverser, sideTable: GraphSideTable())
         try writer.write(workspace: descriptor)
         return descriptor.xcworkspacePath
     }

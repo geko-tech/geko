@@ -147,6 +147,7 @@ public final class FocusedTargetsExpanderGraphMapper: GraphMapping {
             }
         }
 
+        sideTable.workspace.cacheEnabled = true
         sideTable.workspace.focusedTargets = focusedTargets
 
         return []

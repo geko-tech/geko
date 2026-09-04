@@ -15,7 +15,7 @@ public protocol Generating {
     func loadWithSideEffects(path: AbsolutePath) async throws -> (Graph, GraphSideTable, [SideEffectDescriptor])
     func generate(path: AbsolutePath) async throws -> AbsolutePath
     func generateWithGraph(path: AbsolutePath) async throws -> (AbsolutePath, Graph)
-    func generateGraph(_ graph: Graph, sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, Graph)
+    func generateGraph(_ graph: Graph, sideTable: GraphSideTable, sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, Graph)
 }
 
 public class Generator: Generating {
@@ -52,15 +52,15 @@ public class Generator: Generating {
     }
 
     public func generateWithGraph(path: AbsolutePath) async throws -> (AbsolutePath, Graph) {
-        let (graph, _, sideEffects) = try await loadWithSideEffects(path: path)
-        return try await generate(graph, with: sideEffects)
+        let (graph, sideTable, sideEffects) = try await loadWithSideEffects(path: path)
+        return try await generate(graph, sideTable: sideTable,  with: sideEffects)
     }
 
-    public func generateGraph(_ graph: Graph, sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, Graph) {
-        try await generate(graph, with: sideEffects)
+    public func generateGraph(_ graph: Graph, sideTable: GraphSideTable, sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, Graph) {
+        try await generate(graph, sideTable: sideTable, with: sideEffects)
     }
 
-    func generate(_ graph: Graph, with sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, Graph) {
+    func generate(_ graph: Graph, sideTable: GraphSideTable, with sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, Graph) {
         // Load
         let graphTraverser = GraphTraverser(graph: graph)
 
@@ -68,7 +68,7 @@ public class Generator: Generating {
         try lint(graphTraverser: graphTraverser)
 
         // Generate
-        let workspaceDescriptor = try generator.generateWorkspace(graphTraverser: graphTraverser)
+        let workspaceDescriptor = try generator.generateWorkspace(graphTraverser: graphTraverser, sideTable: sideTable)
 
         // Write
         try writer.write(workspace: workspaceDescriptor)
