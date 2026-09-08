@@ -3199,6 +3199,82 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
         )
     }
 
+    func testMap_whenTargetDependencyNamesContainDashes_usesSanitizedTargetReferences() throws {
+        let basePath = try temporaryPath()
+        let loggerSourcesPath = basePath.appending(
+            try RelativePath(validating: "Package/Sources/GoogleUtilities-Logger")
+        )
+        let environmentSourcesPath = basePath.appending(
+            try RelativePath(validating: "Package/Sources/GoogleUtilities-Environment")
+        )
+        try fileHandler.createFolder(loggerSourcesPath)
+        try fileHandler.createFolder(environmentSourcesPath)
+
+        let project = try subject.map(
+            package: "Package",
+            basePath: basePath,
+            packageInfos: [
+                "Package": .test(
+                    name: "Package",
+                    products: [
+                        .init(
+                            name: "GoogleUtilities-Logger",
+                            type: .library(.automatic),
+                            targets: ["GoogleUtilities-Logger"]
+                        ),
+                    ],
+                    targets: [
+                        .test(
+                            name: "GoogleUtilities-Logger",
+                            dependencies: [
+                                .target(name: "GoogleUtilities-Environment", condition: nil),
+                            ]
+                        ),
+                        .test(name: "GoogleUtilities-Environment"),
+                    ],
+                    platforms: [.ios],
+                    cLanguageStandard: nil,
+                    cxxLanguageStandard: nil,
+                    swiftLanguageVersions: nil
+                ),
+            ]
+        )
+
+        XCTAssertEqual(
+            project,
+            .testWithDefaultConfigs(
+                name: "Package",
+                targets: [
+                    .test(
+                        "GoogleUtilities_Logger",
+                        basePath: basePath,
+                        customProductName: "GoogleUtilities_Logger",
+                        customBundleID: "GoogleUtilities-Logger",
+                        customSources: .custom([SourceFiles(paths: [
+                            basePath.appending(
+                                try RelativePath(validating: "Package/Sources/GoogleUtilities-Logger/**")
+                            ),
+                        ])]),
+                        dependencies: [
+                            .target(name: "GoogleUtilities_Environment"),
+                        ]
+                    ),
+                    .test(
+                        "GoogleUtilities_Environment",
+                        basePath: basePath,
+                        customProductName: "GoogleUtilities_Environment",
+                        customBundleID: "GoogleUtilities-Environment",
+                        customSources: .custom([SourceFiles(paths: [
+                            basePath.appending(
+                                try RelativePath(validating: "Package/Sources/GoogleUtilities-Environment/**")
+                            ),
+                        ])])
+                    ),
+                ]
+            )
+        )
+    }
+
     func testMap_whenBinaryTargetDependency_mapsToXcframework() throws {
         let basePath = try temporaryPath()
         let sourcesPath = basePath.appending(try RelativePath(validating: "Package/Sources/Target1"))

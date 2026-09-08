@@ -553,7 +553,7 @@ public final class PackageInfoMapper: PackageInfoMapping {
             destinations: destinations,
             product: product,
             productName: productName,
-            bundleId: PackageInfoMapper.spm_mangledToBundleIdentifier(bundleId: targetName),
+            bundleId: PackageInfoMapper.spmMangledBundleIdentifier(from: targetName),
             deploymentTargets: deploymentTargets,
             infoPlist: .default,
             sources: sources,
@@ -593,7 +593,7 @@ public final class PackageInfoMapper: PackageInfoMapping {
                 dependencyModuleAliases[name] = aliasedName
                 return .target(name: aliasedName, condition: platformCondition)
             } else {
-                return .target(name: name, condition: platformCondition)
+                return .target(name: PackageInfoMapper.sanitize(targetName: name), condition: platformCondition)
             }
         } else {
             if let aliasedName = moduleAliases?[name] {
@@ -626,8 +626,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
             .replacingOccurrences(of: "+", with: "_")
     }
 
-    fileprivate class func spm_mangledToBundleIdentifier(bundleId: String) -> String {
-        bundleId.map { character in
+    fileprivate class func spmMangledBundleIdentifier(from targetName: String) -> String {
+        targetName.map { character in
             switch character {
             case "a"..."z",
                  "A"..."Z",

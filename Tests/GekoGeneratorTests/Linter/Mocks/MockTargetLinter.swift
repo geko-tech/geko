@@ -7,7 +7,7 @@ import ProjectDescription
 @testable import GekoGenerator
 
 class MockTargetLinter: TargetLinting {
-    func lint(target _: Target) -> [LintingIssue] {
+    func lint(target _: Target, projectType _: Project.ProjectType) -> [LintingIssue] {
         []
     }
 }
