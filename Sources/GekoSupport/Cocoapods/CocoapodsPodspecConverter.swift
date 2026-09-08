@@ -86,7 +86,10 @@ public final class CocoapodsPodspecConverter: CocoapodsPodspecConverting {
 
         let (command, input) = buildPodspecCommand(paths: paths, baseShellCommand: shellCommand)
         var commandOutput = try system
-            .capture(command, withInput: input)
+            .capture(command, withInput: input, environment: System.shared.env.merging(
+                ["LANG": "en_US.UTF-8"],
+                uniquingKeysWith: { _, new in new }
+            ))
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Skip firstline of repl command result. First line contains techical info like version and name of util.

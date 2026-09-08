@@ -8,6 +8,7 @@ public struct LoggingConfig {
         case console
         case detailed
         case osLog
+        case silent
     }
 
     public var loggerType: LoggerType
@@ -21,11 +22,14 @@ extension LoggingConfig {
         let osLog = env[Constants.EnvironmentVariables.osLog] != nil
         let detailed = env[Constants.EnvironmentVariables.detailedLog] != nil
         let verbose = env[Constants.EnvironmentVariables.verbose] != nil
+        let silent = env[Constants.EnvironmentVariables.silent] != nil
 
         if osLog {
             return .init(loggerType: .osLog, verbose: verbose)
         } else if detailed {
             return .init(loggerType: .detailed, verbose: verbose)
+        } else if silent {
+            return .init(loggerType: .silent, verbose: false)
         } else {
             return .init(loggerType: .console, verbose: verbose)
         }
@@ -33,7 +37,12 @@ extension LoggingConfig {
 }
 
 public enum LogOutput {
+    private static var currentConfig: LoggingConfig = .default
     static var environment = ProcessInfo.processInfo.environment
+    
+    public static var isSilent: Bool {
+        return ProcessInfo.processInfo.environment[Constants.EnvironmentVariables.silent] != nil
+    }
 
     public static func bootstrap(config: LoggingConfig = .default) {
         let handler: VerboseLogHandler.Type
@@ -49,6 +58,8 @@ public enum LogOutput {
             handler = DetailedLogHandler.self
         case .console:
             handler = StandardLogHandler.self
+        case .silent:
+            handler = SilentLogHandler.self
         }
 
         if config.verbose {
@@ -74,6 +85,14 @@ extension DetailedLogHandler: VerboseLogHandler {
 extension StandardLogHandler: VerboseLogHandler {
     public static func verbose(label: String) -> LogHandler {
         StandardLogHandler(label: label, logLevel: .debug)
+    }
+}
+
+extension SilentLogHandler: VerboseLogHandler {
+    init(label: String) {}
+    
+    public static func verbose(label: String) -> LogHandler {
+        SilentLogHandler()
     }
 }
 

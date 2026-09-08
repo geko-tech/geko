@@ -6,6 +6,8 @@ struct HelpEnvCommand: AsyncParsableCommand {
         switch variable {
         case .verbose:
             return "Enable verbose logging. Defaults to 'false'."
+        case .silent:
+            return "Enable silent logging. Default to 'false'."
         case .colouredOutput:
             return "Enable colored output. Defaults to 'true'."
         case .versionsDirectory:

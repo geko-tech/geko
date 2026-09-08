@@ -72,6 +72,7 @@ public enum Constants {
     /// But only eg. for acceptance tests and other cases needed internally
     public enum EnvironmentVariables: String, CaseIterable {
         case verbose = "GEKO_CONFIG_VERBOSE"
+        case silent = "GEKO_CONFIG_SILENT"
         case colouredOutput = "GEKO_CONFIG_COLOURED_OUTPUT"
         case versionsDirectory = "GEKO_CONFIG_VERSIONS_DIRECTORY"
         case forceConfigCacheDirectory = "GEKO_CONFIG_FORCE_CONFIG_CACHE_DIRECTORY"
