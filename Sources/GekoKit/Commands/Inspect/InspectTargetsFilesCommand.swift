@@ -42,7 +42,7 @@ struct InspectTargetsFilesCommand: AsyncParsableCommand {
         let graph = try await ProjectGraphLoader(keepGlobs: true).load(path: path)
 
         let inputFiles = try files.map {
-            try AbsolutePath(validating: $0, relativeTo: FileHandler.shared.currentPath)
+            try AbsolutePath(validating: $0, relativeTo: path)
         }
 
         let ownerships = try TargetFileOwnershipResolver().resolve(inputFiles, graph: graph)
