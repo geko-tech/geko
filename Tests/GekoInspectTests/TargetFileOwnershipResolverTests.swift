@@ -114,6 +114,47 @@ final class TargetFileOwnershipResolverTests: GekoUnitTestCase {
             doesNotOwn: ["/repo/Sources/Three.swift"]
         )
     }
+    
+    func test_sourceLiteralPathOwnsDescendants() throws {
+        let target = Target.test(sources: [
+            "/repo/Sources/Feature",
+        ])
+
+        try assertOwnership(
+            target,
+            owns: [
+                "/repo/Sources/Feature",
+                "/repo/Sources/Feature/View.swift",
+                "/repo/Sources/Feature/Nested/DeletedView.swift",
+            ],
+            doesNotOwn: [
+                "/repo/Sources/Feature2/View.swift",
+            ]
+        )
+    }
+    
+    func test_sourceLiteralExclusionExcludesEntireSubtree() throws {
+        let target = Target.test(sources: [
+            .glob(
+                "/repo/Sources/**",
+                excluding: [
+                    "/repo/Sources/Generated",
+                ]
+            ),
+        ])
+
+        try assertOwnership(
+            target,
+            owns: [
+                "/repo/Sources/App/View.swift",
+            ],
+            doesNotOwn: [
+                "/repo/Sources/Generated",
+                "/repo/Sources/Generated/File.swift",
+                "/repo/Sources/Generated/Nested/File.swift",
+            ]
+        )
+    }
 
     // MARK: - Resources and additional files
 
@@ -172,6 +213,67 @@ final class TargetFileOwnershipResolverTests: GekoUnitTestCase {
             doesNotOwn: [
                 "/repo/Docs/README.md/Child",
                 "/repo/Docs/Guides2/Guide.md",
+            ]
+        )
+    }
+    
+    func test_resourceLiteralGlobOwnsDescendants() throws {
+        let target = Target.test(resources: [
+            .glob(pattern: "/repo/Resources/Images.xcassets"),
+        ])
+
+        try assertOwnership(
+            target,
+            owns: [
+                "/repo/Resources/Images.xcassets",
+                "/repo/Resources/Images.xcassets/Contents.json",
+                "/repo/Resources/Images.xcassets/AppIcon.appiconset/Contents.json",
+                "/repo/Resources/Images.xcassets/AppIcon.appiconset/AppIcon.png",
+            ],
+            doesNotOwn: [
+                "/repo/Resources/Images.xcassets2/AppIcon.png",
+                "/repo/Resources/Other.xcassets/AppIcon.png",
+            ]
+        )
+    }
+    
+    func test_resourceLiteralGlobExclusionExcludesEntireSubtree() throws {
+        let target = Target.test(resources: [
+            .glob(
+                pattern: "/repo/Resources/**",
+                excluding: [
+                    "/repo/Resources/Generated",
+                ]
+            ),
+        ])
+
+        try assertOwnership(
+            target,
+            owns: [
+                "/repo/Resources/Images.xcassets/AppIcon.appiconset/AppIcon.png",
+            ],
+            doesNotOwn: [
+                "/repo/Resources/Generated",
+                "/repo/Resources/Generated/image.png",
+                "/repo/Resources/Generated/Nested/image.png",
+            ]
+        )
+    }
+    
+    func test_additionalFilesLiteralGlobOwnsDescendants() throws {
+        let target = Target.test(additionalFiles: [
+            .glob(pattern: "/repo/Config"),
+        ])
+
+        try assertOwnership(
+            target,
+            owns: [
+                "/repo/Config",
+                "/repo/Config/settings.yml",
+                "/repo/Config/CI/deleted.yml",
+            ],
+            doesNotOwn: [
+                "/repo/Configuration/settings.yml",
             ]
         )
     }

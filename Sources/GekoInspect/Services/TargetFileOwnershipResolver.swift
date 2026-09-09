@@ -19,9 +19,16 @@ public protocol TargetFileOwnershipResolving {
     func resolve(_ files: [AbsolutePath], graph: Graph) throws -> [FileTargetOwnership]
 }
 
+/// Resolves target ownership for file paths using declarations from the project graph.
+///
+/// This resolver should avoid relying on the filesystem, since ownership must remain
+/// resolvable for paths whose files may no longer exist on disk.
 public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
+    // MARK: - Init
 
     public init() {}
+
+    // MARK: - TargetFileOwnershipResolving
 
     public func resolve(_ files: [AbsolutePath], graph: Graph) throws -> [FileTargetOwnership] {
         let graphTraverser = GraphTraverser(graph: graph)
@@ -34,6 +41,8 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
             )
         }
     }
+    
+    // MARK: - Private
 
     private func owns(_ file: AbsolutePath, target: Target) throws -> Bool {
         if try sourceOwns(file, sources: target.sources) {
@@ -71,7 +80,7 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
 
     private func sourceOwns(_ file: AbsolutePath, sources: [SourceFiles]) throws -> Bool {
         try sources.contains { source in
-            try matches(file, includes: source.paths, excluding: source.excluding)
+            try matchesIncludingDescendants(file, includes: source.paths, excluding: source.excluding)
         }
     }
 
@@ -83,7 +92,7 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
             case let .folderReference(path, _, _) where file.isDescendantOfOrEqual(to: path):
                 return true
             case let .glob(pattern, excluding, _, _)
-                where try matches(file, includes: [pattern], excluding: excluding):
+                where try matchesIncludingDescendants(file, includes: [pattern], excluding: excluding):
                 return true
             default:
                 continue
@@ -100,7 +109,7 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
             case let .folderReference(path):
                 return file.isDescendantOfOrEqual(to: path)
             case let .glob(pattern):
-                return try matches(file, pattern: pattern)
+                return try matchesIncludingDescendants(file, pattern: pattern)
             }
         }
     }
@@ -129,7 +138,7 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
 
             let lists = [header.public, header.private, header.project].compactMap { $0 }
             if try lists.contains(where: {
-                try matches(file, includes: $0.files, excluding: $0.excluding ?? [])
+                try matchesIncludingDescendants(file, includes: $0.files, excluding: $0.excluding ?? [])
             }) { return true }
         }
         return false
@@ -145,6 +154,22 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
         }
         return try !excluding.contains(where: { try matches(file, pattern: $0) })
     }
+    
+    private func matchesIncludingDescendants(
+        _ file: AbsolutePath,
+        includes: [AbsolutePath],
+        excluding: [AbsolutePath]
+    ) throws -> Bool {
+        guard try includes.contains(where: {
+            try matchesIncludingDescendants(file, pattern: $0)
+        }) else {
+            return false
+        }
+
+        return try !excluding.contains(where: {
+            try matchesIncludingDescendants(file, pattern: $0)
+        })
+    }
 
     private func matches(_ file: AbsolutePath, pattern: AbsolutePath) throws -> Bool {
         guard Glob.isGlob(pattern.pathString) else {
@@ -158,5 +183,13 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
 
         let glob = try Glob(String(pattern.pathString.dropFirst(baseString.count)))
         return glob.match(string: file.relative(to: base).pathString)
+    }
+    
+    private func matchesIncludingDescendants(_ file: AbsolutePath, pattern: AbsolutePath) throws -> Bool {
+        if Glob.isGlob(pattern.pathString) {
+            return try matches(file, pattern: pattern)
+        }
+        
+        return file.isDescendantOfOrEqual(to: pattern)
     }
 }

@@ -29,27 +29,34 @@ struct InspectTargetsFilesCommand: AsyncParsableCommand {
         completion: .directory
     )
     var path: String?
+    
+    @Option(
+        name: .shortAndLong,
+        help: "The command will save output to a json file."
+    )
+    var output: String?
+    var outputPath: AbsolutePath? = nil
 
     @OptionGroup
     var manifestOptions: ManifestOptions
 
     func run() async throws {
         let path = try path.map { try AbsolutePath(validatingAbsolutePath: $0) } ?? FileHandler.shared.currentPath
-
         try ManifestOptionsService()
             .load(options: manifestOptions, path: path.pathString)
-
         let graph = try await ProjectGraphLoader(keepGlobs: true).load(path: path)
-
-        let inputFiles = try files.map {
-            try AbsolutePath(validating: $0, relativeTo: path)
-        }
-
-        let ownerships = try TargetFileOwnershipResolver().resolve(inputFiles, graph: graph)
-
-        for ownership in ownerships {
-            let targetNames = ownership.targets.map(\.target.name)
-            logger.info("\(ownership.file.pathString): \(targetNames.isEmpty ? "no targets" : targetNames.joined(separator: ", "))")
+        
+        try InspectTargetsService().run(
+            path: path,
+            files: files,
+            graph: graph,
+            output: outputPath
+        )
+    }
+    
+    mutating func validate() throws {
+        if let output {
+            outputPath = try AbsolutePath(validating: output, relativeTo: FileHandler.shared.currentPath)
         }
     }
 }
