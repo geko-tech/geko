@@ -180,7 +180,7 @@ public final class PackageInfoMapper: PackageInfoMapping {
                 }
             }
         }
-        
+
         var externalDependencies: [String: [ProjectDescription.TargetDependency]] = try packageInfos
             .reduce(into: [:]) { result, packageInfo in
                 let moduleAliases = packageModuleAliases[packageInfo.value.name]
@@ -535,7 +535,6 @@ public final class PackageInfoMapper: PackageInfoMapping {
         let targetName = packageModuleAliases[packageInfo.name]?[target.name] ?? target.name
         let productName = PackageInfoMapper
             .sanitize(targetName: targetName)
-            .replacingOccurrences(of: "-", with: "_")
         
         let settings = try Settings.from(
             target: target,
@@ -554,7 +553,7 @@ public final class PackageInfoMapper: PackageInfoMapping {
             destinations: destinations,
             product: product,
             productName: productName,
-            bundleId: targetName.replacingOccurrences(of: "_", with: ".").replacingOccurrences(of: "/", with: "."),
+            bundleId: PackageInfoMapper.spmMangledBundleIdentifier(from: targetName),
             deploymentTargets: deploymentTargets,
             infoPlist: .default,
             sources: sources,
@@ -594,7 +593,7 @@ public final class PackageInfoMapper: PackageInfoMapping {
                 dependencyModuleAliases[name] = aliasedName
                 return .target(name: aliasedName, condition: platformCondition)
             } else {
-                return .target(name: name, condition: platformCondition)
+                return .target(name: PackageInfoMapper.sanitize(targetName: name), condition: platformCondition)
             }
         } else {
             if let aliasedName = moduleAliases?[name] {
@@ -623,6 +622,24 @@ public final class PackageInfoMapper: PackageInfoMapping {
     fileprivate class func sanitize(targetName: String) -> String {
         targetName.replacingOccurrences(of: ".", with: "_")
             .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: "+", with: "_")
+    }
+
+    fileprivate class func spmMangledBundleIdentifier(from targetName: String) -> String {
+        targetName.map { character in
+            switch character {
+            case "a"..."z",
+                 "A"..."Z",
+                 "0"..."9",
+                 ".",
+                 "-":
+                return character
+            default:
+                return "-"
+            }
+        }
+        .reduce(into: "") { $0.append($1) }
     }
 }
 

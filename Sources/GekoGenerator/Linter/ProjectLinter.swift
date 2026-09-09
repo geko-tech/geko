@@ -41,7 +41,9 @@ class ProjectLinter: ProjectLinting {
 
     private func lintTargets(project: Project) -> [LintingIssue] {
         var issues: [LintingIssue] = []
-        issues.append(contentsOf: project.targets.flatMap(targetLinter.lint))
+        issues.append(contentsOf: project.targets.flatMap { target in
+            targetLinter.lint(target: target, projectType: project.projectType)
+        })
         issues.append(contentsOf: lintNotDuplicatedTargets(project: project))
         return issues
     }

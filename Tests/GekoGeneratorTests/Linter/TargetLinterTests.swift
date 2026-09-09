@@ -84,6 +84,16 @@ final class TargetLinterTests: GekoUnitTestCase {
         )
     }
 
+    func test_lint_when_spm_target_no_source_files() {
+        let target = Target.test(sources: [])
+        let got = subject.lint(target: target, projectType: .spm)
+
+        XCTDoesNotContainLintingIssue(
+            got,
+            LintingIssue(reason: "The target \(target.name) doesn't contain source files.", severity: .warning)
+        )
+    }
+
     func test_lint_when_target_no_source_files_but_has_dependency() {
         let target = Target.test(sources: [], dependencies: [
             TargetDependency.sdk(name: "libc++.tbd", type: .library, status: .optional),

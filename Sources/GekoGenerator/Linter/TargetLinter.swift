@@ -5,7 +5,7 @@ import GekoSupport
 import ProjectDescription
 
 protocol TargetLinting: AnyObject {
-    func lint(target: Target) -> [LintingIssue]
+    func lint(target: Target, projectType: Project.ProjectType) -> [LintingIssue]
 }
 
 class TargetLinter: TargetLinting {
@@ -26,12 +26,12 @@ class TargetLinter: TargetLinting {
 
     // MARK: - TargetLinting
 
-    func lint(target: Target) -> [LintingIssue] {
+    func lint(target: Target, projectType: Project.ProjectType = .geko) -> [LintingIssue] {
         var issues: [LintingIssue] = []
         issues.append(contentsOf: lintProductName(target: target))
         issues.append(contentsOf: lintValidPlatformProductCombinations(target: target))
         issues.append(contentsOf: lintBundleIdentifier(target: target))
-        issues.append(contentsOf: lintHasSourceFiles(target: target))
+        issues.append(contentsOf: lintHasSourceFiles(target: target, projectType: projectType))
         issues.append(contentsOf: lintCopiedFiles(target: target))
         // issues.append(contentsOf: lintLibraryHasNoResources(target: target))
         issues.append(contentsOf: lintDeploymentTarget(target: target))
@@ -90,7 +90,7 @@ class TargetLinter: TargetLinting {
         return []
     }
 
-    private func lintHasSourceFiles(target: Target) -> [LintingIssue] {
+    private func lintHasSourceFiles(target: Target, projectType: Project.ProjectType) -> [LintingIssue] {
         let supportsSources = target.supportsSources
         let sources = target.sources
 
@@ -103,7 +103,7 @@ class TargetLinter: TargetLinting {
             return []
         }
 
-        if hasNoSources, hasNoDependencies, hasNoScripts {
+        if projectType != .spm, hasNoSources, hasNoDependencies, hasNoScripts {
             return [LintingIssue(reason: "The target \(target.name) doesn't contain source files.", severity: .warning)]
         } else if !supportsSources, sources.contains(where: { !$0.paths.isEmpty }) {
             

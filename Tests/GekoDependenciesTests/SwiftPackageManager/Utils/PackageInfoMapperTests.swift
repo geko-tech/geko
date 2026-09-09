@@ -391,7 +391,7 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             [
                 "com.example.dep-1": [
                     .project(
-                        target: "com_example_dep-1",
+                        target: "com_example_dep_1",
                         path: basePath.appending(try RelativePath(validating: "com.example.dep-1")),
                         condition: nil
                     ),
@@ -820,7 +820,52 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             .testWithDefaultConfigs(
                 name: "Package",
                 targets: [
-                    .test("Target_1", basePath: basePath, customBundleID: "Target.1"),
+                    .test("Target_1", basePath: basePath, customBundleID: "Target-1"),
+                ]
+            )
+        )
+    }
+
+    func testMap_whenNameContainsPlus_mapsToDashInBundleIDAndUnderscoreInTargetName() throws {
+        let basePath = try temporaryPath()
+        let sourcesPath = basePath.appending(try RelativePath(validating: "Package/Sources/Foo+Bar"))
+        try fileHandler.createFolder(sourcesPath)
+
+        let project = try subject.map(
+            package: "Package",
+            basePath: basePath,
+            packageInfos: [
+                "Package": .test(
+                    name: "Package",
+                    products: [
+                        .init(name: "Product1", type: .library(.automatic), targets: ["Foo+Bar"]),
+                    ],
+                    targets: [
+                        .test(name: "Foo+Bar"),
+                    ],
+                    platforms: [.ios],
+                    cLanguageStandard: nil,
+                    cxxLanguageStandard: nil,
+                    swiftLanguageVersions: nil
+                ),
+            ]
+        )
+
+        XCTAssertEqual(
+            project,
+            .testWithDefaultConfigs(
+                name: "Package",
+                targets: [
+                    .test(
+                        "Foo_Bar",
+                        basePath: basePath,
+                        customProductName: "Foo_Bar",
+                        customBundleID: "Foo-Bar",
+                        customSources: .custom([SourceFiles(paths: [
+                            basePath
+                                .appending(try RelativePath(validating: "Package/Sources/Foo+Bar/**")),
+                        ])])
+                    ),
                 ]
             )
         )
@@ -948,7 +993,7 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
                 name: "Package",
                 targets: [
                     .test(
-                        "com_example_target-1",
+                        "com_example_target_1",
                         basePath: basePath,
                         customProductName: "com_example_target_1",
                         customBundleID: "com.example.target-1",
@@ -1588,9 +1633,14 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             name: "Package",
             targets: [
                 .test(
-                    "target-with-dashes",
+                    "target_with_dashes",
                     basePath: basePath,
                     customProductName: "target_with_dashes",
+                    customBundleID: "target-with-dashes",
+                    customSources: .custom([SourceFiles(paths: [
+                        basePath
+                            .appending(try RelativePath(validating: "Package/Sources/target-with-dashes/**")),
+                    ])]),
                     customSettings: [
                         "HEADER_SEARCH_PATHS": ["$(inherited)", "$(SRCROOT)/Sources/target-with-dashes/include"],
                         "DEFINES_MODULE": "NO",
@@ -3149,6 +3199,82 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
         )
     }
 
+    func testMap_whenTargetDependencyNamesContainDashes_usesSanitizedTargetReferences() throws {
+        let basePath = try temporaryPath()
+        let loggerSourcesPath = basePath.appending(
+            try RelativePath(validating: "Package/Sources/GoogleUtilities-Logger")
+        )
+        let environmentSourcesPath = basePath.appending(
+            try RelativePath(validating: "Package/Sources/GoogleUtilities-Environment")
+        )
+        try fileHandler.createFolder(loggerSourcesPath)
+        try fileHandler.createFolder(environmentSourcesPath)
+
+        let project = try subject.map(
+            package: "Package",
+            basePath: basePath,
+            packageInfos: [
+                "Package": .test(
+                    name: "Package",
+                    products: [
+                        .init(
+                            name: "GoogleUtilities-Logger",
+                            type: .library(.automatic),
+                            targets: ["GoogleUtilities-Logger"]
+                        ),
+                    ],
+                    targets: [
+                        .test(
+                            name: "GoogleUtilities-Logger",
+                            dependencies: [
+                                .target(name: "GoogleUtilities-Environment", condition: nil),
+                            ]
+                        ),
+                        .test(name: "GoogleUtilities-Environment"),
+                    ],
+                    platforms: [.ios],
+                    cLanguageStandard: nil,
+                    cxxLanguageStandard: nil,
+                    swiftLanguageVersions: nil
+                ),
+            ]
+        )
+
+        XCTAssertEqual(
+            project,
+            .testWithDefaultConfigs(
+                name: "Package",
+                targets: [
+                    .test(
+                        "GoogleUtilities_Logger",
+                        basePath: basePath,
+                        customProductName: "GoogleUtilities_Logger",
+                        customBundleID: "GoogleUtilities-Logger",
+                        customSources: .custom([SourceFiles(paths: [
+                            basePath.appending(
+                                try RelativePath(validating: "Package/Sources/GoogleUtilities-Logger/**")
+                            ),
+                        ])]),
+                        dependencies: [
+                            .target(name: "GoogleUtilities_Environment"),
+                        ]
+                    ),
+                    .test(
+                        "GoogleUtilities_Environment",
+                        basePath: basePath,
+                        customProductName: "GoogleUtilities_Environment",
+                        customBundleID: "GoogleUtilities-Environment",
+                        customSources: .custom([SourceFiles(paths: [
+                            basePath.appending(
+                                try RelativePath(validating: "Package/Sources/GoogleUtilities-Environment/**")
+                            ),
+                        ])])
+                    ),
+                ]
+            )
+        )
+    }
+
     func testMap_whenBinaryTargetDependency_mapsToXcframework() throws {
         let basePath = try temporaryPath()
         let sourcesPath = basePath.appending(try RelativePath(validating: "Package/Sources/Target1"))
@@ -3721,9 +3847,10 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
                 name: "Package",
                 targets: [
                     .test("RxSwift", basePath: basePath, product: .framework),
-                ] + testTargets.map {
+                ] + (try testTargets.map {
                     var customSettings: ProjectDescription.SettingsDictionary
                     var customProductName: String?
+                    var customSources: ProjectDescription.Target.SourceFilesListType = .default
                     switch $0 {
                     case "Nimble":
                         customSettings = ["ENABLE_TESTING_SEARCH_PATHS": "NO", "ANOTHER_SETTING": "YES"]
@@ -3732,6 +3859,10 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
                     case "RxTest-Dynamic": // because RxTest does have an "-" we need to account for the custom mapping to product
                         // names
                         customProductName = "RxTest_Dynamic"
+                        customSources = .custom([SourceFiles(paths: [
+                            basePath
+                                .appending(try RelativePath(validating: "Package/Sources/RxTest-Dynamic/**")),
+                        ])])
                         customSettings = ["ENABLE_TESTING_SEARCH_PATHS": "YES"]
                     default:
                         customSettings = ["ENABLE_TESTING_SEARCH_PATHS": "YES"]
@@ -3741,12 +3872,14 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
                     ]
 
                     return .test(
-                        $0,
+                        $0.replacingOccurrences(of: "-", with: "_"),
                         basePath: basePath,
                         customProductName: customProductName,
+                        customBundleID: $0,
+                        customSources: customSources,
                         customSettings: customSettings
                     )
-                }
+                })
             )
         )
     }

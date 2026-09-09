@@ -19,7 +19,9 @@ public final class GenerateDummySourceFileProjectMapper: ProjectMapping {
     public func map(
         project: inout Project,
         sideTable: inout ProjectSideTable
-    ) throws -> [SideEffectDescriptor] {
+    ) throws -> [SideEffectDescriptor] {        
+        guard project.projectType != .spm else { return [] }
+
         let sourcesPath = project.path
             .appending(component: derivedDirectoryName)
             .appending(component: sourcesDirectoryName)
