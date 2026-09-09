@@ -38,13 +38,13 @@ extension LoggingConfig {
 
 public enum LogOutput {
     private static var currentConfig: LoggingConfig = .default
-    static var environment = ProcessInfo.processInfo.environment
     
     public static var isSilent: Bool {
-        return ProcessInfo.processInfo.environment[Constants.EnvironmentVariables.silent] != nil
+        return currentConfig.loggerType == .silent
     }
 
     public static func bootstrap(config: LoggingConfig = .default) {
+        currentConfig = config
         let handler: VerboseLogHandler.Type
 
         switch config.loggerType {
