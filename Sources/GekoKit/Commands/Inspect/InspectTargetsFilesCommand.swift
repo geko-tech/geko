@@ -41,7 +41,9 @@ struct InspectTargetsFilesCommand: AsyncParsableCommand {
     var manifestOptions: ManifestOptions
 
     func run() async throws {
-        let path = try path.map { try AbsolutePath(validatingAbsolutePath: $0) } ?? FileHandler.shared.currentPath
+        let path = try path.map {
+            try AbsolutePath(validating: $0, relativeTo: .current)
+        } ?? FileHandler.shared.currentPath
         try ManifestOptionsService()
             .load(options: manifestOptions, path: path.pathString)
         let graph = try await ProjectGraphLoader(keepGlobs: true).load(path: path)

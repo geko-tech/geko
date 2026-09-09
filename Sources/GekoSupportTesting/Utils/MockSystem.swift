@@ -101,8 +101,9 @@ public final class MockSystem: Systeming {
         _ = try capture(arguments, verbose: false, environment: env)
     }
 
-    public func capture(_ arguments: [String], withInput _: String?, environment _: [String: String]) throws -> String {
-        try capture(arguments, verbose: false, environment: env)
+    public func capture(_ arguments: [String], withInput: String?, environment _: [String: String]) throws -> String {
+        withInputStub?(withInput)
+        return try capture(arguments, verbose: false, environment: env)
     }
 
     public func runAndPrint(_ arguments: [String]) throws {

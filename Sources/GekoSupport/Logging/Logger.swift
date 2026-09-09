@@ -23,13 +23,13 @@ extension LoggingConfig {
         let detailed = env[Constants.EnvironmentVariables.detailedLog] != nil
         let verbose = env[Constants.EnvironmentVariables.verbose] != nil
         let silent = env[Constants.EnvironmentVariables.silent] != nil
-
-        if osLog {
+        
+        if silent {
+            return .init(loggerType: .silent, verbose: false)
+        } else if osLog {
             return .init(loggerType: .osLog, verbose: verbose)
         } else if detailed {
             return .init(loggerType: .detailed, verbose: verbose)
-        } else if silent {
-            return .init(loggerType: .silent, verbose: false)
         } else {
             return .init(loggerType: .console, verbose: verbose)
         }
