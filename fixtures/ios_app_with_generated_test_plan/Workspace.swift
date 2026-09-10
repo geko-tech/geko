@@ -35,7 +35,7 @@ let workspace = Workspace(
                     runtimeIssueDetection: .off(),
                     checkedAllocations: .onWhenSupportedFallBackToGuardMalloc(),
                 ),
-                testTargets: .all,
+                testTargetSelection: .all,
             ),
         ]
     )

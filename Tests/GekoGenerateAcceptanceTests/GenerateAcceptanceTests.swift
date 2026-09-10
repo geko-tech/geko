@@ -915,6 +915,8 @@ final class GenerateAcceptanceTestAppWithGeneratedTestPlan: GekoAcceptanceTestCa
                 "container:TestPlans/Geko/GeneratedTestPlan.xctestplan"
             ]
         )
+
+        try await run(TestCommand.self, "MainApp", "--test-plan", "GeneratedTestPlan")
     }
 }
 

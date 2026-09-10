@@ -56,7 +56,7 @@ final class WorkspaceDescriptorGeneratorTests: GekoUnitTestCase {
 
         // When
         let graphTraverser = GraphTraverser(graph: graph)
-        let result = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
+        let (result, _) = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
 
         // Then
         let xcworkspace = result.xcworkspace
@@ -117,7 +117,7 @@ final class WorkspaceDescriptorGeneratorTests: GekoUnitTestCase {
         let graphTraverser = GraphTraverser(graph: graph)
 
         // When
-        let result = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
+        let (result, _) = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
 
         // Then
         let xcworkspace = result.xcworkspace
@@ -140,7 +140,7 @@ final class WorkspaceDescriptorGeneratorTests: GekoUnitTestCase {
         let graphTraverser = GraphTraverser(graph: graph)
 
         // When
-        let result = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
+        let (result, _) = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
 
         // Then
         XCTAssertEqual(result.workspaceSettingsDescriptor, WorkspaceSettingsDescriptor(enableAutomaticXcodeSchemes: false))
@@ -160,7 +160,7 @@ final class WorkspaceDescriptorGeneratorTests: GekoUnitTestCase {
         let graphTraverser = GraphTraverser(graph: graph)
 
         // When
-        let result = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
+        let (result, _) = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
 
         // Then
         XCTAssertEqual(result.workspaceSettingsDescriptor, WorkspaceSettingsDescriptor(enableAutomaticXcodeSchemes: true))
@@ -180,7 +180,7 @@ final class WorkspaceDescriptorGeneratorTests: GekoUnitTestCase {
         let graphTraverser = GraphTraverser(graph: graph)
 
         // When
-        let result = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
+        let (result, _) = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
 
         // Then
         XCTAssertNil(result.workspaceSettingsDescriptor)

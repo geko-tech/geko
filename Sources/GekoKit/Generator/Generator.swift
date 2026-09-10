@@ -68,13 +68,13 @@ public class Generator: Generating {
         try lint(graphTraverser: graphTraverser)
 
         // Generate
-        let workspaceDescriptor = try generator.generateWorkspace(graphTraverser: graphTraverser, sideTable: sideTable)
+        let (workspaceDescriptor, workspaceSideEffects) = try generator.generateWorkspace(graphTraverser: graphTraverser, sideTable: sideTable)
 
         // Write
         try writer.write(workspace: workspaceDescriptor)
 
         // Mapper side effects
-        try sideEffectDescriptorExecutor.execute(sideEffects: sideEffects)
+        try sideEffectDescriptorExecutor.execute(sideEffects: sideEffects + workspaceSideEffects)
 
         // Post Generate Actions
         try await postGenerationActions(
