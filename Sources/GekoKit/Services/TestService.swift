@@ -50,7 +50,7 @@ enum TestServiceError: FatalError, Equatable {
         case .actionInvalid:
             return "Cannot specify both --build-only and --without-building"
         case let .generateMetadataNotFound(path):
-            return "Couldn't find file 'generateMetadata.json'. You need to regenerate the project. Path - \(path)"
+            return "Couldn't find file '\(Constants.GekoUserCacheDirectory.generateMetadataName)'. You need to regenerate the project. Path - \(path)"
         case let .testTargetNotExist(target):
             return "Test target with name '\(target)' does not exist."
         case let .testTargetWasNotAddedToFocus(target):
@@ -254,13 +254,15 @@ public final class TestService { // swiftlint:disable:this type_body_length
                 .filter(\.target.product.testsBundle)
                 .map(\.target.name)
 
-            for testTarget in testTargets {
-                if !allTestTargetsNames.contains(testTarget.target) {
-                    throw TestServiceError.testTargetNotExist(target: testTarget.target)
+            let testTargetsNames = Set(testTargets.map(\.target))
+
+            for testTargetName in testTargetsNames {
+                if !allTestTargetsNames.contains(testTargetName) {
+                    throw TestServiceError.testTargetNotExist(target: testTargetName)
                 }
 
-                if generateMetadata.cacheEnabled && !generateMetadata.focusedTargets.contains(testTarget.target) {
-                    throw TestServiceError.testTargetWasNotAddedToFocus(target: testTarget.target)
+                if generateMetadata.cacheEnabled && !generateMetadata.focusedTargets.isEmpty && !generateMetadata.focusedTargets.contains(testTargetName) {
+                    throw TestServiceError.testTargetWasNotAddedToFocus(target: testTargetName)
                 }
             }
         }

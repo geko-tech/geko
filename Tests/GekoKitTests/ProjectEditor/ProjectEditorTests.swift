@@ -119,7 +119,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
         helpersDirectoryLocator.locateStub = helpersDirectory
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath"))
+            (.test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath")), [])
         }
 
         // When
@@ -153,7 +153,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
         helpersDirectoryLocator.locateStub = helpersDirectory
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath"))
+            (.test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath")), [])
         }
 
         // Then
@@ -178,7 +178,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
 
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: directory.appending(component: "Edit.xcworkspace"))
+            (.test(xcworkspacePath: directory.appending(component: "Edit.xcworkspace")), [])
         }
 
         // When
@@ -213,7 +213,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
 
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath"))
+            (.test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath")), [])
         }
 
         // When
@@ -260,7 +260,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
         manifestFilesLocator.locatePluginManifestsStub = [pluginManifestPath]
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath"))
+            (.test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath")), [])
         }
 
         // When
@@ -307,7 +307,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
         manifestFilesLocator.locatePluginManifestsStub = [pluginManifestPath]
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: editingPath.appending(component: "Edit.xcworkspacepath"))
+            (.test(xcworkspacePath: editingPath.appending(component: "Edit.xcworkspacepath")), [])
         }
 
         // When
@@ -350,7 +350,7 @@ final class ProjectEditorTests: GekoUnitTestCase {
         manifestFilesLocator.locatePluginManifestsStub = []
         projectEditorMapper.mapStub = graph
         generator.generateWorkspaceStub = { _ in
-            .test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath"))
+            (.test(xcworkspacePath: directory.appending(component: "Edit.xcworkspacepath")), [])
         }
 
         // When

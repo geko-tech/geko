@@ -33,7 +33,7 @@ public enum Constants {
     public enum GekoUserCacheDirectory {
         public static let name = ".geko"
         public static let versionsDir = "Versions"
-        public static let generateMetadataName = "generateMetadata.json"
+        public static let generateMetadataName = "generate_metadata.json"
     }
 
     public enum DependenciesDirectory {
