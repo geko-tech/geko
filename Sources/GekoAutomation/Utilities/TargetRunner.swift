@@ -135,7 +135,12 @@ public final class TargetRunner: TargetRunning {
     private func runExecutable(_ executablePath: AbsolutePath, arguments: [String]) throws {
         logger.notice("Running executable \(executablePath.basename)", metadata: .section)
         logger.debug("Forwarding arguments: \(arguments.joined(separator: ", "))")
-        try System.shared.runAndPrint([executablePath.pathString] + arguments)
+        let command = [executablePath.pathString] + arguments
+        if LogOutput.isQuiet {
+            try System.shared.run(command)
+        } else {
+            try System.shared.runAndPrint(command)
+        }
     }
 
     private func runApp(

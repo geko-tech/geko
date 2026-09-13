@@ -150,6 +150,8 @@ extension Logger {
             line: line
         )
 
+        guard !LogOutput.isQuiet else { return }
+
         if Environment.shared.shouldOutputBeColoured {
             FileHandle.standardOutput.print(printableString.pretty)
         } else {

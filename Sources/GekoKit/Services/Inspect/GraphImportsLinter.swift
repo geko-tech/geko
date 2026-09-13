@@ -32,7 +32,7 @@ struct GraphImportsLinterConfig: Codable {
 private struct GraphImportsLinterOutput: Encodable {
     let type: InspectType
     let outputFile: String?
-    let lintedTargets: [String: Set<String>]?
+    let lintedTargets: [String: [String]]?
 }
 
 final class GraphImportsLinter: GraphImportsLinting {
@@ -81,9 +81,9 @@ final class GraphImportsLinter: GraphImportsLinting {
             inspectType: inspectType,
             inspectMode: inspectMode
         )
-        
+
         let lintedOutput = prepareOutput(lintedTargets: lintedTargets)
-        
+
         if let output {
             try saveOutput(
                 lintedTargets: lintedOutput,
@@ -225,24 +225,24 @@ final class GraphImportsLinter: GraphImportsLinting {
         transitiveDeps.formUnion(directDeps)
         visitedDependencies[dependency] = transitiveDeps
     }
-    
+
     private func prepareOutput(
         lintedTargets: [Target: Set<String>]
-    ) -> [String: Set<String>] {
-        let output = lintedTargets.reduce(into: [String: Set<String>]()) { acc, linted in
-            acc[linted.key.productName] = linted.value
+    ) -> [String: [String]] {
+        let output = lintedTargets.reduce(into: [String: [String]]()) { acc, linted in
+            acc[linted.key.productName] = linted.value.sorted()
         }
         return output
     }
 
     private func saveOutput(
-        lintedTargets: [String: Set<String>],
+        lintedTargets: [String: [String]],
         outputPath: AbsolutePath
     ) throws {
         if fileHandler.exists(outputPath) {
             try fileHandler.delete(outputPath)
         }
-        
+
         let jsonData = try JSONEncoder().encode(lintedTargets)
         guard let content = String(data: jsonData, encoding: .utf8) else {
             throw FileHandlerError.invalidTextEncoding(outputPath)

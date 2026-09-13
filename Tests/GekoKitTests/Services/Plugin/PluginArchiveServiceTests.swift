@@ -55,7 +55,7 @@ final class PluginArchiveServiceTests: GekoUnitTestCase {
         )
 
         // When
-        try subject.run(path: path.pathString, outputPath: nil, configuration: .release, createZip: true)
+        _ = try subject.run(path: path.pathString, outputPath: nil, configuration: .release, createZip: true)
 
         // Then
         XCTAssertEqual(invokedPackagePath, path)
@@ -82,7 +82,7 @@ final class PluginArchiveServiceTests: GekoUnitTestCase {
         )
 
         // When
-        try subject.run(path: path.pathString, outputPath: outputPath.pathString, configuration: .release, createZip: true)
+        _ = try subject.run(path: path.pathString, outputPath: outputPath.pathString, configuration: .release, createZip: true)
 
         // Then
         XCTAssertEqual(invokedPackagePath, path)
@@ -108,7 +108,7 @@ final class PluginArchiveServiceTests: GekoUnitTestCase {
         )
 
         // When
-        try subject.run(path: path.pathString, outputPath: nil, configuration: .release, createZip: false)
+        _ = try subject.run(path: path.pathString, outputPath: nil, configuration: .release, createZip: false)
 
         // Then
         XCTAssertEqual(invokedPackagePath, path)
@@ -144,7 +144,7 @@ final class PluginArchiveServiceTests: GekoUnitTestCase {
         )
 
         // When
-        try subject.run(path: path.pathString, outputPath: outputPath.pathString, configuration: .release, createZip: false)
+        _ = try subject.run(path: path.pathString, outputPath: outputPath.pathString, configuration: .release, createZip: false)
 
         // Then
         XCTAssertEqual(invokedPackagePath, path)

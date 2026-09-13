@@ -7,10 +7,14 @@ protocol IPluginExecutor {
 
 final class PluginExecutor: IPluginExecutor {
     func execute(arguments: [String]) throws {
-        try System.shared.runAndPrint(
-            arguments,
-            verbose: Environment.shared.isVerbose,
-            environment: System.shared.env
-        )
+        if LogOutput.isQuiet {
+            try System.shared.run(arguments)
+        } else {
+            try System.shared.runAndPrint(
+                arguments,
+                verbose: Environment.shared.isVerbose,
+                environment: System.shared.env
+            )
+        }
     }
 }

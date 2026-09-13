@@ -1,77 +1,45 @@
-import Foundation
 import AnyCodable
+import Foundation
 
+/// Collects diagnostics and command data for the final JSON response.
+///
+/// Commands and services can add output while they run. `GekoCommand` reads
+/// all collected values once the command finishes and renders the response.
 public protocol CommandOutputStoring {
+    /// Adds a warning to the final JSON response.
     func appendWarning(_ message: String)
 
+    /// Adds an error to the final JSON response.
     func appendError(_ message: String)
-    
-    func set<T: Encodable> (_ key: CommandOutputKey, value: T)
-    
-    func set<Key, Value>(_ key: Key, value: Value, in section: CommandOutputKey) where Key: RawRepresentable, Key.RawValue == String, Value: Encodable
 
-    func drainWarnings() -> [CommandDiagnostic]
+    /// Stores a value under a top-level command output key.
+    func set<T: Encodable>(_ key: CommandOutputKey, value: T)
 
-    func drainErrors() -> [CommandDiagnostic]
-    
-    func drainData() -> [String: AnyCodable]
+    /// Stores a value inside the section assigned to the given key.
+    func set<Key: CommandOutputSectionKey, Value: Encodable>(_ key: Key, value: Value)
+
+    /// Returns all collected output and clears the store for the next use.
+    func drain() -> CommandOutputSnapshot
 }
 
-public enum CommandOutputKey: String {
-    case graph
-    case targetOwnership
-    case focus
-    case cache
-    case workspacePath
-    case xcconfigPath
-    case clean
-    case dump
-    case pluginArchive
-    case pluginExecutablePath
-    case gekoVersion
-    case projectDescriptionVersion
-    case tree
-    case cacheUpload
-    case bump
-    case inspectImports
-    case migrationTargets
+public struct CommandOutputSnapshot {
+    public let warnings: [CommandDiagnostic]
+    public let errors: [CommandDiagnostic]
+    public let data: [String: AnyEncodable]
 }
 
-public enum FocusOutputKey: String {
-    case requestedTargets
-    case focusedTargets
-    case scheme
-    case focusTests
-}
-
-public enum CacheOutputKey: String {
-    case profile
-    case configuration
-    case destination
-    case platforms
-    
-    case cacheEnabled
-    case swiftModuleCacheEnabled
-    case onlyActiveResourcesInBundles
-    case exportCoverageProfiles
-    
-    case ignoreRemoteCache
-    case focusDirectDependencies
-    case dependenciesOnly
-    case unsafe
-}
-
+/// Thread-safe storage used to build the final command output.
 public final class CommandOutputStore: CommandOutputStoring {
     public static let shared: CommandOutputStoring = CommandOutputStore()
-    
+
     private let lock = NSLock()
-    
+
     private var warnings: [CommandDiagnostic] = []
     private var errors: [CommandDiagnostic] = []
-    private var data: [String: AnyCodable] = [:]
-    
+    private var data: [String: AnyEncodable] = [:]
+
     // MARK: - CommandOutputStoring
-    
+
     public func appendWarning(_ message: String) {
         lock.withLock {
             warnings.append(CommandDiagnostic(message: message))
@@ -83,46 +51,40 @@ public final class CommandOutputStore: CommandOutputStoring {
             errors.append(CommandDiagnostic(message: message))
         }
     }
-    
-    public func set<T: Encodable> (
+
+    public func set<T: Encodable>(
         _ key: CommandOutputKey,
         value: T
     ) {
         lock.withLock {
-            data[key.rawValue] = AnyCodable(value)
+            data[key.rawValue] = AnyEncodable(value)
         }
     }
-    
-    public func set<Key, Value>(
+
+    public func set<Key: CommandOutputSectionKey, Value: Encodable>(
         _ key: Key,
-        value: Value,
-        in section: CommandOutputKey
-    ) where Key: RawRepresentable, Key.RawValue == String, Value: Encodable {
+        value: Value
+    ) {
         lock.withLock {
-            var sectionData = data[section.rawValue]?.value as? [String: AnyCodable] ?? [:]
-            sectionData[key.rawValue] = AnyCodable(value)
-            data[section.rawValue] = AnyCodable(sectionData)
+            let section = Key.section.rawValue
+            var sectionData = data[section]?.value as? [String: AnyEncodable] ?? [:]
+            sectionData[key.rawValue] = AnyEncodable(value)
+            data[section] = AnyEncodable(sectionData)
         }
     }
 
-    public func drainWarnings() -> [CommandDiagnostic] {
+    public func drain() -> CommandOutputSnapshot {
         lock.withLock {
-            defer { warnings.removeAll() }
-            return warnings
-        }
-    }
-
-    public func drainErrors() -> [CommandDiagnostic] {
-        lock.withLock {
-            defer { errors.removeAll() }
-            return errors
-        }
-    }
-    
-    public func drainData() -> [String: AnyCodable] {
-        lock.withLock {
-            defer { data.removeAll() }
-            return data
+            defer {
+                warnings.removeAll()
+                errors.removeAll()
+                data.removeAll()
+            }
+            return CommandOutputSnapshot(
+                warnings: warnings,
+                errors: errors,
+                data: data
+            )
         }
     }
 }

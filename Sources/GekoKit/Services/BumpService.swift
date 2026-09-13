@@ -84,7 +84,14 @@ final class BumpService {
             logger.info("Successfully updated version \(version)")
         }
         logger.info("Modified info plists:\n\(infoPlistPaths.joined(separator: "\n"))")
-        CommandOutputStore.shared.set(.bump, value: BumpOutput(buildNumber: buildNumber, version: version, modifiedInfoPlists: infoPlistPaths))
+        CommandOutputStore.shared.set(
+            .bump,
+            value: BumpOutput(
+                buildNumber: buildNumber,
+                version: version,
+                modifiedInfoPlists: Array(Set(infoPlistPaths)).sorted()
+            )
+        )
     }
     
     // MARK: - Helpers

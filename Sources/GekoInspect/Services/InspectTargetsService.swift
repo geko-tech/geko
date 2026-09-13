@@ -3,16 +3,20 @@ import GekoSupport
 import GekoGraph
 import ProjectDescription
 
-private struct TargetsOutput: Codable {
+private struct TargetsOutput: Encodable {
     let files: [FileOwnershipOutput]
 }
 
-private struct FileOwnershipOutput: Codable {
+private struct TargetOwnershipFileOutput: Encodable {
+    let outputFile: String
+}
+
+private struct FileOwnershipOutput: Encodable {
     let path: String
     let targets: [TargetOutput]
 }
 
-private struct TargetOutput: Codable {
+private struct TargetOutput: Encodable {
     let name: String
     let projectPath: String
 }
@@ -57,16 +61,19 @@ public final class InspectTargetsService: InspectTargetsServicing {
             ownerships: ownerships,
             rootPath: path
         )
-        
-        CommandOutputStore.shared.set(.targetOwnership, value: targetsOutput)
-        
+
         if let output {
             try saveOutput(
                 targetsOutput,
                 outputPath: output
             )
+            CommandOutputStore.shared.set(
+                .targetOwnership,
+                value: TargetOwnershipFileOutput(outputFile: output.pathString)
+            )
         } else {
             consoleOutput(for: ownerships, rootPath: path)
+            CommandOutputStore.shared.set(.targetOwnership, value: targetsOutput)
         }
     }
     

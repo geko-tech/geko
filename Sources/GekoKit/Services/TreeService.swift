@@ -11,6 +11,19 @@ private struct TreeDependency: Encodable {
     let version: String?
     let isExternal: Bool
     var dependencies: Set<String>
+
+    private enum CodingKeys: String, CodingKey {
+        case version
+        case isExternal
+        case dependencies
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(version, forKey: .version)
+        try container.encode(isExternal, forKey: .isExternal)
+        try container.encode(dependencies.sorted(), forKey: .dependencies)
+    }
 }
 
 private struct TreeCommandOutput: Encodable {
@@ -73,12 +86,12 @@ final class TreeService {
         }
 
         if LogOutput.isJSON || outputFile != nil {
-            let filterTree = try filter(tree: tree, targets: targets)
+            let filteredTree = try filter(tree: tree, targets: targets)
             if let outputFile {
-                let path = try dumpJson(tree: filterTree, output: outputFile)
+                let path = try dumpJson(tree: filteredTree, output: outputFile)
                 CommandOutputStore.shared.set(.tree, value: TreeCommandOutput(outputFile: path.pathString))
             } else {
-                CommandOutputStore.shared.set(.tree, value: filterTree)
+                CommandOutputStore.shared.set(.tree, value: filteredTree)
             }
         } else {
             try printTree(tree, targets: targets)
@@ -331,17 +344,17 @@ final class TreeService {
 
         return result
     }
-    
+
     private func filter(
         tree: consuming [String: TreeDependency],
         targets: [String]
     ) throws -> [String: TreeDependency] {
         guard !targets.isEmpty else { return tree }
-        
+
         var tree = consume tree
         var visited: Set<String> = []
         var queue = Set(targets)
-        
+
         while !queue.isEmpty {
             let node = queue.removeFirst()
             visited.insert(node)
@@ -358,10 +371,9 @@ final class TreeService {
         for key in tree.keys where !visited.contains(key) {
             tree[key] = nil
         }
-        
+
         return tree
     }
-    
 
     private func dumpJson(
         tree: [String: TreeDependency],

@@ -8,6 +8,13 @@ enum InspectMode: String, ExpressibleByArgument {
     case diff
 }
 
+/// Signals a severity-driven inspection failure without duplicating findings
+/// that are already present in structured command data.
+struct StructuredInspectionFailure: FatalError {
+    let description = ""
+    let type = ErrorType.abortSilent
+}
+
 struct InspectOptions: ParsableArguments {
     @Option(
         name: .shortAndLong,

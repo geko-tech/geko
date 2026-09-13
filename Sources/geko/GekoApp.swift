@@ -21,11 +21,15 @@ private enum GekoApp {
         // bootstrap must be called before everything else
         GekoSupport.LogOutput.bootstrap()
 
-        #if !DEBUG
-        try await startCorrectVersion()
-        #endif
+        do {
+            #if !DEBUG
+            try await startCorrectVersion()
+            #endif
 
-        try GekoSupport.Environment.shared.bootstrap()
+            try GekoSupport.Environment.shared.bootstrap()
+        } catch {
+            GekoCommand.exit(with: error)
+        }
 
         await GekoCommand.main()
     }

@@ -46,13 +46,18 @@ public struct GekoCommand: AsyncParsableCommand {
     )
     var isForced: Bool = false
 
+    @Flag(
+        name: [.customLong("json")],
+        help: "Emit one machine-readable JSON document to standard output."
+    )
+    var isJSON: Bool = false
+
     public static func main(
         _ arguments: [String]? = nil,
         parseAsRoot: ((_ arguments: [String]?) throws -> ParsableCommand) = Self.parseAsRoot,
         execute: ((_ command: ParsableCommand, _ commandArguments: [String]) async throws -> Void)? = nil
     ) async {
         let execute = execute ?? Self.execute
-        let errorHandler = ErrorHandler()
         let executeCommand: () async throws -> Void
         let processedArguments = Array(processArguments(arguments).dropFirst())
         do {
@@ -90,58 +95,17 @@ public struct GekoCommand: AsyncParsableCommand {
 
         do {
             try await executeCommand()
-            
-            if LogOutput.isJSON {
-                try renderJSONOutput(exitCode: 0)
-            } else {
-                WarningController.shared.flush()
-            }
-        } catch let error as FatalError {
-            let exitCode = exitCode(for: error).rawValue
-            if LogOutput.isJSON {
-                try? renderJSONOutput(
-                    exitCode: exitCode,
-                    additionalErrors: [
-                        diagnostic(for: error)
-                    ]
-                )
-            } else {
-                WarningController.shared.flush()
-                errorHandler.fatal(error: error)
-            }
-            
-            _exit(exitCode)
-        } catch {
-            if !LogOutput.isJSON {
-                WarningController.shared.flush()
-            }
- 
-            let exitCode = exitCode(for: error).rawValue
-            
-            // Exit cleanly
-            if exitCode == 0 {
-                if LogOutput.isJSON {
-                    try? renderJSONOutput(exitCode: exitCode)
-                    _exit(exitCode)
-                } else {
-                    exit(withError: error)
-                }
-            } else {
-                let unhandledError = UnhandledError(error: error)
 
-                if LogOutput.isJSON {
-                    try? renderJSONOutput(
-                        exitCode: exitCode,
-                        additionalErrors: [
-                            diagnostic(for: unhandledError)
-                        ]
-                    )
-                } else {
-                    errorHandler.fatal(error: unhandledError)
+            if LogOutput.isJSON {
+                let renderedExitCode = renderJSONOutput(exitCode: 0)
+                if renderedExitCode != 0 {
+                    _exit(renderedExitCode)
                 }
-                
-                _exit(exitCode)
+            } else {
+                WarningController.shared.flush()
             }
+        } catch {
+            exit(with: error)
         }
     }
 
@@ -155,20 +119,16 @@ public struct GekoCommand: AsyncParsableCommand {
     private static func handleParseError(_ error: Error) -> Never {
         let exitCode = exitCode(for: error).rawValue
         let message = fullMessage(for: error)
-        
-        if LogOutput.isJSON {
-            let diagnostic = CommandDiagnostic(message: message)
 
+        if LogOutput.isJSON {
             if exitCode == 0 {
-                try? renderJSONOutput(
-                    exitCode: exitCode,
-                    additionalWarnings: [diagnostic]
-                )
+                CommandOutputStore.shared.set(.output, value: message)
+                _exit(renderJSONOutput(exitCode: exitCode))
             } else {
-                try? renderJSONOutput(
+                _exit(renderJSONOutput(
                     exitCode: exitCode,
-                    additionalErrors: [diagnostic]
-                )
+                    additionalErrors: [CommandDiagnostic(message: message)]
+                ))
             }
         } else {
             if exitCode == 0 {
@@ -179,6 +139,36 @@ public struct GekoCommand: AsyncParsableCommand {
         }
 
         _exit(exitCode)
+    }
+
+    /// Terminates after rendering an error according to the active output mode.
+    /// This is also used for failures that happen during executable startup,
+    /// before ArgumentParser invokes a command.
+    public static func exit(with error: Error) -> Never {
+        let exitCode = exitCode(for: error).rawValue
+
+        // ArgumentParser uses thrown errors for successful control flow such as
+        // help, version, and completion-script output.
+        if exitCode == 0 {
+            if LogOutput.isJSON {
+                CommandOutputStore.shared.set(.output, value: fullMessage(for: error))
+                _exit(renderJSONOutput(exitCode: exitCode))
+            } else {
+                WarningController.shared.flush()
+                exit(withError: error)
+            }
+        }
+
+        let fatalError = (error as? FatalError) ?? UnhandledError(error: error)
+
+        if LogOutput.isJSON {
+            let diagnostic = diagnostic(for: fatalError).map { [$0] } ?? []
+            _exit(renderJSONOutput(exitCode: exitCode, additionalErrors: diagnostic))
+        } else {
+            WarningController.shared.flush()
+            ErrorHandler().fatal(error: fatalError)
+            _exit(exitCode)
+        }
     }
 
     private static func execute(
@@ -207,26 +197,60 @@ public struct GekoCommand: AsyncParsableCommand {
         let arguments = arguments ?? Array(ProcessInfo.processInfo.arguments)
         return arguments.filter { $0 != "--verbose" && $0 != "--force" && $0 != "--quiet" && $0 != "--json" }
     }
-    
+
+    @discardableResult
     private static func renderJSONOutput(
         exitCode: Int32,
-        additionalErrors: [CommandDiagnostic] = [],
-        additionalWarnings: [CommandDiagnostic] = []
-    ) throws {
-        let data = CommandOutputStore.shared.drainData()
+        additionalErrors: [CommandDiagnostic] = []
+    ) -> Int32 {
+        let snapshot = CommandOutputStore.shared.drain()
         let output = CommandOutput(
             exitCode: exitCode,
-            errors: CommandOutputStore.shared.drainErrors() + additionalErrors,
-            warnings: CommandOutputStore.shared.drainWarnings() + additionalWarnings,
-            data: data.isEmpty ? nil : data
+            errors: snapshot.errors + additionalErrors,
+            warnings: snapshot.warnings,
+            data: snapshot.data.isEmpty ? nil : snapshot.data
         )
-        try JSONOutputRender.render(output)
+
+        do {
+            try JSONOutputRenderer.render(output)
+            return exitCode
+        } catch {
+            let renderingExitCode = exitCode == 0 ? ExitCode.failure.rawValue : exitCode
+            let fallback = CommandOutput(
+                exitCode: renderingExitCode,
+                errors: snapshot.errors + additionalErrors + [
+                    CommandDiagnostic(
+                        message: "Failed to render structured command output: \(error.localizedDescription)",
+                        type: ErrorType.bug.rawValue
+                    )
+                ],
+                warnings: snapshot.warnings,
+                data: nil
+            )
+            try? JSONOutputRenderer.render(fallback)
+            return renderingExitCode
+        }
     }
-    
-    private static func diagnostic(for error: FatalError) -> CommandDiagnostic {
-        CommandDiagnostic(
-            message: error.description,
-            type: error.type.rawValue
-        )
+
+    private static func diagnostic(for error: FatalError) -> CommandDiagnostic? {
+        switch error.type {
+        case .abortSilent:
+            guard !error.description.isEmpty else { return nil }
+            return CommandDiagnostic(
+                message: error.description,
+                type: ErrorType.abort.rawValue
+            )
+        case .bugSilent:
+            return CommandDiagnostic(
+                message: "An unexpected error happened.",
+                type: ErrorType.bug.rawValue
+            )
+        case .abort, .bug:
+            guard !error.description.isEmpty else { return nil }
+            return CommandDiagnostic(
+                message: error.description,
+                type: error.type.rawValue
+            )
+        }
     }
 }

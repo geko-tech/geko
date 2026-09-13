@@ -81,7 +81,13 @@ public struct CleanCommand: ParsableCommand {
         } else {
             categories = cleanCategories
         }
-        
+
+        try CleanService().run(
+            categories: categories,
+            path: path,
+            full: full
+        )
+
         CommandOutputStore.shared.set(
             .clean,
             value: CleanOutput(
@@ -89,16 +95,10 @@ public struct CleanCommand: ParsableCommand {
                 full: full
             )
         )
-        
-        try CleanService().run(
-            categories: categories,
-            path: path,
-            full: full
-        )
     }
 }
 
-private struct CleanOutput: Codable {
+private struct CleanOutput: Encodable {
     let categories: [String]
     let full: Bool
 }

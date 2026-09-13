@@ -135,6 +135,7 @@ public class Environment: Environmenting {
     }
 
     public var isVerbose: Bool {
+        guard !LogOutput.isQuiet else { return false }
         guard let variable = ProcessInfo.processInfo.environment[Constants.EnvironmentVariables.verbose] else { return false }
         return Constants.trueValues.contains(variable)
     }
@@ -220,4 +221,3 @@ public class Environment: Environmenting {
             .filter { !$0.isEmpty }
     }
 }
-

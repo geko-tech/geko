@@ -59,7 +59,9 @@ public final class LogSpinner {
         self.status = false
         self.frameIndex = 0
 
-        DefaultSpinnerSignal().trap()
+        if !LogOutput.isQuiet {
+            DefaultSpinnerSignal().trap()
+        }
     }
 
     // MARK: - LogSpinner

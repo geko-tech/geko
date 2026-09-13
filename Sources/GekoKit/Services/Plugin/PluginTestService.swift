@@ -33,7 +33,7 @@ final class PluginTestService {
             ]
         }
         
-        if LogOutput.isSilent {
+        if LogOutput.isQuiet {
             try System.shared.run(testCommand)
         } else {
             try System.shared.runAndPrint(testCommand)

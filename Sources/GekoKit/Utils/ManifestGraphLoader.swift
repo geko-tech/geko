@@ -215,7 +215,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         // Save focused target to output
         let focusedTargets = graphSideTable.workspace.focusedTargets
         if !focusedTargets.isEmpty {
-            CommandOutputStore.shared.set(FocusOutputKey.focusedTargets, value: focusedTargets.sorted(), in: .focus)
+            CommandOutputStore.shared.set(FocusOutputKey.focusedTargets, value: focusedTargets.sorted())
         }
 
         return (

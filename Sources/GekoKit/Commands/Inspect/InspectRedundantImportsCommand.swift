@@ -1,7 +1,6 @@
 import ArgumentParser
 import GekoSupport
 import ProjectDescription
-import GekoCore
 
 struct InspectRedundantImportsCommand: AsyncParsableCommand {
     private static let defaultConfigPath = "Geko/Inspect/redundant_imports.json"
@@ -69,8 +68,8 @@ struct InspectRedundantImportsCommand: AsyncParsableCommand {
         )
         
         if LogOutput.isJSON {
-            if inspectOptions.severity == .error {
-                throw LintingError()
+            if !issues.isEmpty, inspectOptions.severity == .error {
+                throw StructuredInspectionFailure()
             }
             return
         }

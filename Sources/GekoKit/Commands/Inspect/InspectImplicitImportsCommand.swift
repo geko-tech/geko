@@ -66,10 +66,10 @@ struct InspectImplicitImportsCommand: AsyncParsableCommand {
             inspectMode: inspectOptions.mode,
             output: inspectOptions.outputPath
         )
-        
+
         if LogOutput.isJSON {
-            if inspectOptions.severity == .error {
-                throw LintingError()
+            if !issues.isEmpty, inspectOptions.severity == .error {
+                throw StructuredInspectionFailure()
             }
             return
         }

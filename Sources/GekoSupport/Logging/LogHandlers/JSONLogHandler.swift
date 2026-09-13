@@ -5,11 +5,11 @@ public struct JSONLogHandler: LogHandler {
     public var logLevel: Logger.Level = .debug
     public var metadata: Logger.Metadata = Logger.Metadata()
     public let label: String
-    
+
     public init(label: String) {
         self.label = label
     }
-    
+
     public func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -28,7 +28,7 @@ public struct JSONLogHandler: LogHandler {
             break
         }
     }
-    
+
     public subscript(metadataKey key: String) -> Logging.Logger.Metadata.Value? {
         get { metadata[key] }
         set { metadata[key] = newValue }

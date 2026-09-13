@@ -112,13 +112,13 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
         focusTests: Bool
     ) {
         if !sources.isEmpty {
-            CommandOutputStore.shared.set(FocusOutputKey.requestedTargets, value: sources.sorted(), in: .focus)
+            CommandOutputStore.shared.set(FocusOutputKey.requestedTargets, value: sources.sorted())
         }
         if let scheme {
-            CommandOutputStore.shared.set(FocusOutputKey.scheme, value: scheme, in: .focus)
+            CommandOutputStore.shared.set(FocusOutputKey.scheme, value: scheme)
         }
         if focusTests {
-            CommandOutputStore.shared.set(FocusOutputKey.focusTests, value: focusTests, in: .focus)
+            CommandOutputStore.shared.set(FocusOutputKey.focusTests, value: focusTests)
         }
     }
 }

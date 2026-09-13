@@ -27,7 +27,7 @@ final class SettingsToXCConfigExtractorIntegrationTests: GekoTestCase {
         let xcconfigPath = temporaryPath.appending(component: "iOS.xcconfig")
 
         // When
-        try subject.extract(
+        _ = try subject.extract(
             xcodeprojPath: xcodeprojPath,
             targetName: "iOS",
             xcconfigPath: xcconfigPath
@@ -62,7 +62,7 @@ final class SettingsToXCConfigExtractorIntegrationTests: GekoTestCase {
         let xcconfigPath = temporaryPath.appending(component: "Project.xcconfig")
 
         // When
-        try subject.extract(
+        _ = try subject.extract(
             xcodeprojPath: xcodeprojPath,
             targetName: nil,
             xcconfigPath: xcconfigPath

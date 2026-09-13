@@ -8,7 +8,7 @@ import GekoSupport
 import ProjectAutomation
 import ProjectDescription
 
-private struct GraphOutput: Codable {
+private struct GraphOutput: Encodable {
     let format: String
     let outputPath: String
 }
