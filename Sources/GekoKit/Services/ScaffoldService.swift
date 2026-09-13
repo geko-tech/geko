@@ -33,6 +33,11 @@ enum ScaffoldServiceError: FatalError, Equatable {
     }
 }
 
+struct ScaffoldResult {
+    let path: AbsolutePath
+    let template: String
+}
+
 final class ScaffoldService {
     private let templateLoader: TemplateLoading
     private let templatesDirectoryLocator: TemplatesDirectoryLocating
@@ -83,7 +88,7 @@ final class ScaffoldService {
         templateName: String,
         requiredTemplateOptions: [String: String],
         optionalTemplateOptions: [String: String?]
-    ) async throws {
+    ) async throws -> ScaffoldResult {
         let path = try self.path(path)
         let plugins = try await loadPlugins(at: path)
         let templateDirectories = try locateTemplateDirectories(at: path, plugins: plugins)
@@ -108,6 +113,7 @@ final class ScaffoldService {
         )
 
         logger.notice("Template \(templateName) was successfully generated", metadata: .success)
+        return ScaffoldResult(path: path, template: templateName)
     }
 
     // MARK: - Helpers

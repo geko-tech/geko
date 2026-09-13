@@ -17,6 +17,9 @@ public enum CommandOutputKey: String {
     case bump
     case inspectImports
     case migrationTargets
+    case initProject
+    case scaffold
+    case scaffoldList
     case output
 }
 

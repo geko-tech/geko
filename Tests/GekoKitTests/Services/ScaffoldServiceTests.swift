@@ -154,13 +154,14 @@ final class ScaffoldServiceTests: GekoUnitTestCase {
         }
 
         // When
-        try await subject.testRun()
+        let result = try await subject.testRun()
 
         // Then
         XCTAssertEqual(
             ["optional": "optionalValue"],
             generateAttributes
         )
+        XCTAssertEqual(result.template, "template")
     }
 
     func test_attributes_are_passed_to_generator() async throws {
@@ -182,7 +183,7 @@ final class ScaffoldServiceTests: GekoUnitTestCase {
         }
 
         // When
-        try await subject.testRun(
+        _ = try await subject.testRun(
             requiredTemplateOptions: ["required": "requiredValue"],
             optionalTemplateOptions: ["optional": "optionalValue"]
         )
@@ -204,7 +205,7 @@ extension ScaffoldService {
         templateName: String = "template",
         requiredTemplateOptions: [String: String] = [:],
         optionalTemplateOptions: [String: String] = [:]
-    ) async throws {
+    ) async throws -> ScaffoldResult {
         try await run(
             path: path,
             templateName: templateName,

@@ -41,6 +41,11 @@ class ListService {
             return PrintableTemplate(name: path.basename, description: template.description)
         }
 
+        if LogOutput.isJSON, case .json = format {
+            CommandOutputStore.shared.set(.scaffoldList, value: templates)
+            return
+        }
+
         let output = try string(for: templates, in: format)
         logger.info("\(output)")
     }

@@ -195,7 +195,27 @@ public struct GekoCommand: AsyncParsableCommand {
 
     static func processArguments(_ arguments: [String]? = nil) -> [String] {
         let arguments = arguments ?? Array(ProcessInfo.processInfo.arguments)
-        return arguments.filter { $0 != "--verbose" && $0 != "--force" && $0 != "--quiet" && $0 != "--json" }
+        let legacyScaffoldJSONIndices = legacyScaffoldJSONArgumentIndices(arguments)
+        return arguments.enumerated().compactMap { index, argument in
+            let isDeprecatedScaffoldJSON = legacyScaffoldJSONIndices.contains(index)
+            return argument == "--verbose" || argument == "--force" || argument == "--quiet" || (argument == "--json" && !isDeprecatedScaffoldJSON)
+                ? nil : argument
+        }
+    }
+
+    /// Keeps only the deprecated `scaffold list --json` compatibility flag.
+    /// Other command-local uses of `--json` must not be silently accepted.
+    private static func legacyScaffoldJSONArgumentIndices(_ arguments: [String]) -> Set<Int> {
+        let firstSubcommand = arguments.dropFirst().firstIndex(where: { !$0.hasPrefix("-") })
+        guard let firstSubcommand, arguments[firstSubcommand] == ScaffoldCommand.configuration.commandName else {
+            return []
+        }
+
+        guard let listIndex = arguments[(firstSubcommand + 1)...].firstIndex(where: { !$0.hasPrefix("-") }),
+              arguments[listIndex] == "list"
+        else { return [] }
+
+        return Set(arguments.indices.filter { $0 > listIndex && arguments[$0] == "--json" })
     }
 
     @discardableResult

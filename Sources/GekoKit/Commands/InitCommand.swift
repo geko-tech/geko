@@ -12,6 +12,13 @@ import ProjectDescription
 private typealias Platform = ProjectDescription.Platform
 private typealias Product = ProjectDescription.Product
 
+private struct InitOutput: Encodable {
+    let path: String
+    let name: String
+    let platform: String
+    let template: String
+}
+
 public struct InitCommand: ParsableCommand, HasTrackableParameters {
     public static var configuration: CommandConfiguration {
         CommandConfiguration(
@@ -79,13 +86,22 @@ public struct InitCommand: ParsableCommand, HasTrackableParameters {
                 "platform": AnyCodable(platform ?? "unknown"),
             ]
         )
-        try InitService().run(
+        let result = try InitService().run(
             name: name,
             platform: platform,
             path: path,
             templateName: template,
             requiredTemplateOptions: requiredTemplateOptions,
             optionalTemplateOptions: optionalTemplateOptions
+        )
+        CommandOutputStore.shared.set(
+            .initProject,
+            value: InitOutput(
+                path: result.path.pathString,
+                name: result.name,
+                platform: result.platform,
+                template: result.template
+            )
         )
     }
 }

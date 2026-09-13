@@ -69,10 +69,13 @@ final class InitServiceTests: GekoUnitTestCase {
         }
 
         // When
-        try subject.testRun(name: "Name", platform: "macos")
+        let result = try subject.testRun(name: "Name", platform: "macos")
 
         // Then
         XCTAssertEqual(expectedAttributes, generatorAttributes)
+        XCTAssertEqual(result.name, "Name")
+        XCTAssertEqual(result.platform, "macOS")
+        XCTAssertEqual(result.template, "default")
     }
 
     func test_init_default_platform() throws {
@@ -88,7 +91,7 @@ final class InitServiceTests: GekoUnitTestCase {
         }
 
         // When
-        try subject.testRun(name: "Name")
+        _ = try subject.testRun(name: "Name")
 
         // Then
         XCTAssertEqual(expectedAttributes, generatorAttributes)
@@ -118,7 +121,7 @@ final class InitServiceTests: GekoUnitTestCase {
         }
 
         // When
-        try subject.testRun(
+        _ = try subject.testRun(
             name: "Name",
             platform: "macos",
             templateName: "https://url/to/repo.git",
@@ -140,7 +143,7 @@ extension InitService {
         templateName: String? = nil,
         requiredTemplateOptions: [String: String] = [:],
         optionalTemplateOptions: [String: String?] = [:]
-    ) throws {
+    ) throws -> InitResult {
         try run(
             name: name,
             platform: platform,
