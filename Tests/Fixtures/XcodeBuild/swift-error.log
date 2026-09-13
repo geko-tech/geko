@@ -1,0 +1,4 @@
+/tmp/XcodeBuildOutputFixture/macOS/macOS.swift:7:9: error: cannot find 'missingValue' in scope
+        missingValue
+        ^~~~~~~~~~~~
+** BUILD FAILED **

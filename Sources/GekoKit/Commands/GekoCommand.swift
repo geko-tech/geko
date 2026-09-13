@@ -52,6 +52,12 @@ public struct GekoCommand: AsyncParsableCommand {
     )
     var isStructured: Bool = false
 
+    @Flag(
+        name: [.customLong("include-build-warnings")],
+        help: "Include detailed xcodebuild warnings in structured JSON output."
+    )
+    var includeBuildWarnings: Bool = false
+
     public static func main(
         _ arguments: [String]? = nil,
         parseAsRoot: ((_ arguments: [String]?) throws -> ParsableCommand) = Self.parseAsRoot,
@@ -200,6 +206,7 @@ public struct GekoCommand: AsyncParsableCommand {
                 && argument != "--force"
                 && argument != "--quiet"
                 && argument != "--structured"
+                && argument != "--include-build-warnings"
         }
     }
 
@@ -238,11 +245,12 @@ public struct GekoCommand: AsyncParsableCommand {
     }
 
     private static func diagnostic(for error: FatalError) -> CommandDiagnostic? {
+        let description = (error as? StructuredErrorDescribing)?.structuredDescription ?? error.description
         switch error.type {
         case .abortSilent:
-            guard !error.description.isEmpty else { return nil }
+            guard !description.isEmpty else { return nil }
             return CommandDiagnostic(
-                message: error.description,
+                message: description,
                 type: ErrorType.abort.rawValue
             )
         case .bugSilent:
@@ -251,9 +259,9 @@ public struct GekoCommand: AsyncParsableCommand {
                 type: ErrorType.bug.rawValue
             )
         case .abort, .bug:
-            guard !error.description.isEmpty else { return nil }
+            guard !description.isEmpty else { return nil }
             return CommandDiagnostic(
-                message: error.description,
+                message: description,
                 type: error.type.rawValue
             )
         }

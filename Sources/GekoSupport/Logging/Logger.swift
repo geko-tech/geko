@@ -14,6 +14,7 @@ public struct LoggingConfig {
 
     public var loggerType: LoggerType
     public var verbose: Bool
+    public var includeBuildWarnings: Bool
 }
 
 extension LoggingConfig {
@@ -25,17 +26,26 @@ extension LoggingConfig {
         let verbose = env[Constants.EnvironmentVariables.verbose] != nil
         let quiet = env[Constants.EnvironmentVariables.quiet] != nil
         let structured = env[Constants.EnvironmentVariables.structured] != nil
+        let includeBuildWarnings = env[Constants.EnvironmentVariables.includeBuildWarnings] != nil
 
         if structured {
-            return .init(loggerType: .structured, verbose: false)
+            return .init(
+                loggerType: .structured,
+                verbose: false,
+                includeBuildWarnings: includeBuildWarnings
+            )
         } else if quiet {
-            return .init(loggerType: .quiet, verbose: false)
+            return .init(
+                loggerType: .quiet,
+                verbose: false,
+                includeBuildWarnings: includeBuildWarnings
+            )
         } else if osLog {
-            return .init(loggerType: .osLog, verbose: verbose)
+            return .init(loggerType: .osLog, verbose: verbose, includeBuildWarnings: includeBuildWarnings)
         } else if detailed {
-            return .init(loggerType: .detailed, verbose: verbose)
+            return .init(loggerType: .detailed, verbose: verbose, includeBuildWarnings: includeBuildWarnings)
         } else {
-            return .init(loggerType: .console, verbose: verbose)
+            return .init(loggerType: .console, verbose: verbose, includeBuildWarnings: includeBuildWarnings)
         }
     }
 }
@@ -53,6 +63,10 @@ public enum LogOutput {
 
     public static var suppressesHumanOutput: Bool {
         isQuiet || isStructured
+    }
+
+    public static var includeBuildWarnings: Bool {
+        currentConfig.includeBuildWarnings
     }
 
     public static func bootstrap(config: LoggingConfig = .default) {

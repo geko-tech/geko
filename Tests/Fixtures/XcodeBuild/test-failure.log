@@ -1,0 +1,6 @@
+Test Case '-[FixtureTests.FixtureLibraryTests testFixtureValue]' started.
+/tmp/XcodeBuildOutputFixture/Tests/FixtureLibraryTests.swift:5: error: -[FixtureTests.FixtureLibraryTests testFixtureValue] : XCTAssertEqual failed: ("1") is not equal to ("2")
+Test Case '-[FixtureTests.FixtureLibraryTests testFixtureValue]' failed (0.548 seconds).
+Failing tests:
+	FixtureLibraryTests.testFixtureValue()
+** TEST FAILED **

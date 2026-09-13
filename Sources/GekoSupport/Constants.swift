@@ -74,6 +74,7 @@ public enum Constants {
         case verbose = "GEKO_CONFIG_VERBOSE"
         case quiet = "GEKO_CONFIG_QUIET"
         case structured = "GEKO_CONFIG_STRUCTURED"
+        case includeBuildWarnings = "GEKO_CONFIG_INCLUDE_BUILD_WARNINGS"
         case colouredOutput = "GEKO_CONFIG_COLOURED_OUTPUT"
         case versionsDirectory = "GEKO_CONFIG_VERSIONS_DIRECTORY"
         case forceConfigCacheDirectory = "GEKO_CONFIG_FORCE_CONFIG_CACHE_DIRECTORY"

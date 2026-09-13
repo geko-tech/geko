@@ -1,0 +1,6 @@
+Undefined symbols for architecture arm64:
+  "_geko_missing_symbol", referenced from:
+      macOS.macOS.init() -> macOS.macOS in macOS.o
+ld: symbol(s) not found for architecture arm64
+/tmp/XcodeBuildOutputFixture/Frameworks.xcodeproj: macOS: clang: error: linker command failed with exit code 1 (use -v to see invocation)
+** BUILD FAILED **

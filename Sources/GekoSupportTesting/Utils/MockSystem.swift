@@ -49,7 +49,7 @@ public final class MockSystem: Systeming {
     }
     
     public func runShell(_ arguments: [String], environment: [String : String], handler: @escaping (String) throws -> Void) throws {
-        _ = try capture(arguments)
+        try captureStreamLines(arguments, environment: environment, handler: handler)
     }
 
     public func capture(_ arguments: [String]) throws -> String {
@@ -98,7 +98,32 @@ public final class MockSystem: Systeming {
     }
     
     public func captureStreamLines(_ arguments: [String], environment: [String : String], handler: @escaping (String) throws -> Void) throws {
-        _ = try capture(arguments, verbose: false, environment: env)
+        let command = arguments.joined(separator: " ")
+        guard let stub = stubs[command] else {
+            throw GekoSupport.SystemError.terminated(
+                command: command,
+                code: 1,
+                standardError: Data(),
+                standardOutput: Data()
+            )
+        }
+
+        let output = [stub.stdout, stub.stderror]
+            .compactMap { $0 }
+            .joined(separator: "\n")
+        for line in output.split(separator: "\n", omittingEmptySubsequences: false) {
+            try handler(String(line))
+        }
+
+        guard stub.exitstatus == 0 else {
+            throw GekoSupport.SystemError.terminated(
+                command: arguments.first!,
+                code: 1,
+                standardError: Data((stub.stderror ?? "").utf8),
+                standardOutput: Data((stub.stdout ?? "").utf8)
+            )
+        }
+        calls.append(command)
     }
 
     public func capture(_ arguments: [String], withInput: String?, environment _: [String: String]) throws -> String {

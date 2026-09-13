@@ -10,6 +10,8 @@ struct HelpEnvCommand: AsyncParsableCommand {
             return "Enable quiet logging. Only output errors. Defaults to 'false'."
         case .structured:
             return "Enable structured JSON output. Defaults to 'false'."
+        case .includeBuildWarnings:
+            return "Include detailed xcodebuild warnings in structured JSON output. Defaults to 'false'."
         case .colouredOutput:
             return "Enable colored output. Defaults to 'true'."
         case .versionsDirectory:

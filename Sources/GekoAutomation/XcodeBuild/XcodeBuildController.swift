@@ -21,13 +21,17 @@ public final class XcodeBuildController: XcodeBuildControlling {
     private let environment: Environmenting
     private let logFileStoreHandler: LogFileStoreHandling
     private let outputParser: XcodeBuildOutputParsing
+    private let isStructuredOutputEnabled: Bool
+    private let includeStructuredBuildWarnings: Bool
 
     public convenience init() {
         self.init(
             formatter: Formatter(),
             environment: Environment.shared,
             logFileStoreHandler: LogFileStoreHandler(),
-            outputParser: XcodeBuildOutputParser()
+            outputParser: XcodeBuildOutputParser(),
+            isStructuredOutputEnabled: LogOutput.isStructured,
+            includeStructuredBuildWarnings: LogOutput.includeBuildWarnings
         )
     }
 
@@ -35,12 +39,16 @@ public final class XcodeBuildController: XcodeBuildControlling {
         formatter: Formatting,
         environment: Environmenting,
         logFileStoreHandler: LogFileStoreHandling,
-        outputParser: XcodeBuildOutputParsing
+        outputParser: XcodeBuildOutputParsing,
+        isStructuredOutputEnabled: Bool = LogOutput.isStructured,
+        includeStructuredBuildWarnings: Bool = LogOutput.includeBuildWarnings
     ) {
         self.formatter = formatter
         self.environment = environment
         self.logFileStoreHandler = logFileStoreHandler
         self.outputParser = outputParser
+        self.isStructuredOutputEnabled = isStructuredOutputEnabled
+        self.includeStructuredBuildWarnings = includeStructuredBuildWarnings
     }
 
     public func build(
@@ -60,7 +68,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         if clean {
             command.append("clean")
         }
-        command.append("build")
+        command.append(XcodeBuildAction.build.rawValue)
 
         // Scheme
         command.append(contentsOf: ["-scheme", scheme.spm_shellEscaped()])
@@ -93,7 +101,12 @@ public final class XcodeBuildController: XcodeBuildControlling {
             command.append(contentsOf: ["-derivedDataPath", derivedDataPath.pathString])
         }
 
-        return try runBuild(command: command, eventHandler: eventHandler)
+        return try runBuild(
+            command: command,
+            action: .build,
+            scheme: scheme,
+            eventHandler: eventHandler
+        )
     }
 
     public func test(
@@ -118,14 +131,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
         if clean {
             command.append("clean")
         }
-        switch action {
-        case .test:
-            command.append("test")
-        case .build:
-            command.append("build-for-testing")
-        case .testWithoutBuilding:
-            command.append("test-without-building")
-        }
+        let xcodeBuildAction = XcodeBuildAction(testAction: action)
+        command.append(xcodeBuildAction.rawValue)
 
         // Scheme
         command.append(contentsOf: ["-scheme", scheme])
@@ -188,7 +195,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         }
 
         do {
-            try runBuild(command: command)
+            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme)
         } catch let error as XcodeBuildError {
             switch error {
             case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
@@ -219,7 +226,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         if clean {
             command.append("clean")
         }
-        command.append("archive")
+        command.append(XcodeBuildAction.archive.rawValue)
 
         // Scheme
         command.append(contentsOf: ["-scheme", scheme])
@@ -238,7 +245,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         // Arguments
         command.append(contentsOf: arguments.flatMap(\.arguments))
 
-        return try runBuild(command: command)
+        return try runBuild(command: command, action: .archive, scheme: scheme)
     }
 
     public func createXCFramework(
@@ -332,7 +339,12 @@ public final class XcodeBuildController: XcodeBuildControlling {
         let _ = try System.shared.runShell(command)
     }
 
-    private func runBuild(command: [String], eventHandler: XcodeBuildEventHandler? = nil) throws {
+    private func runBuild(
+        command: [String],
+        action: XcodeBuildAction,
+        scheme: String?,
+        eventHandler: XcodeBuildEventHandler? = nil
+    ) throws {
         logger.debug("Running xcodebuild command: \(command.joined(separator: " "))")
 
         let logDate = Date()
@@ -344,6 +356,21 @@ public final class XcodeBuildController: XcodeBuildControlling {
         
         // Collect and show only errors when build
         var errors: [String] = []
+        var structuredParser = isStructuredOutputEnabled
+            ? XcodeBuildStructuredOutputParser(
+                action: action,
+                scheme: scheme,
+                includeWarnings: includeStructuredBuildWarnings
+            )
+            : nil
+
+        func storeStructuredOutput(succeeded: Bool) {
+            guard var parser = structuredParser else { return }
+            CommandOutputStore.shared.append(
+                XcodeBuildOutputKey.invocations,
+                value: parser.finish(succeeded: succeeded)
+            )
+        }
 
         let outputCompletion: (String, OutputType) throws -> Void = { formattedLine, type in
             if type == .error { errors.append(formattedLine) }
@@ -353,11 +380,15 @@ public final class XcodeBuildController: XcodeBuildControlling {
         do {
             try System.shared.runShell(command, environment: environment) { line in
                 try self.logFileStoreHandler.write(line, logFile: .rawBuildLog)
+                structuredParser?.feed(line)
                 try self.formatter.format(line: line, output: outputCompletion)
                 guard let event = self.outputParser.parse(line: line) else { return }
                 eventHandler?(event)
             }
-        } catch let error as SystemError {
+            storeStructuredOutput(succeeded: true)
+        } catch {
+            storeStructuredOutput(succeeded: false)
+            guard let error = error as? SystemError else { throw error }
             switch error {
             case .terminated, .signalled:
                 throw XcodeBuildError.buildFailed(

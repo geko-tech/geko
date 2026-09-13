@@ -163,12 +163,39 @@
       }
     },
     {
+      "identity" : "swift-toml",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mattt/swift-toml",
+      "state" : {
+        "revision" : "827506c90475e82d5a7f191f950fb3025cbdc0d6",
+        "version" : "2.0.0"
+      }
+    },
+    {
+      "identity" : "toon-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/toon-format/toon-swift.git",
+      "state" : {
+        "revision" : "b519ede235854489e1fbfe05d171c69a3bf558e5",
+        "version" : "0.4.0"
+      }
+    },
+    {
       "identity" : "xcbeautify",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/cpisciotta/xcbeautify",
       "state" : {
         "revision" : "84d24a9854e6fdcd2c91122d50a3189b072e8136",
         "version" : "1.4.0"
+      }
+    },
+    {
+      "identity" : "xcsift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ldomaradzki/xcsift",
+      "state" : {
+        "revision" : "84f7c6bc01f7bb1cd56e20ce51f9fd440899c391",
+        "version" : "1.5.0"
       }
     },
     {

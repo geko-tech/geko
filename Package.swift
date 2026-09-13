@@ -7,6 +7,7 @@ let argumentParserDependency: Target.Dependency = .product(name: "ArgumentParser
 let yamsDependency: Target.Dependency = .product(name: "Yams", package: "Yams")
 let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "project-description")
 let zipFoundationDependency: Target.Dependency = .product(name: "ZIPFoundation", package: "ZIPFoundation")
+let xcsiftCoreDependency: Target.Dependency = .product(name: "XCSiftCore", package: "xcsift")
 
 var targets: [Target] = [
     .target(
@@ -175,6 +176,7 @@ var targets: [Target] = [
         dependencies: [
             "XcodeProj",
             .product(name: "XcbeautifyLib", package: "xcbeautify"),
+            xcsiftCoreDependency,
             "GekoCore",
             "GekoGraph",
             "GekoSupport",
@@ -825,6 +827,7 @@ let package = Package(
         .package(url: "https://github.com/stencilproject/Stencil", exact: "0.15.1"),
         .package(url: "https://github.com/SwiftGen/StencilSwiftKit", exact: "2.10.1"),
         .package(url: "https://github.com/cpisciotta/xcbeautify", from: "1.4.0"),
+        .package(url: "https://github.com/ldomaradzki/xcsift", exact: "1.5.0"),
         .package(url: "https://github.com/tadija/AEXML.git", .upToNextMinor(from: "4.6.1")),
         .package(url: "https://github.com/kylef/PathKit.git", .upToNextMinor(from: "1.0.1")),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.4.3"),
