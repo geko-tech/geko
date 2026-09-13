@@ -63,7 +63,9 @@ final class DumpService {
         if let resultFile = resultFile {
             let resultPath = try AbsolutePath(validating: resultFile, relativeTo: AbsolutePath.current)
             try fileHandler.write(resultContent, path: resultPath, atomically: true)
+            CommandOutputStore.shared.set(.dump, value: DumpFileOutput(manifest: manifest.rawValue, outputPath: resultPath.pathString))
         } else {
+            CommandOutputStore.shared.set(.dump, value: encoded)
             logger.notice("\(resultContent)")
         }
     }
@@ -76,4 +78,9 @@ enum DumpableManifest: String, CaseIterable {
     case template
     case dependencies
     case plugin
+}
+
+private struct DumpFileOutput: Encodable {
+    let manifest: String
+    let outputPath: String
 }

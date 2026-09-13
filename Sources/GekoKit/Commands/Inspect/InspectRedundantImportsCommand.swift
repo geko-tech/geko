@@ -1,6 +1,7 @@
 import ArgumentParser
 import GekoSupport
 import ProjectDescription
+import GekoCore
 
 struct InspectRedundantImportsCommand: AsyncParsableCommand {
     private static let defaultConfigPath = "Geko/Inspect/redundant_imports.json"
@@ -66,6 +67,13 @@ struct InspectRedundantImportsCommand: AsyncParsableCommand {
             inspectMode: inspectOptions.mode,
             output: inspectOptions.outputPath
         )
+        
+        if LogOutput.isJSON {
+            if inspectOptions.severity == .error {
+                throw LintingError()
+            }
+            return
+        }
 
         if issues.isEmpty {
             logger.info("We did not find any redundant dependencies in your project.")

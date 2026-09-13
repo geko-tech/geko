@@ -55,7 +55,6 @@ public struct GekoCommand: AsyncParsableCommand {
         let errorHandler = ErrorHandler()
         let executeCommand: () async throws -> Void
         let processedArguments = Array(processArguments(arguments).dropFirst())
-        var parsedError: Error?
         do {
             let subcommandArguments = CommandLine.filterSubcommandArguments(from: arguments ?? CommandLine.arguments)
 
@@ -86,28 +85,62 @@ public struct GekoCommand: AsyncParsableCommand {
                 }
             }
         } catch {
-            parsedError = error
             handleParseError(error)
         }
 
         do {
-            defer { WarningController.shared.flush() }
             try await executeCommand()
-        } catch let error as FatalError {
-            WarningController.shared.flush()
-            errorHandler.fatal(error: error)
-            _exit(exitCode(for: error).rawValue)
-        } catch {
-            WarningController.shared.flush()
-            if let parsedError {
-                handleParseError(parsedError)
-            }
-            // Exit cleanly
-            if exitCode(for: error).rawValue == 0 {
-                exit(withError: error)
+            
+            if LogOutput.isJSON {
+                try renderJSONOutput(exitCode: 0)
             } else {
-                errorHandler.fatal(error: UnhandledError(error: error))
-                _exit(exitCode(for: error).rawValue)
+                WarningController.shared.flush()
+            }
+        } catch let error as FatalError {
+            let exitCode = exitCode(for: error).rawValue
+            if LogOutput.isJSON {
+                try? renderJSONOutput(
+                    exitCode: exitCode,
+                    additionalErrors: [
+                        diagnostic(for: error)
+                    ]
+                )
+            } else {
+                WarningController.shared.flush()
+                errorHandler.fatal(error: error)
+            }
+            
+            _exit(exitCode)
+        } catch {
+            if !LogOutput.isJSON {
+                WarningController.shared.flush()
+            }
+ 
+            let exitCode = exitCode(for: error).rawValue
+            
+            // Exit cleanly
+            if exitCode == 0 {
+                if LogOutput.isJSON {
+                    try? renderJSONOutput(exitCode: exitCode)
+                    _exit(exitCode)
+                } else {
+                    exit(withError: error)
+                }
+            } else {
+                let unhandledError = UnhandledError(error: error)
+
+                if LogOutput.isJSON {
+                    try? renderJSONOutput(
+                        exitCode: exitCode,
+                        additionalErrors: [
+                            diagnostic(for: unhandledError)
+                        ]
+                    )
+                } else {
+                    errorHandler.fatal(error: unhandledError)
+                }
+                
+                _exit(exitCode)
             }
         }
     }
@@ -121,11 +154,30 @@ public struct GekoCommand: AsyncParsableCommand {
 
     private static func handleParseError(_ error: Error) -> Never {
         let exitCode = exitCode(for: error).rawValue
-        if exitCode == 0 {
-            logger.info("\(fullMessage(for: error))")
+        let message = fullMessage(for: error)
+        
+        if LogOutput.isJSON {
+            let diagnostic = CommandDiagnostic(message: message)
+
+            if exitCode == 0 {
+                try? renderJSONOutput(
+                    exitCode: exitCode,
+                    additionalWarnings: [diagnostic]
+                )
+            } else {
+                try? renderJSONOutput(
+                    exitCode: exitCode,
+                    additionalErrors: [diagnostic]
+                )
+            }
         } else {
-            logger.error("\(fullMessage(for: error))")
+            if exitCode == 0 {
+                logger.info("\(message)")
+            } else {
+                logger.error("\(message)")
+            }
         }
+
         _exit(exitCode)
     }
 
@@ -153,6 +205,28 @@ public struct GekoCommand: AsyncParsableCommand {
 
     static func processArguments(_ arguments: [String]? = nil) -> [String] {
         let arguments = arguments ?? Array(ProcessInfo.processInfo.arguments)
-        return arguments.filter { $0 != "--verbose" && $0 != "--force" && $0 != "--quiet" }
+        return arguments.filter { $0 != "--verbose" && $0 != "--force" && $0 != "--quiet" && $0 != "--json" }
+    }
+    
+    private static func renderJSONOutput(
+        exitCode: Int32,
+        additionalErrors: [CommandDiagnostic] = [],
+        additionalWarnings: [CommandDiagnostic] = []
+    ) throws {
+        let data = CommandOutputStore.shared.drainData()
+        let output = CommandOutput(
+            exitCode: exitCode,
+            errors: CommandOutputStore.shared.drainErrors() + additionalErrors,
+            warnings: CommandOutputStore.shared.drainWarnings() + additionalWarnings,
+            data: data.isEmpty ? nil : data
+        )
+        try JSONOutputRender.render(output)
+    }
+    
+    private static func diagnostic(for error: FatalError) -> CommandDiagnostic {
+        CommandDiagnostic(
+            message: error.description,
+            type: error.type.rawValue
+        )
     }
 }

@@ -14,6 +14,9 @@ private enum GekoApp {
         if CommandLine.topLevelArguments.contains("--quiet") {
             try? ProcessEnv.setVar(Constants.EnvironmentVariables.quiet.rawValue, value: "true")
         }
+        if CommandLine.topLevelArguments.contains("--json") {
+            try? ProcessEnv.setVar(Constants.EnvironmentVariables.json.rawValue, value: "true")
+        }
 
         // bootstrap must be called before everything else
         GekoSupport.LogOutput.bootstrap()

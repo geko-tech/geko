@@ -61,6 +61,14 @@ final class CacheWarmService {
             ignoreRemoteCache: ignoreRemoteCache,
             noOpen: noOpen
         )
+        storeOutput(
+            profile: profile,
+            destination: destination,
+            ignoreRemoteCache: ignoreRemoteCache,
+            focusDirectDependencies: focusDirectDependencies,
+            dependenciesOnly: dependenciesOnly,
+            unsafe: unsafe
+        )
         
         var context = CacheContext(
             path: path,
@@ -198,4 +206,59 @@ final class CacheWarmService {
     private var currentPath: AbsolutePath {
         FileHandler.shared.currentPath
     }
+    
+    private func storeOutput(
+        profile: ProjectDescription.Cache.Profile,
+        destination: CacheFrameworkDestination,
+        ignoreRemoteCache: Bool,
+        focusDirectDependencies: Bool,
+        dependenciesOnly: Bool,
+        unsafe: Bool,
+    ) {
+        CommandOutputStore.shared.set(CacheOutputKey.cacheEnabled, value: true, in: .cache)
+        
+        // Profile
+        CommandOutputStore.shared.set(CacheOutputKey.profile, value: profile.name, in: .cache)
+        CommandOutputStore.shared.set(CacheOutputKey.configuration, value: profile.configuration, in: .cache)
+        CommandOutputStore.shared.set(CacheOutputKey.destination, value: destination.rawValue, in: .cache)
+        
+        let platforms = Dictionary(
+            uniqueKeysWithValues: profile.platforms.map { platform, options in
+                (
+                    platform.rawValue,
+                    CachePlatformOutput(
+                        arch: options.arch.rawValue,
+                        os: options.os?.description,
+                        device: options.device
+                    )
+                )
+            }
+        )
+        CommandOutputStore.shared.set(CacheOutputKey.platforms, value: platforms, in: .cache)
+        
+        // Profile options
+        CommandOutputStore.shared.set(CacheOutputKey.swiftModuleCacheEnabled, value: profile.options.swiftModuleCacheEnabled, in: .cache)
+        CommandOutputStore.shared.set(CacheOutputKey.onlyActiveResourcesInBundles, value: profile.options.onlyActiveResourcesInBundles, in: .cache)
+        CommandOutputStore.shared.set(CacheOutputKey.exportCoverageProfiles, value: profile.options.exportCoverageProfiles, in: .cache)
+        
+        // Cache options
+        if ignoreRemoteCache {
+            CommandOutputStore.shared.set(CacheOutputKey.ignoreRemoteCache, value: ignoreRemoteCache, in: .cache)
+        }
+        if focusDirectDependencies {
+            CommandOutputStore.shared.set(CacheOutputKey.focusDirectDependencies, value: focusDirectDependencies, in: .cache)
+        }
+        if dependenciesOnly {
+            CommandOutputStore.shared.set(CacheOutputKey.dependenciesOnly, value: dependenciesOnly, in: .cache)
+        }
+        if unsafe {
+            CommandOutputStore.shared.set(CacheOutputKey.unsafe, value: unsafe, in: .cache)
+        }
+    }
+}
+
+private struct CachePlatformOutput: Codable {
+    let arch: String
+    let os: String?
+    let device: String?
 }

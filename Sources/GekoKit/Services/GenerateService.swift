@@ -53,6 +53,7 @@ final class GenerateService {
             generator = try generatorFactory.default(config: config)
         }
         let workspacePath = try await generator.generate(path: path)
+        CommandOutputStore.shared.set(.workspacePath, value: workspacePath.pathString)
         if !noOpen {
             try opener.open(path: workspacePath)
         }

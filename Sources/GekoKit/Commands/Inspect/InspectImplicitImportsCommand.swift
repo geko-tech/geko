@@ -66,6 +66,13 @@ struct InspectImplicitImportsCommand: AsyncParsableCommand {
             inspectMode: inspectOptions.mode,
             output: inspectOptions.outputPath
         )
+        
+        if LogOutput.isJSON {
+            if inspectOptions.severity == .error {
+                throw LintingError()
+            }
+            return
+        }
 
         if issues.isEmpty {
             logger.info("We did not find any implicit dependencies in your project.")

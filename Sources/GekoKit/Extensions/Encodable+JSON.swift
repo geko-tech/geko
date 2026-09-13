@@ -1,6 +1,7 @@
 import Foundation
 import struct ProjectDescription.AbsolutePath
 import GekoSupport
+import AnyCodable
 
 extension Encodable {
     func toJSON() throws -> JSON {

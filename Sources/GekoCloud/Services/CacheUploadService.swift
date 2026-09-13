@@ -28,6 +28,11 @@ enum CacheUploadError: FatalError, Equatable {
     }
 }
 
+private struct CacheUploadOutput: Encodable {
+    let count: Int
+    let cloudUrl: String
+}
+
 public final class CacheUploadService {
     // MARK: - Attributes
 
@@ -88,6 +93,7 @@ public final class CacheUploadService {
             cloudUrl: cloudUrl,
             bucket: cloud.bucket
         )
+        CommandOutputStore.shared.set(.cacheUpload, value: CacheUploadOutput(count: paths.count, cloudUrl: cloud.url))
         logger.notice("\(paths.count) targets were loaded onto the server: \(cloud.url)")
         logger.notice(timeTakenLoggerFormatter.timeTakenMessage(for: timer))
     }

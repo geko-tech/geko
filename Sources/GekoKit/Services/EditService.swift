@@ -65,6 +65,7 @@ final class EditService {
             onlyCurrentDirectory: onlyCurrentDirectory,
             plugins: plugins
         )
+        CommandOutputStore.shared.set(.workspacePath, value: workspacePath.pathString)
         if !noOpen {
             guard let selectedXcode = try XcodeController.shared.selected() else {
                 throw EditServiceError.xcodeNotSelected

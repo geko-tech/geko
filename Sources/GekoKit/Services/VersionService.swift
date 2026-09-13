@@ -4,10 +4,14 @@ import GekoSupport
 
 final class VersionService {
     func geko() throws {
-        logger.notice("\(Constants.version)")
+        let version = Constants.version
+        CommandOutputStore.shared.set(.gekoVersion, value: version)
+        logger.notice("\(version)")
     }
     
     func projectDescription() throws {
-        logger.notice("\(Constants.projectDescriptionVersion)")
+        let version = Constants.projectDescriptionVersion
+        CommandOutputStore.shared.set(.projectDescriptionVersion, value: version)
+        logger.notice("\(version)")
     }
 }

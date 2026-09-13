@@ -40,6 +40,10 @@ final class PluginBuildService {
                 "--product", product,
             ]
         }
-        try System.shared.runAndPrint(buildCommand)
+        if LogOutput.isSilent {
+            try System.shared.run(buildCommand)
+        } else {
+            try System.shared.runAndPrint(buildCommand)
+        }
     }
 }

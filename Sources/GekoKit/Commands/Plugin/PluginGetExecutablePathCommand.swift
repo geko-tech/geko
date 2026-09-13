@@ -26,6 +26,7 @@ struct PluginGetExecutablePathCommand: ParsableCommand {
             pluginName: pluginName,
             executableName: executableName
         )
-        print(pathToExecutable, terminator: "")
+        CommandOutputStore.shared.set(.pluginExecutablePath, value: pathToExecutable)
+        logger.notice(Logger.Message(stringLiteral: pathToExecutable))
     }
 }

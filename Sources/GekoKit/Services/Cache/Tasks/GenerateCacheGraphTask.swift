@@ -36,6 +36,8 @@ final class GenerateCacheGraphTask: CacheTask {
         context.graph = buildGraph
         context.workspacePath = workspacePath
         
+        CommandOutputStore.shared.set(.workspacePath, value: workspacePath.pathString)
+        
         if !noOpen {
             try opener.open(path: workspacePath)
         }

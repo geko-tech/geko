@@ -69,7 +69,7 @@ final class PluginArchiveService {
         outputPath: String?,
         configuration: PluginCommand.PackageConfiguration,
         createZip: Bool
-    ) throws {
+    ) throws -> AbsolutePath {
         let path = try self.path(path)
         let outputPath =  try outputPath.map { try self.path($0) }
         let plugin = try manifestLoader.loadPlugin(at: path)
@@ -92,7 +92,7 @@ final class PluginArchiveService {
             return workspaceMapper.name
         }
 
-        try FileHandler.shared.inTemporaryDirectory { temporaryDirectory in
+        return try FileHandler.shared.inTemporaryDirectory { temporaryDirectory in
             try archiveProducts(
                 taskProducts: pluginTaskProducts,
                 workspaceMapperName: workspaceMapperName,
@@ -136,7 +136,7 @@ final class PluginArchiveService {
         createZip: Bool,
         configuration: PluginCommand.PackageConfiguration,
         in temporaryDirectory: AbsolutePath
-    ) throws {
+    ) throws -> AbsolutePath {
         let artifactsPath = temporaryDirectory.appending(component: "artifacts")
         let buildPath = temporaryDirectory.appending(component: "build")
 
@@ -208,9 +208,9 @@ final class PluginArchiveService {
         let outputPath = createOutputPath(path: path, outputPath: outputPath, createZip: createZip)
 
         if createZip {
-            try createArchive(at: outputPath, paths: paths, plugin: plugin)
+            return try createArchive(at: outputPath, paths: paths, plugin: plugin)
         } else {
-            try createPluginBuildFolder(at: outputPath, paths: paths)
+            return try createPluginBuildFolder(at: outputPath, paths: paths)
         }
     }
 
@@ -222,7 +222,7 @@ final class PluginArchiveService {
         }
     }
 
-    private func createArchive(at path: AbsolutePath, paths: [AbsolutePath], plugin: ProjectDescription.Plugin) throws {
+    private func createArchive(at path: AbsolutePath, paths: [AbsolutePath], plugin: ProjectDescription.Plugin) throws -> AbsolutePath {
         let archiver = try fileArchiverFactory.makeFileArchiver(
             for: paths
         )
@@ -255,6 +255,7 @@ final class PluginArchiveService {
             "Plugin was successfully archived. Create a new Github release and attach the file \(zipPath.pathString) as an artifact.",
             metadata: .success
         )
+        return zipPath
     }
 
     private func buildWorkspaceMapper(
@@ -396,8 +397,7 @@ final class PluginArchiveService {
         }
     }
 
-    private func createPluginBuildFolder(at path: AbsolutePath, paths: [AbsolutePath]) throws {
-
+    private func createPluginBuildFolder(at path: AbsolutePath, paths: [AbsolutePath]) throws -> AbsolutePath {
         if !FileHandler.shared.exists(path) {
             try FileHandler.shared.createFolder(path)
         }
@@ -417,6 +417,7 @@ final class PluginArchiveService {
             "Plugin was successfully archived and saved at \(path)",
             metadata: .success
         )
+        return path
     }
 
     private func projectDescriptionVersion(packageResolvedPath: AbsolutePath) throws -> String {

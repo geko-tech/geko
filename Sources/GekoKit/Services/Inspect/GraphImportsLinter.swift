@@ -4,7 +4,7 @@ import GekoGraph
 import GekoSupport
 import ProjectDescription
 
-enum InspectType {
+enum InspectType: String, Encodable {
     case redundant
     case implicit
 }
@@ -27,6 +27,12 @@ struct GraphImportsLinterConfig: Codable {
     static let `default` = GraphImportsLinterConfig(
         exclude: [:]
     )
+}
+
+private struct GraphImportsLinterOutput: Encodable {
+    let type: InspectType
+    let outputFile: String?
+    let lintedTargets: [String: Set<String>]?
 }
 
 final class GraphImportsLinter: GraphImportsLinting {
@@ -75,11 +81,19 @@ final class GraphImportsLinter: GraphImportsLinting {
             inspectType: inspectType,
             inspectMode: inspectMode
         )
+        
+        let lintedOutput = prepareOutput(lintedTargets: lintedTargets)
+        
         if let output {
             try saveOutput(
-                lintedTargets: lintedTargets,
+                lintedTargets: lintedOutput,
                 outputPath: output
             )
+            let commandOutput = GraphImportsLinterOutput(type: inspectType, outputFile: output.pathString, lintedTargets: nil)
+            CommandOutputStore.shared.set(.inspectImports, value: commandOutput)
+        } else {
+            let commandOutput = GraphImportsLinterOutput(type: inspectType, outputFile: nil, lintedTargets: lintedOutput)
+            CommandOutputStore.shared.set(.inspectImports, value: commandOutput)
         }
 
         return lintedTargets.compactMap { target, implicitDependencies in
@@ -211,19 +225,25 @@ final class GraphImportsLinter: GraphImportsLinting {
         transitiveDeps.formUnion(directDeps)
         visitedDependencies[dependency] = transitiveDeps
     }
+    
+    private func prepareOutput(
+        lintedTargets: [Target: Set<String>]
+    ) -> [String: Set<String>] {
+        let output = lintedTargets.reduce(into: [String: Set<String>]()) { acc, linted in
+            acc[linted.key.productName] = linted.value
+        }
+        return output
+    }
 
     private func saveOutput(
-        lintedTargets: [Target: Set<String>],
+        lintedTargets: [String: Set<String>],
         outputPath: AbsolutePath
     ) throws {
         if fileHandler.exists(outputPath) {
             try fileHandler.delete(outputPath)
         }
-
-        let output = lintedTargets.reduce(into: [String: Set<String>]()) { acc, linted in
-            acc[linted.key.productName] = linted.value
-        }
-        let jsonData = try JSONEncoder().encode(output)
+        
+        let jsonData = try JSONEncoder().encode(lintedTargets)
         guard let content = String(data: jsonData, encoding: .utf8) else {
             throw FileHandlerError.invalidTextEncoding(outputPath)
         }

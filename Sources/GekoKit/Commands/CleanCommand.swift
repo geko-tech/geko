@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import GekoCore
+import GekoSupport
 
 /// Category that can be cleaned
 enum CleanCategory: ExpressibleByArgument {
@@ -81,10 +82,23 @@ public struct CleanCommand: ParsableCommand {
             categories = cleanCategories
         }
         
+        CommandOutputStore.shared.set(
+            .clean,
+            value: CleanOutput(
+                categories: categories.map { $0.defaultValueDescription }.sorted(),
+                full: full
+            )
+        )
+        
         try CleanService().run(
             categories: categories,
             path: path,
             full: full
         )
     }
+}
+
+private struct CleanOutput: Codable {
+    let categories: [String]
+    let full: Bool
 }

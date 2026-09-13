@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import struct ProjectDescription.AbsolutePath
+import GekoSupport
 
 public struct PluginArchiveCommannd: AsyncParsableCommand {
     public init() {}
@@ -38,11 +39,17 @@ public struct PluginArchiveCommannd: AsyncParsableCommand {
     var noZip = false
 
     public func run() async throws {
-        try PluginArchiveService().run(
+        let outputPath = try PluginArchiveService().run(
             path: path,
             outputPath: outputPath,
             configuration: configuration,
             createZip: !noZip
         )
+        
+        CommandOutputStore.shared.set(.pluginArchive, value: PluginArchiveOutput(outputPath: outputPath.pathString))
     }
+}
+
+private struct PluginArchiveOutput: Encodable {
+    let outputPath: String
 }

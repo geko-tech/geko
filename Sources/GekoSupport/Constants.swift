@@ -73,6 +73,7 @@ public enum Constants {
     public enum EnvironmentVariables: String, CaseIterable {
         case verbose = "GEKO_CONFIG_VERBOSE"
         case quiet = "GEKO_CONFIG_QUIET"
+        case json = "GEKO_CONFIG_JSON"
         case colouredOutput = "GEKO_CONFIG_COLOURED_OUTPUT"
         case versionsDirectory = "GEKO_CONFIG_VERSIONS_DIRECTORY"
         case forceConfigCacheDirectory = "GEKO_CONFIG_FORCE_CONFIG_CACHE_DIRECTORY"
