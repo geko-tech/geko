@@ -8,6 +8,7 @@ public struct LoggingConfig {
         case console
         case detailed
         case osLog
+        case quiet
     }
 
     public var loggerType: LoggerType
@@ -21,8 +22,11 @@ extension LoggingConfig {
         let osLog = env[Constants.EnvironmentVariables.osLog] != nil
         let detailed = env[Constants.EnvironmentVariables.detailedLog] != nil
         let verbose = env[Constants.EnvironmentVariables.verbose] != nil
-
-        if osLog {
+        let quiet = env[Constants.EnvironmentVariables.quiet] != nil
+        
+        if quiet {
+            return .init(loggerType: .quiet, verbose: false)
+        } else if osLog {
             return .init(loggerType: .osLog, verbose: verbose)
         } else if detailed {
             return .init(loggerType: .detailed, verbose: verbose)
@@ -33,9 +37,14 @@ extension LoggingConfig {
 }
 
 public enum LogOutput {
-    static var environment = ProcessInfo.processInfo.environment
+    private static var currentConfig: LoggingConfig = .default
+    
+    public static var isQuiet: Bool {
+        return currentConfig.loggerType == .quiet
+    }
 
     public static func bootstrap(config: LoggingConfig = .default) {
+        currentConfig = config
         let handler: VerboseLogHandler.Type
 
         switch config.loggerType {
@@ -49,6 +58,8 @@ public enum LogOutput {
             handler = DetailedLogHandler.self
         case .console:
             handler = StandardLogHandler.self
+        case .quiet:
+            handler = QuietLogHandler.self
         }
 
         if config.verbose {
@@ -74,6 +85,12 @@ extension DetailedLogHandler: VerboseLogHandler {
 extension StandardLogHandler: VerboseLogHandler {
     public static func verbose(label: String) -> LogHandler {
         StandardLogHandler(label: label, logLevel: .debug)
+    }
+}
+
+extension QuietLogHandler: VerboseLogHandler {
+    public static func verbose(label: String) -> LogHandler {
+        QuietLogHandler(label: label)
     }
 }
 

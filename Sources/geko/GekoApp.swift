@@ -11,6 +11,9 @@ private enum GekoApp {
         if CommandLine.topLevelArguments.contains("--verbose") {
             try? ProcessEnv.setVar(Constants.EnvironmentVariables.verbose.rawValue, value: "true")
         }
+        if CommandLine.topLevelArguments.contains("--quiet") {
+            try? ProcessEnv.setVar(Constants.EnvironmentVariables.quiet.rawValue, value: "true")
+        }
 
         // bootstrap must be called before everything else
         GekoSupport.LogOutput.bootstrap()

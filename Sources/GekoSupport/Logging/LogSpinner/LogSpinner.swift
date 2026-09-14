@@ -65,6 +65,7 @@ public final class LogSpinner {
     // MARK: - LogSpinner
 
     public func start(message: String = "") {
+        guard !LogOutput.isQuiet else { return }
         self.message = message
         guard !ciChecker.isCI() && !isDebug else {
             logger.notice(.init(stringLiteral: message))
@@ -83,6 +84,7 @@ public final class LogSpinner {
     }
     
     public func update(message: String = "") {
+        guard !LogOutput.isQuiet else { return }
         guard !ciChecker.isCI() && !isDebug else {
             return
         }
@@ -90,6 +92,7 @@ public final class LogSpinner {
     }
 
     public func stop(message: String? = nil) {
+        guard !LogOutput.isQuiet else { return }
         guard !ciChecker.isCI() && !isDebug else {
             if let message {
                 logger.notice(.init(stringLiteral: message))

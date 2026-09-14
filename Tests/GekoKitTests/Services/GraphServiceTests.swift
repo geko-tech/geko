@@ -13,20 +13,20 @@ import XCTest
 @testable import GekoSupportTesting
 
 final class GraphServiceTests: GekoUnitTestCase {
-    var manifestGraphLoader: MockManifestGraphLoader!
+    var projectGraphLoader: MockProjectGraphLoader!
     var subject: GraphService!
 
     override func setUp() {
         super.setUp()
-        manifestGraphLoader = MockManifestGraphLoader()
+        projectGraphLoader = MockProjectGraphLoader()
 
         subject = GraphService(
-            manifestGraphLoader: manifestGraphLoader
+            projectGraphLoader: projectGraphLoader
         )
     }
 
     override func tearDown() {
-        manifestGraphLoader = nil
+        projectGraphLoader = nil
         subject = nil
         super.tearDown()
     }

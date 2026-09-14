@@ -69,6 +69,7 @@ var targets: [Target] = [
             "GekoPlugin",
             "GekoGraph",
             "GekoCache",
+            "GekoInspect",
         ],
         exclude: ["LICENSE.md"]
     ),
@@ -258,6 +259,24 @@ var targets: [Target] = [
         name: "GekoCloudTesting",
         dependencies: [
             "GekoCloud"
+        ]
+    ),
+    .target(
+        name: "GekoInspect",
+        dependencies: [
+            "GekoSupport",
+            "GekoCore",
+            "GekoGraph",
+            "Glob",
+        ]
+    ),
+    .testTarget(
+        name: "GekoInspectTests",
+        dependencies: [
+            "GekoInspect",
+            "GekoGraph",
+            "GekoGraphTesting",
+            projectDescriptionDependency,
         ]
     ),
     .target(

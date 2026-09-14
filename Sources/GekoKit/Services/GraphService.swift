@@ -9,43 +9,19 @@ import ProjectAutomation
 import ProjectDescription
 
 final class GraphService {
-    private let manifestGraphLoader: ManifestGraphLoading
+    private let projectGraphLoader: ProjectGraphLoading
 
     convenience init(keepGlobs: Bool) {
-        var workspaceMappers: [WorkspaceMapping] = [
-            ReplaceLocalReferencesWorkspaceMapper(),
-            ResolvePathsWorkspaceMapper(),
-            WorkspaceMapperPluginExecutor(stage: .rawGlobs)
-        ]
-
-        if !keepGlobs {
-            workspaceMappers.append(
-                ResolveGlobsWorkspaceMapper(checkFilesExist: true)
-            )
-            workspaceMappers.append(
-                WorkspaceMapperPluginExecutor(stage: .resolvedGlobs)
-            )
-            workspaceMappers.append(
-                ResolveTargetRulesWorkspaceMapper()
-            )
-        }
-
-        let manifestLoader = ManifestLoaderFactory()
-            .createManifestLoader()
-        let manifestGraphLoader = ManifestGraphLoader(
-            manifestLoader: manifestLoader,
-            workspaceMapper: SequentialWorkspaceMapper(mappers: workspaceMappers),
-            graphMapper: SequentialGraphMapper([])
-        )
+        let projectGraphLoader = ProjectGraphLoader(keepGlobs: keepGlobs)
         self.init(
-            manifestGraphLoader: manifestGraphLoader
+            projectGraphLoader: projectGraphLoader
         )
     }
 
     init(
-        manifestGraphLoader: ManifestGraphLoading
+        projectGraphLoader: ProjectGraphLoading
     ) {
-        self.manifestGraphLoader = manifestGraphLoader
+        self.projectGraphLoader = projectGraphLoader
     }
 
     func run(
@@ -58,7 +34,7 @@ final class GraphService {
         path: AbsolutePath,
         outputPath: AbsolutePath
     ) async throws {
-        let (graph, _, _, _) = try await manifestGraphLoader.load(path: path)
+        let graph = try await projectGraphLoader.load(path: path)
 
         let filePath = outputPath.appending(component: "graph.\(format.rawValue)")
         if FileHandler.shared.exists(filePath) {

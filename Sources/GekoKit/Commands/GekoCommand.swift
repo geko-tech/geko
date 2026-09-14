@@ -153,6 +153,6 @@ public struct GekoCommand: AsyncParsableCommand {
 
     static func processArguments(_ arguments: [String]? = nil) -> [String] {
         let arguments = arguments ?? Array(ProcessInfo.processInfo.arguments)
-        return arguments.filter { $0 != "--verbose" && $0 != "--force" }
+        return arguments.filter { $0 != "--verbose" && $0 != "--force" && $0 != "--quiet" }
     }
 }

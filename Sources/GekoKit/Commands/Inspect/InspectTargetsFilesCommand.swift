@@ -1,0 +1,64 @@
+import ArgumentParser
+import Foundation
+import GekoInspect
+import GekoSupport
+import ProjectDescription
+
+struct InspectTargetsFilesCommand: AsyncParsableCommand {
+    static var configuration: CommandConfiguration {
+        CommandConfiguration(
+            commandName: "targets",
+            abstract: "Find targets that own the specified files.",
+            discussion: """
+            Resolves project targets that contain the specified files in their sources, resources, or additional files.
+            This command is useful for determining which targets are affected by a set of changed files.
+            Multiple targets may be returned for the same file.
+            Files do not need to exist on disk if they can still be matched against target file patterns.
+            """
+        )
+    }
+
+    @Argument(
+        help: "Files to resolve to project targets."
+    )
+    var files: [String]
+
+    @Option(
+        name: .shortAndLong,
+        help: "The path to the directory that contains the project whose targets will be cached.",
+        completion: .directory
+    )
+    var path: String?
+    
+    @Option(
+        name: .shortAndLong,
+        help: "The command will save output to a json file."
+    )
+    var output: String?
+    var outputPath: AbsolutePath? = nil
+
+    @OptionGroup
+    var manifestOptions: ManifestOptions
+
+    func run() async throws {
+        let path = try path.map {
+            try AbsolutePath(validating: $0, relativeTo: .current)
+        } ?? FileHandler.shared.currentPath
+        try ManifestOptionsService()
+            .load(options: manifestOptions, path: path.pathString)
+        let graph = try await ProjectGraphLoader(keepGlobs: true).load(path: path)
+        
+        try InspectTargetsService().run(
+            path: path,
+            files: files,
+            graph: graph,
+            output: outputPath
+        )
+    }
+    
+    mutating func validate() throws {
+        if let output {
+            outputPath = try AbsolutePath(validating: output, relativeTo: FileHandler.shared.currentPath)
+        }
+    }
+}
