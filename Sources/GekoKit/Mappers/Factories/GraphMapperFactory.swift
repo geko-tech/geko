@@ -30,7 +30,8 @@ protocol GraphMapperFactorying {
         focusTests: Bool,
         unsafe: Bool,
         dependenciesOnly: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) -> [GraphMapping]
 
     /// Returns the grpah mapper for generating project with focus on targets without cache
@@ -38,7 +39,8 @@ protocol GraphMapperFactorying {
         config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) -> [GraphMapping]
 
     /// Returns the default graph mapper that should be used from all the commands that require loading and processing the graph.
@@ -86,11 +88,16 @@ public final class GraphMapperFactory: GraphMapperFactorying {
         focusTests: Bool,
         unsafe: Bool,
         dependenciesOnly: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) -> [GraphMapping] {
         var mappers: [GraphMapping] = []
         mappers.append(UserFocusedTargetsMapper(focusedTargets: focusedTargets))
-        mappers.append(FocusedTargetsResolverGraphMapper(focusTests: focusTests, schemeName: scheme))
+        mappers.append(FocusedTargetsResolverGraphMapper(
+            focusTests: focusTests,
+            schemeName: scheme,
+            handoff: handoff
+        ))
         mappers.append(FocusTargetsGraphMappers())
         mappers.append(TreeShakePrunedTargetsGraphMapper())
         mappers.append(UpdateWorkspaceProjectsGraphMapper())
@@ -107,11 +114,16 @@ public final class GraphMapperFactory: GraphMapperFactorying {
         config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) -> [GraphMapping] {
         var mappers: [GraphMapping] = []
         mappers.append(UserFocusedTargetsMapper(focusedTargets: focusedTargets))
-        mappers.append(FocusedTargetsResolverGraphMapper(focusTests: focusTests, schemeName: scheme))
+        mappers.append(FocusedTargetsResolverGraphMapper(
+            focusTests: focusTests,
+            schemeName: scheme,
+            handoff: handoff
+        ))
         mappers.append(FocusTargetsGraphMappers())
         mappers.append(TreeShakePrunedTargetsGraphMapper())
         mappers.append(UpdateWorkspaceProjectsGraphMapper())

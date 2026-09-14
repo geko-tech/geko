@@ -51,6 +51,7 @@ public enum FocusOutputKey: String, CommandOutputSectionKey {
     case focusedTargets
     case scheme
     case focusTests
+    case handoff
 
     public static let section = CommandOutputSection.focus
 }

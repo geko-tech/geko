@@ -59,6 +59,18 @@ struct CacheOptions: ParsableArguments {
         help: "If passed, the command cache only external dependencies"
     )
     var dependenciesOnly: Bool = false
+    
+    @Flag(
+        name: [.customLong("handoff")],
+        help: "Focuses generation on targets affected by local changes."
+    )
+    var handoff: Bool = false
+
+    @Flag(
+        name: [.customLong("ignore-remote-cache")],
+        help: "Command will ignore remote cache, and use only local storage instead."
+    )
+    var ignoreRemoteCache: Bool = false
 
     @Flag(
         name: .shortAndLong,

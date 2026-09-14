@@ -56,6 +56,9 @@ public protocol GitHandling {
     ///
     ///   - path: The path to the git repository (location with `.git` directory) in which to perform the pull.
     func pull(in path: AbsolutePath?) throws
+
+    /// Returns absolute paths for staged, unstaged, and untracked non-ignored files.
+    func locallyChangedFiles(in path: AbsolutePath) throws -> [AbsolutePath]
 }
 
 /// An implementation of `GitHandling`.
@@ -111,6 +114,29 @@ public final class GitHandler: GitHandling {
         }
     }
 
+    public func locallyChangedFiles(in path: AbsolutePath) throws -> [AbsolutePath] {
+        guard isGitWorkingTree(path) else { return [] }
+
+        let tracked = try trackedChanges(path: path)
+        let untracked = try capture(
+            command: "git",
+            "-C",
+            path.pathString,
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "-z",
+            "--",
+            "."
+        )
+
+        let relativePaths = Set(parseNullSeparatedPaths(tracked) + parseNullSeparatedPaths(untracked))
+        return
+            try relativePaths
+            .map { try AbsolutePath(validating: $0, relativeTo: path) }
+            .sorted { $0.pathString < $1.pathString }
+    }
+
     // MARK: - Private
 
     private func cloneArgs(shallow: Bool, branch: String?) -> [String] {
@@ -125,6 +151,37 @@ public final class GitHandler: GitHandling {
         }
 
         return result
+    }
+
+    private func parseNullSeparatedPaths(_ output: String) -> [String] {
+        output.split(separator: "\0").map(String.init)
+    }
+
+    private func isGitWorkingTree(_ path: AbsolutePath) -> Bool {
+        let output = try? capture(
+            command: "git",
+            "-C",
+            path.pathString,
+            "rev-parse",
+            "--is-inside-work-tree"
+        )
+        return output?.chomp() == "true"
+    }
+
+    private func trackedChanges(path: AbsolutePath) throws -> String {
+        try capture(
+            command: "git",
+            "-C",
+            path.pathString,
+            "diff",
+            "HEAD",
+            "--name-only",
+            "--no-renames",
+            "--relative",
+            "-z",
+            "--",
+            "."
+        )
     }
 
     private func run(command: String...) throws {
