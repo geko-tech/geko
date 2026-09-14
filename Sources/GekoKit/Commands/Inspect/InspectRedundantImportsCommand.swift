@@ -67,7 +67,7 @@ struct InspectRedundantImportsCommand: AsyncParsableCommand {
             output: inspectOptions.outputPath
         )
         
-        if LogOutput.isJSON {
+        if LogOutput.isStructured {
             if !issues.isEmpty, inspectOptions.severity == .error {
                 throw StructuredInspectionFailure()
             }

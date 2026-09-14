@@ -7,7 +7,7 @@ protocol IPluginExecutor {
 
 final class PluginExecutor: IPluginExecutor {
     func execute(arguments: [String]) throws {
-        if LogOutput.isQuiet {
+        if LogOutput.suppressesHumanOutput {
             try System.shared.run(arguments)
         } else {
             try System.shared.runAndPrint(

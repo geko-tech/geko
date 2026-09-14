@@ -114,7 +114,7 @@ public final class SwiftPackageManagerController: SwiftPackageManagerControlling
     public func resolve(at path: AbsolutePath, arguments: [String], printOutput: Bool) throws {
         let command = buildSwiftPackageCommand(packagePath: path, extraArguments: arguments + ["resolve"])
 
-        printOutput && !LogOutput.isQuiet ?
+        printOutput && !LogOutput.suppressesHumanOutput ?
             try System.shared.runAndPrint(command) :
             try System.shared.run(command)
     }
@@ -122,7 +122,7 @@ public final class SwiftPackageManagerController: SwiftPackageManagerControlling
     public func update(at path: AbsolutePath, arguments: [String], printOutput: Bool) throws {
         let command = buildSwiftPackageCommand(packagePath: path, extraArguments: arguments + ["update"])
 
-        printOutput && !LogOutput.isQuiet ?
+        printOutput && !LogOutput.suppressesHumanOutput ?
             try System.shared.runAndPrint(command) :
             try System.shared.run(command)
     }

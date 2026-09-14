@@ -33,10 +33,6 @@ final class PluginRunService {
         runCommand.append(task)
         runCommand += arguments
         
-        if LogOutput.isQuiet {
-            try System.shared.run(runCommand)
-        } else {
-            try System.shared.runAndPrint(runCommand)
-        }
+        try System.shared.runAndPrint(runCommand)
     }
 }

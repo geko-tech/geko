@@ -47,10 +47,10 @@ public struct GekoCommand: AsyncParsableCommand {
     var isForced: Bool = false
 
     @Flag(
-        name: [.customLong("json")],
+        name: [.customLong("structured")],
         help: "Emit one machine-readable JSON document to standard output."
     )
-    var isJSON: Bool = false
+    var isStructured: Bool = false
 
     public static func main(
         _ arguments: [String]? = nil,
@@ -96,7 +96,7 @@ public struct GekoCommand: AsyncParsableCommand {
         do {
             try await executeCommand()
 
-            if LogOutput.isJSON {
+            if LogOutput.isStructured {
                 let renderedExitCode = renderJSONOutput(exitCode: 0)
                 if renderedExitCode != 0 {
                     _exit(renderedExitCode)
@@ -120,7 +120,7 @@ public struct GekoCommand: AsyncParsableCommand {
         let exitCode = exitCode(for: error).rawValue
         let message = fullMessage(for: error)
 
-        if LogOutput.isJSON {
+        if LogOutput.isStructured {
             if exitCode == 0 {
                 CommandOutputStore.shared.set(.output, value: message)
                 _exit(renderJSONOutput(exitCode: exitCode))
@@ -150,7 +150,7 @@ public struct GekoCommand: AsyncParsableCommand {
         // ArgumentParser uses thrown errors for successful control flow such as
         // help, version, and completion-script output.
         if exitCode == 0 {
-            if LogOutput.isJSON {
+            if LogOutput.isStructured {
                 CommandOutputStore.shared.set(.output, value: fullMessage(for: error))
                 _exit(renderJSONOutput(exitCode: exitCode))
             } else {
@@ -161,7 +161,7 @@ public struct GekoCommand: AsyncParsableCommand {
 
         let fatalError = (error as? FatalError) ?? UnhandledError(error: error)
 
-        if LogOutput.isJSON {
+        if LogOutput.isStructured {
             let diagnostic = diagnostic(for: fatalError).map { [$0] } ?? []
             _exit(renderJSONOutput(exitCode: exitCode, additionalErrors: diagnostic))
         } else {
@@ -195,27 +195,12 @@ public struct GekoCommand: AsyncParsableCommand {
 
     static func processArguments(_ arguments: [String]? = nil) -> [String] {
         let arguments = arguments ?? Array(ProcessInfo.processInfo.arguments)
-        let legacyScaffoldJSONIndices = legacyScaffoldJSONArgumentIndices(arguments)
-        return arguments.enumerated().compactMap { index, argument in
-            let isDeprecatedScaffoldJSON = legacyScaffoldJSONIndices.contains(index)
-            return argument == "--verbose" || argument == "--force" || argument == "--quiet" || (argument == "--json" && !isDeprecatedScaffoldJSON)
-                ? nil : argument
+        return arguments.filter { argument in
+            argument != "--verbose"
+                && argument != "--force"
+                && argument != "--quiet"
+                && argument != "--structured"
         }
-    }
-
-    /// Keeps only the deprecated `scaffold list --json` compatibility flag.
-    /// Other command-local uses of `--json` must not be silently accepted.
-    private static func legacyScaffoldJSONArgumentIndices(_ arguments: [String]) -> Set<Int> {
-        let firstSubcommand = arguments.dropFirst().firstIndex(where: { !$0.hasPrefix("-") })
-        guard let firstSubcommand, arguments[firstSubcommand] == ScaffoldCommand.configuration.commandName else {
-            return []
-        }
-
-        guard let listIndex = arguments[(firstSubcommand + 1)...].firstIndex(where: { !$0.hasPrefix("-") }),
-              arguments[listIndex] == "list"
-        else { return [] }
-
-        return Set(arguments.indices.filter { $0 > listIndex && arguments[$0] == "--json" })
     }
 
     @discardableResult

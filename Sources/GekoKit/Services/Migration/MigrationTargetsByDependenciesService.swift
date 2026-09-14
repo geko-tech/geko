@@ -19,7 +19,7 @@ final class MigrationTargetsByDependenciesService {
     func run(xcodeprojPath: AbsolutePath) throws {
         let sortedTargets = try targetsExtractor.targetsSortedByDependencies(xcodeprojPath: xcodeprojPath)
         
-        if LogOutput.isJSON {
+        if LogOutput.isStructured {
             CommandOutputStore.shared.set(.migrationTargets, value: sortedTargets)
         } else {
             let sortedTargetsJson = try makeJson(from: sortedTargets)

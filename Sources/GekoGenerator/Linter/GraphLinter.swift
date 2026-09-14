@@ -122,7 +122,6 @@ public class GraphLinter: GraphLinting {
             guard let supportedTargets = GraphLinter.validLinks[fromTarget] else {
                 let reason =
                     "Target \(from.target.name) has platform '\(fromPlatform)' and product '\(from.target.product)' which is an invalid or not yet supported combination."
-                logger.info("\(from.target.name) depends on \(to.target.name)")
                 return [LintingIssue(reason: reason, severity: .error)]
             }
 

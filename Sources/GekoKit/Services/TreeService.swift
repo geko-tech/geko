@@ -85,7 +85,7 @@ final class TreeService {
             trace(&tree, to: traceTargets)
         }
 
-        if LogOutput.isJSON || outputFile != nil {
+        if LogOutput.isStructured || outputFile != nil {
             let filteredTree = try filter(tree: tree, targets: targets)
             if let outputFile {
                 let path = try dumpJson(tree: filteredTree, output: outputFile)

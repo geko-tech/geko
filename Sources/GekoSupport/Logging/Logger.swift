@@ -9,7 +9,7 @@ public struct LoggingConfig {
         case detailed
         case osLog
         case quiet
-        case json
+        case structured
     }
 
     public var loggerType: LoggerType
@@ -24,10 +24,10 @@ extension LoggingConfig {
         let detailed = env[Constants.EnvironmentVariables.detailedLog] != nil
         let verbose = env[Constants.EnvironmentVariables.verbose] != nil
         let quiet = env[Constants.EnvironmentVariables.quiet] != nil
-        let json = env[Constants.EnvironmentVariables.json] != nil
+        let structured = env[Constants.EnvironmentVariables.structured] != nil
 
-        if json {
-            return .init(loggerType: .json, verbose: false)
+        if structured {
+            return .init(loggerType: .structured, verbose: false)
         } else if quiet {
             return .init(loggerType: .quiet, verbose: false)
         } else if osLog {
@@ -44,16 +44,15 @@ public enum LogOutput {
     private static var currentConfig: LoggingConfig = .default
 
     public static var isQuiet: Bool {
-        switch currentConfig.loggerType {
-        case .quiet, .json:
-            return true
-        default:
-            return false
-        }
+        currentConfig.loggerType == .quiet
     }
     
-    public static var isJSON: Bool {
-        currentConfig.loggerType == .json
+    public static var isStructured: Bool {
+        currentConfig.loggerType == .structured
+    }
+
+    public static var suppressesHumanOutput: Bool {
+        isQuiet || isStructured
     }
 
     public static func bootstrap(config: LoggingConfig = .default) {
@@ -73,7 +72,7 @@ public enum LogOutput {
             handler = StandardLogHandler.self
         case .quiet:
             handler = QuietLogHandler.self
-        case .json:
+        case .structured:
             handler = JSONLogHandler.self
         }
 

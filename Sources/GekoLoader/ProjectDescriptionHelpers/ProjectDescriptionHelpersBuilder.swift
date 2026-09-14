@@ -183,7 +183,7 @@ public final class ProjectDescriptionHelpersBuilder: ProjectDescriptionHelpersBu
         )
 
         let timer = clock.startTimer()
-        if LogOutput.isQuiet {
+        if LogOutput.suppressesHumanOutput {
             try System.shared.run(command)
         } else {
             try System.shared.runAndPrint(

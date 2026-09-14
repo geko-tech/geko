@@ -136,7 +136,7 @@ public final class TargetRunner: TargetRunning {
         logger.notice("Running executable \(executablePath.basename)", metadata: .section)
         logger.debug("Forwarding arguments: \(arguments.joined(separator: ", "))")
         let command = [executablePath.pathString] + arguments
-        if LogOutput.isQuiet {
+        if LogOutput.suppressesHumanOutput {
             try System.shared.run(command)
         } else {
             try System.shared.runAndPrint(command)

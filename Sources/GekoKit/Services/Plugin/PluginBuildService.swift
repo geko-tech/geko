@@ -40,7 +40,7 @@ final class PluginBuildService {
                 "--product", product,
             ]
         }
-        if LogOutput.isQuiet {
+        if LogOutput.suppressesHumanOutput {
             try System.shared.run(buildCommand)
         } else {
             try System.shared.runAndPrint(buildCommand)

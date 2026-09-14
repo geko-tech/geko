@@ -40,7 +40,7 @@ public struct ScaffoldCommand: AsyncParsableCommand {
     }
 
     @Flag(
-        help: "Deprecated. Use the global --json option: geko --json scaffold list"
+        help: "Deprecated. Use the global --structured option: geko --structured scaffold list"
     )
     var json: Bool = false
 
@@ -84,7 +84,7 @@ public struct ScaffoldCommand: AsyncParsableCommand {
     public func run() async throws {
         // Currently, @Argument and subcommand clashes, so we need to handle that ourselves
         if template == ListCommand.configuration.commandName {
-            let format: ListService.OutputFormat = json || LogOutput.isJSON ? .json : .table
+            let format: ListService.OutputFormat = json || LogOutput.isStructured ? .json : .table
             try await ListService().run(path: path, outputFormat: format)
         } else {
             let result = try await ScaffoldService().run(
