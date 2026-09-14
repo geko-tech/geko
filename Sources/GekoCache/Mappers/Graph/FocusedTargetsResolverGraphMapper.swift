@@ -99,6 +99,15 @@ public final class FocusedTargetsResolverGraphMapper: GraphMapping {
             graph: graph,
             rootPath: graph.path
         )
+        guard !ownerships.isEmpty else {
+            logger.warning(
+                """
+                No locally changed files were found for --handoff. \
+                The working tree may be clean, or the project may not be in a Git repository.
+                """
+            )
+            return []
+        }
         return Set(
             ownerships.flatMap { ownership in
                 ownership.targets.map(\.target.name)

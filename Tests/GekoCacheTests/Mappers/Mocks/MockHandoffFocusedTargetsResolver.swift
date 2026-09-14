@@ -3,7 +3,7 @@ import GekoInspect
 import ProjectDescription
 import GekoGraph
 
-private final class MockHandoffFocusedTargetsResolver: HandoffFocusedTargetsResolving {
+final class MockHandoffFocusedTargetsResolver: HandoffFocusedTargetsResolving {
     private let result: [FileTargetOwnership]
     private(set) var invokedResolveRootPath: AbsolutePath?
 

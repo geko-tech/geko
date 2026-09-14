@@ -926,6 +926,10 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         // Then
         XCTAssertEqual(sideTable.workspace.focusedTargets, [])
         XCTAssertEqual(handoffFocusedTargetsResolver.invokedResolveRootPath, graph.path)
+        XCTAssertPrinterOutputContains(
+            "No locally changed files were found for --handoff. "
+                + "The working tree may be clean, or the project may not be in a Git repository."
+        )
     }
 
     // MARK: - Private
