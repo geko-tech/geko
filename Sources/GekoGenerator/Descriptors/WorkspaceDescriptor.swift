@@ -36,6 +36,9 @@ public struct WorkspaceDescriptor {
     /// The descriptor used to generate workspace settings (WorkspaceSettings.xcsettings)
     public var workspaceSettingsDescriptor: WorkspaceSettingsDescriptor?
 
+    /// The descriptor is used to generate metadata.
+    public var generateMetadata: GenerateMetadata
+
     public init(
         path: AbsolutePath,
         xcworkspacePath: AbsolutePath,
@@ -43,7 +46,8 @@ public struct WorkspaceDescriptor {
         projectDescriptors: [ProjectDescriptor],
         schemeDescriptors: [SchemeDescriptor],
         sideEffectDescriptors: [SideEffectDescriptor],
-        workspaceSettingsDescriptor: WorkspaceSettingsDescriptor? = nil
+        workspaceSettingsDescriptor: WorkspaceSettingsDescriptor? = nil,
+        generateMetadata: GenerateMetadata,
     ) {
         self.path = path
         self.xcworkspacePath = xcworkspacePath
@@ -52,5 +56,6 @@ public struct WorkspaceDescriptor {
         self.projectDescriptors = projectDescriptors
         self.schemeDescriptors = schemeDescriptors
         self.sideEffectDescriptors = sideEffectDescriptors
+        self.generateMetadata = generateMetadata
     }
 }

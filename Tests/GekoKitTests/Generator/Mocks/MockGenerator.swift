@@ -22,7 +22,7 @@ final class MockGenerator: Generating {
         }
     }
     
-    func generateGraph(_ graph: GekoGraph.Graph, sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, GekoGraph.Graph) {
+    func generateGraph(_ graph: GekoGraph.Graph, sideTable: GraphSideTable, sideEffects: [SideEffectDescriptor]) async throws -> (AbsolutePath, GekoGraph.Graph) {
         return (AbsolutePath(stringLiteral: ""), Graph.test())
     }
     

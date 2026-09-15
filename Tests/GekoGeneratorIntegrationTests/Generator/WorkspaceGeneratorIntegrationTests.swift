@@ -52,7 +52,7 @@ final class WorkspaceGeneratorIntegrationTests: GekoTestCase {
 
         // When / Then
         for _ in 0 ..< 50 {
-            _ = try subject.generate(graphTraverser: graphTraverser)
+            _ = try subject.generate(graphTraverser: graphTraverser, sideTable: GraphSideTable())
         }
     }
 }

@@ -66,6 +66,8 @@ public final class FocusedTargetsExpanderGraphMapper: GraphMapping {
             graphTraverser.allTargets().map(\.target.name)
         )
 
+        sideTable.workspace.cacheEnabled = true
+
         if dependenciesOnly {
             // If only dependencies passed then we should focus on all internal targets
             focusedTargets = Set(allInternalTargets.map(\.target.name))
