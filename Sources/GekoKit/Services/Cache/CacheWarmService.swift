@@ -47,7 +47,8 @@ final class CacheWarmService {
         dependenciesOnly: Bool,
         noOpen: Bool,
         ignoreRemoteCache: Bool,
-        includeBuildWarnings: Bool
+        includeBuildWarnings: Bool,
+        handoff: Bool
     ) async throws {
         let timer = clock.startTimer()
         let path = try self.path(path)
@@ -83,7 +84,8 @@ final class CacheWarmService {
             focusTests: focusTests,
             unsafe: unsafe,
             dependenciesOnly: dependenciesOnly,
-            scheme: scheme
+            scheme: scheme,
+            handoff: handoff
         )
         
         for task in tasks {

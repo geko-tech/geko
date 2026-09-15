@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import GekoInspect
 import GekoSupport
 import ProjectDescription
 
@@ -28,15 +29,21 @@ public final class FocusedTargetsResolverGraphMapper: GraphMapping {
 
     private let focusTests: Bool
     private let schemeName: String?
+    private let handoff: Bool
+    private let handoffFocusedTargetsResolver: HandoffFocusedTargetsResolving
 
     // MARK: - Initialization
 
     public init(
         focusTests: Bool,
-        schemeName: String?
+        schemeName: String?,
+        handoff: Bool = false,
+        handoffFocusedTargetsResolver: HandoffFocusedTargetsResolving = HandoffFocusedTargetsResolver()
     ) {
         self.focusTests = focusTests
         self.schemeName = schemeName
+        self.handoff = handoff
+        self.handoffFocusedTargetsResolver = handoffFocusedTargetsResolver
     }
 
     // MARK: - GraphMapping
@@ -45,13 +52,15 @@ public final class FocusedTargetsResolverGraphMapper: GraphMapping {
         graph: inout Graph,
         sideTable: inout GraphSideTable
     ) async throws -> [SideEffectDescriptor] {
-        guard !sideTable.workspace.userFocusedTargets.isEmpty || schemeName != nil else { return [] }
+        var focusedTargets = sideTable.workspace.userFocusedTargets
+        focusedTargets.formUnion(try handoffTargets(graph: graph))
+
+        guard !focusedTargets.isEmpty || schemeName != nil else { return [] }
         let graphTraverser = GraphTraverser(graph: graph)
         let allTargets = graphTraverser.allTargets()
 
-        var focusedTargets: Set<String> = sideTable.workspace.userFocusedTargets
-            // By default focus on CacheProject
-            .union([CacheConstants.cacheProjectName])
+        // By default focus on CacheProject
+        focusedTargets.insert(CacheConstants.cacheProjectName)
 
         // Additionaly focus on test and apphost for passed nonrunnable targets
         if focusTests {
@@ -82,6 +91,29 @@ public final class FocusedTargetsResolverGraphMapper: GraphMapping {
     }
 
     // MARK: - Private
+
+    private func handoffTargets(graph: Graph) throws -> Set<String> {
+        guard handoff else { return [] }
+
+        let ownerships = try handoffFocusedTargetsResolver.resolve(
+            graph: graph,
+            rootPath: graph.path
+        )
+        guard !ownerships.isEmpty else {
+            logger.warning(
+                """
+                No locally changed files were found for --handoff. \
+                The working tree may be clean, or the project may not be in a Git repository.
+                """
+            )
+            return []
+        }
+        return Set(
+            ownerships.flatMap { ownership in
+                ownership.targets.map(\.target.name)
+            }
+        )
+    }
 
     private func focusSchemeTargetsIfNeeded(
         graphTraverser: GraphTraversing

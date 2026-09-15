@@ -59,7 +59,8 @@ final class GenerateServiceTests: GekoUnitTestCase {
                     noOpen: true,
                     sources: [],
                     scheme: nil,
-                    focusTests: false)
+                    focusTests: false,
+                    handoff: false)
             XCTFail("Must throw")
         } catch {
             XCTAssertEqual(error as NSError?, expectedError)
@@ -78,7 +79,8 @@ final class GenerateServiceTests: GekoUnitTestCase {
             noOpen: false,
             sources: [],
             scheme: nil,
-            focusTests: false
+            focusTests: false,
+            handoff: false
         )
 
         XCTAssertEqual(opener.openArgs.last?.0, workspacePath.pathString)
@@ -102,7 +104,8 @@ final class GenerateServiceTests: GekoUnitTestCase {
             noOpen: false,
             sources: [],
             scheme: nil,
-            focusTests: false
+            focusTests: false,
+            handoff: false
         )
 
         // Then
@@ -123,7 +126,8 @@ final class GenerateServiceTests: GekoUnitTestCase {
             noOpen: false,
             sources: ["test"],
             scheme: nil,
-            focusTests: false
+            focusTests: false,
+            handoff: false
         )
 
         // Then
@@ -144,11 +148,29 @@ final class GenerateServiceTests: GekoUnitTestCase {
             noOpen: false,
             sources: [],
             scheme: nil,
-            focusTests: false
+            focusTests: false,
+            handoff: false
         )
 
         // Then
         XCTAssertTrue(generatorFactory.invokedDefault)
+    }
+
+    func test_run_handoffUsesFocusGenerator() async throws {
+        let workspacePath = try AbsolutePath(validating: "/test.xcworkspace")
+        generator.generateStub = { _ in workspacePath }
+
+        try await subject.run(
+            path: nil,
+            noOpen: false,
+            sources: [],
+            scheme: nil,
+            focusTests: false,
+            handoff: true
+        )
+
+        XCTAssertTrue(generatorFactory.invokedFocus)
+        XCTAssertEqual(generatorFactory.invokedFocusParameters?.handoff, true)
     }
 }
 

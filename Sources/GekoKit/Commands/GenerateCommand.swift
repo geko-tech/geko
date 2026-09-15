@@ -28,12 +28,6 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
     var cache: Bool = false
 
     @Flag(
-        name: [.customLong("ignore-remote-cache")],
-        help: "Command will ignore remote cache, and use only local storage instead."
-    )
-    var ignoreRemoteCache: Bool = false
-
-    @Flag(
         name: [.customLong("include-build-warnings")],
         help: "Include detailed xcodebuild warnings in structured JSON output."
     )
@@ -48,7 +42,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
             planPath: options.focusPlan
         )
         
-        storeOutput(sources: sources, scheme: options.scheme, focusTests: options.focusTests)
+        storeOutput(sources: sources, scheme: options.scheme, focusTests: options.focusTests, handoff: options.handoff)
 
         let path = try options.path.map {
             let resolvedPath = try AbsolutePath(validating: $0, relativeTo: .current)
@@ -82,8 +76,9 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
                 unsafe: options.unsafe,
                 dependenciesOnly: options.dependenciesOnly,
                 noOpen: options.noOpen,
-                ignoreRemoteCache: ignoreRemoteCache,
-                includeBuildWarnings: includeBuildWarnings
+                ignoreRemoteCache: options.ignoreRemoteCache,
+                includeBuildWarnings: includeBuildWarnings,
+                handoff: options.handoff
             )
         } else {
             try await GenerateService().run(
@@ -92,6 +87,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
                 sources: sources,
                 scheme: options.scheme,
                 focusTests: options.focusTests,
+                handoff: options.handoff
             )
         }
 
@@ -100,7 +96,7 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
                 "destination": AnyCodable(options.destination),
                 "focus_targets": AnyCodable(sources.count),
                 "use_cache": AnyCodable(cache),
-                "ignore_remote_cache": AnyCodable(ignoreRemoteCache),
+                "ignore_remote_cache": AnyCodable(options.ignoreRemoteCache),
                 "cacheable_targets": AnyCodable(CacheAnalytics.cacheableTargets),
                 "cacheable_targets_count": AnyCodable(CacheAnalytics.cacheableTargetsCount),
                 "local_cache_target_hits": AnyCodable(CacheAnalytics.localCacheTargetsHits),
@@ -116,7 +112,8 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
     private func storeOutput(
         sources: Set<String>,
         scheme: String?,
-        focusTests: Bool
+        focusTests: Bool,
+        handoff: Bool
     ) {
         if !sources.isEmpty {
             CommandOutputStore.shared.set(FocusOutputKey.requestedTargets, value: sources.sorted())
@@ -126,6 +123,9 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
         }
         if focusTests {
             CommandOutputStore.shared.set(FocusOutputKey.focusTests, value: focusTests)
+        }
+        if handoff {
+            CommandOutputStore.shared.set(FocusOutputKey.handoff, value: handoff)
         }
     }
 }

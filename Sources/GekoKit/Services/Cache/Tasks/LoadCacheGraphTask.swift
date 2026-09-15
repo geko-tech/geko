@@ -31,7 +31,8 @@ final class LoadCacheGraphTask: CacheTask {
             focusTests: context.focusTests,
             unsafe: context.unsafe,
             dependenciesOnly: context.dependenciesOnly,
-            scheme: context.scheme
+            scheme: context.scheme,
+            handoff: context.handoff
         )
         
         let (graph, sideTable, sideEffects) = try await generator.loadWithSideEffects(path: context.path)

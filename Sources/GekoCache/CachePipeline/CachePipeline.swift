@@ -35,6 +35,7 @@ public struct CacheContext {
     public let unsafe: Bool
     public let dependenciesOnly: Bool
     public let scheme: String?
+    public let handoff: Bool
     
     // Mutable values
     public var graph: Graph?
@@ -57,6 +58,7 @@ public struct CacheContext {
         unsafe: Bool,
         dependenciesOnly: Bool,
         scheme: String?,
+        handoff: Bool,
         graph: Graph? = nil,
         sideTable: GraphSideTable? = nil,
         hashesByCacheableTarget: [String : String] = [:],
@@ -74,6 +76,7 @@ public struct CacheContext {
         self.unsafe = unsafe
         self.dependenciesOnly = dependenciesOnly
         self.scheme = scheme
+        self.handoff = handoff
         self.graph = graph
         self.sideTable = sideTable
         self.hashesByCacheableTarget = hashesByCacheableTarget

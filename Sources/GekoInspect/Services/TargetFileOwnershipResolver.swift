@@ -31,6 +31,7 @@ public final class TargetFileOwnershipResolver: TargetFileOwnershipResolving {
     // MARK: - TargetFileOwnershipResolving
 
     public func resolve(_ files: [AbsolutePath], graph: Graph) throws -> [FileTargetOwnership] {
+        guard !files.isEmpty else { return [] }
         let graphTraverser = GraphTraverser(graph: graph)
         let targets = graphTraverser.allTargets().sorted()
 

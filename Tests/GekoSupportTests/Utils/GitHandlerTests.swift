@@ -109,4 +109,44 @@ final class GitHandlerTests: GekoUnitTestCase {
         XCTAssertTrue(system.called(expectedCommand))
         XCTAssertEqual(result, expectedResult)
     }
+
+    func test_locallyChangedFiles_usesRequestedPathAndDeduplicatesSortedPaths() throws {
+        let projectPath: AbsolutePath = "/repo/Projects/App"
+        let repositoryCheckCommand = [
+            "git", "-C", projectPath.pathString,
+            "rev-parse", "--is-inside-work-tree",
+        ]
+        let trackedCommand = [
+            "git", "-C", projectPath.pathString,
+            "diff", "HEAD", "--name-only", "--no-renames", "--relative", "-z", "--", ".",
+        ]
+        let untrackedCommand = [
+            "git", "-C", projectPath.pathString,
+            "ls-files", "--others", "--exclude-standard", "-z", "--", ".",
+        ]
+        system.succeedCommand(repositoryCheckCommand, output: "true\n")
+        system.succeedCommand(trackedCommand, output: "Sources/B.swift\0Sources/A.swift\0")
+        system.succeedCommand(untrackedCommand, output: "Sources/A.swift\0Sources/Новый файл.swift\0")
+
+        let result = try subject.locallyChangedFiles(in: projectPath)
+
+        XCTAssertEqual(result, [
+            "/repo/Projects/App/Sources/A.swift",
+            "/repo/Projects/App/Sources/B.swift",
+            "/repo/Projects/App/Sources/Новый файл.swift",
+        ])
+        XCTAssertTrue(system.called(trackedCommand))
+        XCTAssertTrue(system.called(untrackedCommand))
+    }
+
+    func test_locallyChangedFiles_returnsEmptyWhenPathIsNotInGitWorkingTree() throws {
+        let path: AbsolutePath = "/project"
+        let repositoryCheckCommand = [
+            "git", "-C", path.pathString,
+            "rev-parse", "--is-inside-work-tree",
+        ]
+        system.errorCommand(repositoryCheckCommand, error: "fatal: not a git repository")
+
+        XCTAssertEqual(try subject.locallyChangedFiles(in: path), [])
+    }
 }

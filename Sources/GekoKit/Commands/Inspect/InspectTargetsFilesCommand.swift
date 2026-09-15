@@ -1,5 +1,4 @@
 import ArgumentParser
-import Foundation
 import GekoInspect
 import GekoSupport
 import ProjectDescription
@@ -29,13 +28,6 @@ struct InspectTargetsFilesCommand: AsyncParsableCommand {
         completion: .directory
     )
     var path: String?
-    
-    @Option(
-        name: .shortAndLong,
-        help: "The command will save output to a json file."
-    )
-    var output: String?
-    var outputPath: AbsolutePath? = nil
 
     @OptionGroup
     var manifestOptions: ManifestOptions
@@ -51,14 +43,7 @@ struct InspectTargetsFilesCommand: AsyncParsableCommand {
         try InspectTargetsService().run(
             path: path,
             files: files,
-            graph: graph,
-            output: outputPath
+            graph: graph
         )
-    }
-    
-    mutating func validate() throws {
-        if let output {
-            outputPath = try AbsolutePath(validating: output, relativeTo: FileHandler.shared.currentPath)
-        }
     }
 }

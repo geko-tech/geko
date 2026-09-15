@@ -37,7 +37,8 @@ protocol GeneratorFactorying {
         focusTests: Bool,
         unsafe: Bool,
         dependenciesOnly: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) throws -> Generating
     
     /// Returns a generator that generates a focused project without cache.
@@ -49,7 +50,8 @@ protocol GeneratorFactorying {
         config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) throws -> Generating
 
     /// Returns the default generator.
@@ -109,7 +111,8 @@ public class GeneratorFactory: GeneratorFactorying {
         focusTests: Bool,
         unsafe: Bool,
         dependenciesOnly: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) throws -> Generating {
         let contentHasher = ContentHasher()
         let projectMapperFactory = ProjectMapperFactory(contentHasher: contentHasher)
@@ -125,7 +128,8 @@ public class GeneratorFactory: GeneratorFactorying {
             focusTests: focusTests,
             unsafe: unsafe,
             dependenciesOnly: dependenciesOnly,
-            scheme: scheme
+            scheme: scheme,
+            handoff: handoff
         )
 
         let workspaceMappers = workspaceMapperFactory.cache(
@@ -148,7 +152,8 @@ public class GeneratorFactory: GeneratorFactorying {
         config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) throws -> Generating {
         let projectMapperFactory = ProjectMapperFactory()
         let projectMappers = projectMapperFactory.default()
@@ -159,7 +164,8 @@ public class GeneratorFactory: GeneratorFactorying {
             config: config,
             focusedTargets: focusedTargets,
             focusTests: focusTests,
-            scheme: scheme
+            scheme: scheme,
+            handoff: handoff
         )
         
         let workspaceMappers = workspaceMapperFactory.default(config: config)

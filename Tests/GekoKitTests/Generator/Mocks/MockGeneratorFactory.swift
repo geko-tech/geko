@@ -76,7 +76,8 @@ final class MockGeneratorFactory: GeneratorFactorying {
         focusTests: Bool,
         unsafe: Bool,
         dependenciesOnly: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     )?
     var invokedCacheParametersList =
         [(
@@ -87,7 +88,8 @@ final class MockGeneratorFactory: GeneratorFactorying {
             focusTests: Bool,
             unsafe: Bool,
             dependenciesOnly: Bool,
-            scheme: String?
+            scheme: String?,
+            handoff: Bool
         )]()
     var stubbedCacheResult: Generating!
     func cache(
@@ -98,7 +100,8 @@ final class MockGeneratorFactory: GeneratorFactorying {
         focusTests: Bool,
         unsafe: Bool,
         dependenciesOnly: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) -> GekoKit.Generating {
         invokedCache = true
         invokedCacheCount += 1
@@ -110,7 +113,8 @@ final class MockGeneratorFactory: GeneratorFactorying {
             focusTests,
             unsafe,
             dependenciesOnly,
-            scheme
+            scheme,
+            handoff
         )
         invokedCacheParametersList.append((
             config,
@@ -120,7 +124,8 @@ final class MockGeneratorFactory: GeneratorFactorying {
             focusTests,
             unsafe,
             dependenciesOnly,
-            scheme
+            scheme,
+            handoff
         ))
         return stubbedCacheResult
     }
@@ -131,14 +136,16 @@ final class MockGeneratorFactory: GeneratorFactorying {
         config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     )?
     var invokedFocusParametersList =
         [(
             config: Config,
             focusedTargets: Set<String>,
             focusTests: Bool,
-            scheme: String?
+            scheme: String?,
+            handoff: Bool
         )]()
     var stubbedFocusResult: Generating!
 
@@ -146,7 +153,8 @@ final class MockGeneratorFactory: GeneratorFactorying {
         config: Config,
         focusedTargets: Set<String>,
         focusTests: Bool,
-        scheme: String?
+        scheme: String?,
+        handoff: Bool
     ) -> GekoKit.Generating {
         invokedFocus = true
         invokedFocusCount += 1
@@ -154,13 +162,15 @@ final class MockGeneratorFactory: GeneratorFactorying {
             config,
             focusedTargets,
             focusTests,
-            scheme
+            scheme,
+            handoff
         )
         invokedFocusParametersList.append((
             config,
             focusedTargets,
             focusTests,
-            scheme
+            scheme,
+            handoff
         ))
         return stubbedFocusResult
     }

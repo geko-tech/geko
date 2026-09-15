@@ -1,6 +1,7 @@
 import Foundation
 import GekoCore
 import GekoGraph
+import GekoInspect
 import GekoSupport
 import ProjectDescription
 import XCTest
@@ -842,6 +843,92 @@ final class FocusedTargetsResolverGraphMapperTests: GekoUnitTestCase {
         XCTAssertEqual(
             sideTable.workspace.focusedTargets.sorted(),
             expectedResult.sorted()
+        )
+    }
+
+    func test_map_with_handoff_sources_and_focus_tests() async throws {
+        // Given
+        let focusedTargets: Set<String> = ["App"]
+        let appTarget = Target.test(name: "App", product: .app)
+        let appProjectPath = try temporaryPath().appending(component: "App")
+        let appProject = Project.test(path: appProjectPath, name: "App", targets: [appTarget])
+
+        let featureTarget = Target.test(name: "Feature", product: .staticFramework)
+        let featureTestsTarget = Target.test(name: "FeatureTests", product: .unitTests)
+        let featureProjectPath = try temporaryPath().appending(component: "Feature")
+        let featureProject = Project.test(
+            path: featureProjectPath,
+            name: "Feature",
+            targets: [featureTarget, featureTestsTarget]
+        )
+        let featureGraphTarget = GraphTarget.test(
+            path: featureProjectPath,
+            target: featureTarget,
+            project: featureProject
+        )
+        let graph = Graph.test(
+            projects: [
+                appProjectPath: appProject,
+                featureProjectPath: featureProject,
+            ],
+            targets: [
+                appProjectPath: ["App": appTarget],
+                featureProjectPath: [
+                    "Feature": featureTarget,
+                    "FeatureTests": featureTestsTarget,
+                ],
+            ]
+        )
+        let handoffFocusedTargetsResolver = MockHandoffFocusedTargetsResolver(
+            result: [
+                FileTargetOwnership(
+                    file: graph.path.appending(component: "Changed.swift"),
+                    targets: [featureGraphTarget]
+                ),
+            ]
+        )
+        subject = FocusedTargetsResolverGraphMapper(
+            focusTests: true,
+            schemeName: nil,
+            handoff: true,
+            handoffFocusedTargetsResolver: handoffFocusedTargetsResolver
+        )
+
+        // When
+        var got = graph
+        var sideTable = GraphSideTable()
+        try await prepareSideTable(focusedTargets: focusedTargets, graph: &got, sideTable: &sideTable)
+        _ = try await subject.map(graph: &got, sideTable: &sideTable)
+
+        // Then
+        XCTAssertEqual(
+            sideTable.workspace.focusedTargets.sorted(),
+            ["App", "Feature", "FeatureTests", CacheConstants.cacheProjectName].sorted()
+        )
+    }
+
+    func test_map_with_empty_handoff_sources() async throws {
+        // Given
+        let graph = Graph.test()
+        let handoffFocusedTargetsResolver = MockHandoffFocusedTargetsResolver(result: [])
+        subject = FocusedTargetsResolverGraphMapper(
+            focusTests: false,
+            schemeName: nil,
+            handoff: true,
+            handoffFocusedTargetsResolver: handoffFocusedTargetsResolver
+        )
+
+        // When
+        var got = graph
+        var sideTable = GraphSideTable()
+        _ = try await subject.map(graph: &got, sideTable: &sideTable)
+
+        // Then
+        XCTAssertEqual(sideTable.workspace.focusedTargets, [])
+        XCTAssertEqual(handoffFocusedTargetsResolver.invokedResolveRootPath, graph.path)
+        XCTAssertPrinterOutputContains(
+            "No locally changed files were found for --handoff. "
+                + "The working tree may be clean, or the project may not be in a Git repository."
         )
     }
 

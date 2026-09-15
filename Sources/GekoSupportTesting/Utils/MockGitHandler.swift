@@ -40,4 +40,12 @@ public final class MockGitHandler: GitHandling {
     public func pull(in path: ProjectDescription.AbsolutePath?) throws {
         pullStub?(path)
     }
+
+    public var locallyChangedFilesStub: ((AbsolutePath) throws -> [AbsolutePath])?
+    public private(set) var locallyChangedFilesPath: AbsolutePath?
+    public func locallyChangedFiles(in path: AbsolutePath) throws -> [AbsolutePath] {
+        locallyChangedFilesPath = path
+        guard let locallyChangedFilesStub else { return [] }
+        return try locallyChangedFilesStub(path)
+    }
 }

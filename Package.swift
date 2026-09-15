@@ -234,7 +234,8 @@ var targets: [Target] = [
             "GekoGraph",
             "GekoSupport",
             "GekoCloud",
-            "GekoAnalytics"
+            "GekoAnalytics",
+            "GekoInspect",
         ]
     ),
     .target(
@@ -444,6 +445,7 @@ var targets: [Target] = [
             "GekoCloudTesting",
             "GekoSupportTesting",
             "GekoCoreTesting",
+            "GekoInspect",
             loggingDependency,
             .byName(name: "AnyCodable"),
         ]
