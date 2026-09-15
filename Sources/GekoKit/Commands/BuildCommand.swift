@@ -28,6 +28,12 @@ public struct BuildCommand: AsyncParsableCommand {
     )
     var clean: Bool = false
 
+    @Flag(
+        name: [.customLong("include-build-warnings")],
+        help: "Include detailed xcodebuild warnings in structured JSON output."
+    )
+    var includeBuildWarnings: Bool = false
+
     @Option(
         name: .shortAndLong,
         help: "The path to the directory that contains the project to be built.",
@@ -120,7 +126,7 @@ public struct BuildCommand: AsyncParsableCommand {
             absolutePath = FileHandler.shared.currentPath
         }
 
-        try await BuildService().run(
+        try await BuildService(includeBuildWarnings: includeBuildWarnings).run(
             schemeName: scheme,
             generate: generate,
             clean: clean,

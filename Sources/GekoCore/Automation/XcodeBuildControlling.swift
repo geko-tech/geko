@@ -82,7 +82,7 @@ public enum XcodeBuildControllerCreateXCFrameworkArgument {
     }
 }
 
-public enum XcodeBuildError: FatalError {
+public enum XcodeBuildError: FatalError, StructuredErrorDescribing {
     case buildFailed(errors: [String], buildLogPath: AbsolutePath, rawBuildLogPath: AbsolutePath)
 
     public var description: String {
@@ -101,6 +101,18 @@ public enum XcodeBuildError: FatalError {
 
     public var type: GekoSupport.ErrorType {
         .abort
+    }
+
+    public var structuredDescription: String {
+        switch self {
+        case let .buildFailed(_, buildLogPath, rawBuildLogPath):
+            return """
+                Build failed. See data.xcodebuild.invocations for structured diagnostics.
+                More information in build logs:
+                Beautified: cat \(buildLogPath.pathString)
+                Raw: open \(rawBuildLogPath.pathString)
+                """
+        }
     }
 }
 

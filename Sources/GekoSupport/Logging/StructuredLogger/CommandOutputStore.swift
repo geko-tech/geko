@@ -18,6 +18,9 @@ public protocol CommandOutputStoring {
     /// Stores a value inside the section assigned to the given key.
     func set<Key: CommandOutputSectionKey, Value: Encodable>(_ key: Key, value: Value)
 
+    /// Appends a value to the collection assigned to the given key.
+    func append<Key: CommandOutputCollectionKey, Value: Encodable>(_ key: Key, value: Value)
+
     /// Returns all collected output and clears the store for the next use.
     func drain() -> CommandOutputSnapshot
 }
@@ -70,6 +73,20 @@ public final class CommandOutputStore: CommandOutputStoring {
             var sectionData = data[section]?.value as? [String: AnyEncodable] ?? [:]
             sectionData[key.rawValue] = AnyEncodable(value)
             data[section] = AnyEncodable(sectionData)
+        }
+    }
+
+    public func append<Key: CommandOutputCollectionKey, Value: Encodable>(
+        _ key: Key,
+        value: Value
+    ) {
+        lock.withLock {
+            let outputKey = Key.outputKey.rawValue
+            var output = data[outputKey]?.value as? [String: AnyEncodable] ?? [:]
+            var values = output[key.rawValue]?.value as? [AnyEncodable] ?? []
+            values.append(AnyEncodable(value))
+            output[key.rawValue] = AnyEncodable(values)
+            data[outputKey] = AnyEncodable(output)
         }
     }
 

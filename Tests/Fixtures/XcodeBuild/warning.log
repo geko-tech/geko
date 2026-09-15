@@ -1,0 +1,5 @@
+/tmp/XcodeBuildOutputFixture/macOS/macOS.swift:7:13: warning: initialization of immutable value 'unusedValue' was never used; consider replacing with assignment to '_' or removing it
+        let unusedValue = 42
+        ~~~~^~~~~~~~~~~
+        _
+** BUILD SUCCEEDED **

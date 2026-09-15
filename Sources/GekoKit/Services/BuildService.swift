@@ -38,6 +38,16 @@ final class BuildService {
     private let buildGraphInspector: BuildGraphInspecting
     private let targetBuilder: TargetBuilding
     private let configLoader: ConfigLoading
+    
+    convenience init(includeBuildWarnings: Bool) {
+        self.init(
+            targetBuilder: TargetBuilder(
+                xcodeBuildController: XcodeBuildController(
+                    includeStructuredBuildWarnings: includeBuildWarnings
+                )
+            )
+        )
+    }
 
     init(
         generatorFactory: GeneratorFactorying = GeneratorFactory(),

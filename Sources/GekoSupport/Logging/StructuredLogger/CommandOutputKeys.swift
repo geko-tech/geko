@@ -20,6 +20,7 @@ public enum CommandOutputKey: String {
     case initProject
     case scaffold
     case scaffoldList
+    case xcodebuild
     case output
 }
 
@@ -32,6 +33,17 @@ public enum CommandOutputSection: String {
 /// Associates a field with exactly one structured-output section.
 public protocol CommandOutputSectionKey: RawRepresentable where RawValue == String {
     static var section: CommandOutputSection { get }
+}
+
+/// Associates an accumulating collection with one top-level output key.
+public protocol CommandOutputCollectionKey: RawRepresentable where RawValue == String {
+    static var outputKey: CommandOutputKey { get }
+}
+
+public enum XcodeBuildOutputKey: String, CommandOutputCollectionKey {
+    case invocations
+
+    public static let outputKey = CommandOutputKey.xcodebuild
 }
 
 public enum FocusOutputKey: String, CommandOutputSectionKey {

@@ -238,11 +238,12 @@ public struct GekoCommand: AsyncParsableCommand {
     }
 
     private static func diagnostic(for error: FatalError) -> CommandDiagnostic? {
+        let description = (error as? StructuredErrorDescribing)?.structuredDescription ?? error.description
         switch error.type {
         case .abortSilent:
-            guard !error.description.isEmpty else { return nil }
+            guard !description.isEmpty else { return nil }
             return CommandDiagnostic(
-                message: error.description,
+                message: description,
                 type: ErrorType.abort.rawValue
             )
         case .bugSilent:
@@ -251,9 +252,9 @@ public struct GekoCommand: AsyncParsableCommand {
                 type: ErrorType.bug.rawValue
             )
         case .abort, .bug:
-            guard !error.description.isEmpty else { return nil }
+            guard !description.isEmpty else { return nil }
             return CommandDiagnostic(
-                message: error.description,
+                message: description,
                 type: error.type.rawValue
             )
         }

@@ -46,3 +46,8 @@ public protocol FatalError: Error, CustomStringConvertible {
     /// Error type.
     var type: ErrorType { get }
 }
+
+/// Provides a concise error message for the structured command response.
+public protocol StructuredErrorDescribing: Error {
+    var structuredDescription: String { get }
+}

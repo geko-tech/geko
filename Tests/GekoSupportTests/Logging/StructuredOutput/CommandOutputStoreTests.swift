@@ -59,6 +59,30 @@ final class CommandOutputStoreTests: XCTestCase {
         XCTAssertEqual(snapshot.errors.count, 100)
     }
 
+    func testAppendAccumulatesValuesWithoutOverwritingPreviousValues() throws {
+        CommandOutputStore.shared.append(XcodeBuildOutputKey.invocations, value: ["scheme": "First"])
+        CommandOutputStore.shared.append(XcodeBuildOutputKey.invocations, value: ["scheme": "Second"])
+
+        let object = try jsonObject(from: CommandOutputStore.shared.drain())
+        let xcodebuild = try XCTUnwrap(object["xcodebuild"] as? [String: Any])
+        let invocations = try XCTUnwrap(xcodebuild["invocations"] as? [[String: String]])
+
+        XCTAssertEqual(invocations.map { $0["scheme"] }, ["First", "Second"])
+    }
+
+    func testConcurrentAppendsAreNotLost() throws {
+        DispatchQueue.concurrentPerform(iterations: 100) { index in
+            CommandOutputStore.shared.append(XcodeBuildOutputKey.invocations, value: index)
+        }
+
+        let object = try jsonObject(from: CommandOutputStore.shared.drain())
+        let xcodebuild = try XCTUnwrap(object["xcodebuild"] as? [String: Any])
+        let invocations = try XCTUnwrap(xcodebuild["invocations"] as? [Int])
+
+        XCTAssertEqual(invocations.count, 100)
+        XCTAssertEqual(Set(invocations), Set(0 ..< 100))
+    }
+
     func testRendererOmitsEmptyDataAndProducesOneJSONObject() throws {
         let output = CommandOutput(
             exitCode: 0,

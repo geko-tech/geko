@@ -33,6 +33,12 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
     )
     var ignoreRemoteCache: Bool = false
 
+    @Flag(
+        name: [.customLong("include-build-warnings")],
+        help: "Include detailed xcodebuild warnings in structured JSON output."
+    )
+    var includeBuildWarnings: Bool = false
+
     @OptionGroup
     var manifestOptions: ManifestOptions
 
@@ -76,7 +82,8 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
                 unsafe: options.unsafe,
                 dependenciesOnly: options.dependenciesOnly,
                 noOpen: options.noOpen,
-                ignoreRemoteCache: ignoreRemoteCache
+                ignoreRemoteCache: ignoreRemoteCache,
+                includeBuildWarnings: includeBuildWarnings
             )
         } else {
             try await GenerateService().run(
