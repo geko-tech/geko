@@ -52,12 +52,6 @@ public struct GekoCommand: AsyncParsableCommand {
     )
     var isStructured: Bool = false
 
-    @Flag(
-        name: [.customLong("include-build-warnings")],
-        help: "Include detailed xcodebuild warnings in structured JSON output."
-    )
-    var includeBuildWarnings: Bool = false
-
     public static func main(
         _ arguments: [String]? = nil,
         parseAsRoot: ((_ arguments: [String]?) throws -> ParsableCommand) = Self.parseAsRoot,
@@ -206,7 +200,6 @@ public struct GekoCommand: AsyncParsableCommand {
                 && argument != "--force"
                 && argument != "--quiet"
                 && argument != "--structured"
-                && argument != "--include-build-warnings"
         }
     }
 

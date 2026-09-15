@@ -46,7 +46,8 @@ final class CacheWarmService {
         unsafe: Bool,
         dependenciesOnly: Bool,
         noOpen: Bool,
-        ignoreRemoteCache: Bool
+        ignoreRemoteCache: Bool,
+        includeBuildWarnings: Bool
     ) async throws {
         let timer = clock.startTimer()
         let path = try self.path(path)
@@ -59,6 +60,7 @@ final class CacheWarmService {
             cacheOutputType: outputType,
             destination: destination,
             ignoreRemoteCache: ignoreRemoteCache,
+            includeBuildWarnings: includeBuildWarnings,
             noOpen: noOpen
         )
         storeOutput(
@@ -103,6 +105,7 @@ final class CacheWarmService {
         cacheOutputType: CacheOutputType,
         destination: CacheFrameworkDestination,
         ignoreRemoteCache: Bool,
+        includeBuildWarnings: Bool,
         noOpen: Bool
     ) throws -> [CacheTask] {
         var tasks = [CacheTask]()
@@ -121,11 +124,15 @@ final class CacheWarmService {
         ).storages()
         let cache = Cache(storages: storages)
         let artifactBuilder = CacheFrameworkBuilder(
-            xcodeBuildController: XcodeBuildController(),
+            xcodeBuildController: XcodeBuildController(
+                includeStructuredBuildWarnings: includeBuildWarnings
+            ),
             destination: destination
         )
         let xcframeworkBuilder = CacheXCFrameworkBuilder(
-            xcodeBuildController: XcodeBuildController()
+            xcodeBuildController: XcodeBuildController(
+                includeStructuredBuildWarnings: includeBuildWarnings
+            )
         )
         
         // Load graph, compute focused modules, prune orphan targets

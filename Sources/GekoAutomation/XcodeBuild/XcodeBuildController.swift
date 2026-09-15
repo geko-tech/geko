@@ -24,14 +24,14 @@ public final class XcodeBuildController: XcodeBuildControlling {
     private let isStructuredOutputEnabled: Bool
     private let includeStructuredBuildWarnings: Bool
 
-    public convenience init() {
+    public convenience init(includeStructuredBuildWarnings: Bool = false) {
         self.init(
             formatter: Formatter(),
             environment: Environment.shared,
             logFileStoreHandler: LogFileStoreHandler(),
             outputParser: XcodeBuildOutputParser(),
             isStructuredOutputEnabled: LogOutput.isStructured,
-            includeStructuredBuildWarnings: LogOutput.includeBuildWarnings
+            includeStructuredBuildWarnings: includeStructuredBuildWarnings
         )
     }
 
@@ -41,7 +41,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         logFileStoreHandler: LogFileStoreHandling,
         outputParser: XcodeBuildOutputParsing,
         isStructuredOutputEnabled: Bool = LogOutput.isStructured,
-        includeStructuredBuildWarnings: Bool = LogOutput.includeBuildWarnings
+        includeStructuredBuildWarnings: Bool = false
     ) {
         self.formatter = formatter
         self.environment = environment
