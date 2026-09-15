@@ -39,6 +39,13 @@ enum InitServiceError: FatalError, Equatable {
     }
 }
 
+struct InitResult {
+    let path: AbsolutePath
+    let name: String
+    let platform: String
+    let template: String
+}
+
 class InitService {
     private let templateLoader: TemplateLoading
     private let templatesDirectoryLocator: TemplatesDirectoryLocating
@@ -106,7 +113,7 @@ class InitService {
         templateName: String?,
         requiredTemplateOptions: [String: String],
         optionalTemplateOptions: [String: String?]
-    ) throws {
+    ) throws -> InitResult {
         let platform = try self.platform(platform)
         let path = try self.path(path)
         let name = try self.name(name, path: path)
@@ -153,6 +160,7 @@ class InitService {
         }
 
         logger.notice("Project generated at path \(path.pathString).", metadata: .success)
+        return InitResult(path: path, name: name, platform: platform.caseValue, template: templateName)
     }
 
     // MARK: - Helpers

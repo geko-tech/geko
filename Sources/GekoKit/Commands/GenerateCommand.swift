@@ -41,6 +41,8 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
             sources: options.sources,
             planPath: options.focusPlan
         )
+        
+        storeOutput(sources: sources, scheme: options.scheme, focusTests: options.focusTests)
 
         let path = try options.path.map {
             let resolvedPath = try AbsolutePath(validating: $0, relativeTo: .current)
@@ -102,5 +104,21 @@ public struct GenerateCommand: AsyncParsableCommand, HasTrackableParameters {
                 "cache_hits": AnyCodable(CacheAnalytics.cacheHit()),
             ]
         )
+    }
+    
+    private func storeOutput(
+        sources: Set<String>,
+        scheme: String?,
+        focusTests: Bool
+    ) {
+        if !sources.isEmpty {
+            CommandOutputStore.shared.set(FocusOutputKey.requestedTargets, value: sources.sorted())
+        }
+        if let scheme {
+            CommandOutputStore.shared.set(FocusOutputKey.scheme, value: scheme)
+        }
+        if focusTests {
+            CommandOutputStore.shared.set(FocusOutputKey.focusTests, value: focusTests)
+        }
     }
 }

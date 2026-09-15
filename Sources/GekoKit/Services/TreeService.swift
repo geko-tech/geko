@@ -11,6 +11,23 @@ private struct TreeDependency: Encodable {
     let version: String?
     let isExternal: Bool
     var dependencies: Set<String>
+
+    private enum CodingKeys: String, CodingKey {
+        case version
+        case isExternal
+        case dependencies
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(version, forKey: .version)
+        try container.encode(isExternal, forKey: .isExternal)
+        try container.encode(dependencies.sorted(), forKey: .dependencies)
+    }
+}
+
+private struct TreeCommandOutput: Encodable {
+    let outputFile: String
 }
 
 enum TreeServiceError: FatalError {
@@ -68,8 +85,14 @@ final class TreeService {
             trace(&tree, to: traceTargets)
         }
 
-        if let outputFile {
-            try dumpJson(tree: tree, output: outputFile, targets: targets)
+        if LogOutput.isStructured || outputFile != nil {
+            let filteredTree = try filter(tree: tree, targets: targets)
+            if let outputFile {
+                let path = try dumpJson(tree: filteredTree, output: outputFile)
+                CommandOutputStore.shared.set(.tree, value: TreeCommandOutput(outputFile: path.pathString))
+            } else {
+                CommandOutputStore.shared.set(.tree, value: filteredTree)
+            }
         } else {
             try printTree(tree, targets: targets)
         }
@@ -322,13 +345,40 @@ final class TreeService {
         return result
     }
 
-    private func dumpJson(
+    private func filter(
         tree: consuming [String: TreeDependency],
-        output: String,
         targets: [String]
-    ) throws {
-        var tree = consume tree
+    ) throws -> [String: TreeDependency] {
+        guard !targets.isEmpty else { return tree }
 
+        var tree = consume tree
+        var visited: Set<String> = []
+        var queue = Set(targets)
+
+        while !queue.isEmpty {
+            let node = queue.removeFirst()
+            visited.insert(node)
+
+            guard let dependency = tree[node] else {
+                throw TreeServiceError.missingDependency(node)
+            }
+
+            queue.formUnion(
+                dependency.dependencies.subtracting(visited)
+            )
+        }
+
+        for key in tree.keys where !visited.contains(key) {
+            tree[key] = nil
+        }
+
+        return tree
+    }
+
+    private func dumpJson(
+        tree: [String: TreeDependency],
+        output: String
+    ) throws -> AbsolutePath {
         let path: AbsolutePath
         if let relativePath = try? RelativePath(validating: output) {
             path = AbsolutePath.current.appending(relativePath)
@@ -336,32 +386,11 @@ final class TreeService {
             path = try AbsolutePath(validatingAbsolutePath: output)
         }
 
-        if !targets.isEmpty {
-            var visited: Set<String> = []
-            var queue = Set(targets)
-
-            while !queue.isEmpty {
-                let node = queue.removeFirst()
-                visited.insert(node)
-
-                guard let deps = tree[node] else {
-                    throw TreeServiceError.missingDependency(node)
-                }
-
-                queue.formUnion(deps.dependencies.subtracting(visited))
-            }
-
-            for key in tree.keys {
-                if !visited.contains(key) {
-                    tree[key] = nil
-                }
-            }
-        }
-
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(tree)
 
         try data.write(to: path.url)
+        return path
     }
 }

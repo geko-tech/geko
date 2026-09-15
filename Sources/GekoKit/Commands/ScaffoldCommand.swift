@@ -7,6 +7,11 @@ import GekoLoader
 import GekoPlugin
 import GekoSupport
 
+private struct ScaffoldOutput: Encodable {
+    let path: String
+    let template: String
+}
+
 enum ScaffoldCommandError: FatalError, Equatable {
     var type: ErrorType {
         switch self {
@@ -35,7 +40,7 @@ public struct ScaffoldCommand: AsyncParsableCommand {
     }
 
     @Flag(
-        help: "The output in JSON format"
+        help: "Deprecated. Use the global --structured option: geko --structured scaffold list"
     )
     var json: Bool = false
 
@@ -79,14 +84,18 @@ public struct ScaffoldCommand: AsyncParsableCommand {
     public func run() async throws {
         // Currently, @Argument and subcommand clashes, so we need to handle that ourselves
         if template == ListCommand.configuration.commandName {
-            let format: ListService.OutputFormat = json ? .json : .table
+            let format: ListService.OutputFormat = json || LogOutput.isStructured ? .json : .table
             try await ListService().run(path: path, outputFormat: format)
         } else {
-            try await ScaffoldService().run(
+            let result = try await ScaffoldService().run(
                 path: path,
                 templateName: template,
                 requiredTemplateOptions: requiredTemplateOptions,
                 optionalTemplateOptions: optionalTemplateOptions
+            )
+            CommandOutputStore.shared.set(
+                .scaffold,
+                value: ScaffoldOutput(path: result.path.pathString, template: result.template)
             )
         }
     }

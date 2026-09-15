@@ -3,9 +3,42 @@ import GekoSupport
 import struct ProjectDescription.AbsolutePath
 
 private let gekoSourceFileName = "geko_source.json"
+private let logger = Logger(label: "io.geko.version-checker")
 
 private struct GekoSource: Decodable {
     let url: String?
+}
+
+private enum VersionCheckerError: FatalError {
+    case sourceNotConfigured(current: String, required: String)
+    case invalidSourceURL(String)
+    case downloadUnavailable(version: String, url: String)
+    case missingBundleResources
+    case executionFailed(path: String, code: Int32)
+
+    var description: String {
+        switch self {
+        case let .sourceNotConfigured(current, required):
+            return "Current geko version \(current) does not match required version \(required). Please install the required version manually or add geko_source.json to the geko bundle to enable auto-update."
+        case let .invalidSourceURL(url):
+            return "The geko source URL is invalid: \(url)"
+        case let .downloadUnavailable(version, url):
+            return "Unable to find geko version \(version) at URL \(url)"
+        case .missingBundleResources:
+            return "Cannot retrieve the geko bundle resource path."
+        case let .executionFailed(path, code):
+            return "Unable to execute geko at \(path). execv failed with errno \(code)."
+        }
+    }
+
+    var type: ErrorType {
+        switch self {
+        case .sourceNotConfigured, .invalidSourceURL, .downloadUnavailable:
+            return .abortSilent
+        case .missingBundleResources, .executionFailed:
+            return .bug
+        }
+    }
 }
 
 private func getMachineArchitecture() -> String {
@@ -57,8 +90,12 @@ func startCorrectVersion() async throws {
     try handler.delete(versionCacheDir)
 
     guard let sourceUrl = try loadGekoSourceUrl(version: neededVersion) else {
-        print("Current geko version \(Constants.version) does not match required version \(neededVersion). Please install required version manually or add geko_source.json file to geko bundle to enable auto update")
-        exit(1)
+        let error = VersionCheckerError.sourceNotConfigured(
+            current: Constants.version,
+            required: neededVersion
+        )
+        logger.info("\(error.description)")
+        throw error
     }
 
     try await downloadVersion(version: neededVersion, url: sourceUrl, cacheDir: versionCacheDir)
@@ -71,17 +108,17 @@ private func downloadVersion(version: String, url: String, cacheDir: AbsolutePat
     let handler: FileHandling = FileHandler.shared
 
     guard let url = URL(string: url) else {
-        exit(1)
+        throw VersionCheckerError.invalidSourceURL(url)
     }
 
     let archive: AbsolutePath
     do {
-        print("Downloading geko version \(version)")
+        logger.notice("Downloading geko version \(version)")
         archive = try await client.download(url: url)
     } catch FileClientError.notFoundError, FileClientError.forbiddenError {
-        print("Unable to find geko version \(version) at url \(url)")
-        fflush(stdout)
-        exit(1)
+        let error = VersionCheckerError.downloadUnavailable(version: version, url: url.absoluteString)
+        logger.info("\(error.description)")
+        throw error
     }
 
     let unarchiver = try FileUnarchiver(path: archive)
@@ -106,7 +143,7 @@ func loadGekoSourceUrl(version: String) throws -> String? {
         let bundleDir = bundle.resourceURL,
         let bundlePath = try? AbsolutePath(validatingAbsolutePath: bundleDir.path(percentEncoded: false))
     else {
-        fatalError("Cannot retrieve executable path")
+        throw VersionCheckerError.missingBundleResources
     }
 
     let gekoSourcePath = bundlePath.appending(component: gekoSourceFileName)
@@ -121,12 +158,12 @@ func loadGekoSourceUrl(version: String) throws -> String? {
     do {
         source = try jsonDecoder.decode(GekoSource.self, from: data)
     } catch {
-        print("Error while loading \(gekoSourceFileName): \(error.localizedDescription)\nAuto-update is disabled")
+        logger.warning("Error while loading \(gekoSourceFileName): \(error.localizedDescription). Auto-update is disabled.")
         return nil
     }
 
     guard let sourceTemplateUrl = source?.url else {
-        print("Source url is not specified in file 'geko_source.json'. Update is disabled.")
+        logger.warning("Source URL is not specified in '\(gekoSourceFileName)'. Auto-update is disabled.")
         return nil
     }
 
@@ -156,7 +193,7 @@ private func startOtherVersion(versionDir: AbsolutePath, version: String) throws
     let path = versionDir.appending(component: Constants.binName).pathString
     let cArgs = CStringArray(arguments)
     guard execv(path, cArgs.cArray) != -1 else {
-        fatalError("Unable to exec process! Failed with errno \(errno)")
+        throw VersionCheckerError.executionFailed(path: path, code: errno)
     }
 }
 

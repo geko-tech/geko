@@ -59,13 +59,15 @@ public final class LogSpinner {
         self.status = false
         self.frameIndex = 0
 
-        DefaultSpinnerSignal().trap()
+        if !LogOutput.suppressesHumanOutput {
+            DefaultSpinnerSignal().trap()
+        }
     }
 
     // MARK: - LogSpinner
 
     public func start(message: String = "") {
-        guard !LogOutput.isQuiet else { return }
+        guard !LogOutput.suppressesHumanOutput else { return }
         self.message = message
         guard !ciChecker.isCI() && !isDebug else {
             logger.notice(.init(stringLiteral: message))
@@ -84,7 +86,7 @@ public final class LogSpinner {
     }
     
     public func update(message: String = "") {
-        guard !LogOutput.isQuiet else { return }
+        guard !LogOutput.suppressesHumanOutput else { return }
         guard !ciChecker.isCI() && !isDebug else {
             return
         }
@@ -92,7 +94,7 @@ public final class LogSpinner {
     }
 
     public func stop(message: String? = nil) {
-        guard !LogOutput.isQuiet else { return }
+        guard !LogOutput.suppressesHumanOutput else { return }
         guard !ciChecker.isCI() && !isDebug else {
             if let message {
                 logger.notice(.init(stringLiteral: message))

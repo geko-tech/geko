@@ -32,6 +32,7 @@ final class PluginRunService {
         }
         runCommand.append(task)
         runCommand += arguments
+        
         try System.shared.runAndPrint(runCommand)
     }
 }

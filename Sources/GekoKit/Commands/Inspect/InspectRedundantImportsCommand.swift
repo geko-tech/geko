@@ -66,6 +66,13 @@ struct InspectRedundantImportsCommand: AsyncParsableCommand {
             inspectMode: inspectOptions.mode,
             output: inspectOptions.outputPath
         )
+        
+        if LogOutput.isStructured {
+            if !issues.isEmpty, inspectOptions.severity == .error {
+                throw StructuredInspectionFailure()
+            }
+            return
+        }
 
         if issues.isEmpty {
             logger.info("We did not find any redundant dependencies in your project.")

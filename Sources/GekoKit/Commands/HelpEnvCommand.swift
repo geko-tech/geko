@@ -8,6 +8,8 @@ struct HelpEnvCommand: AsyncParsableCommand {
             return "Enable verbose logging. Defaults to 'false'."
         case .quiet:
             return "Enable quiet logging. Only output errors. Defaults to 'false'."
+        case .structured:
+            return "Enable structured JSON output. Defaults to 'false'."
         case .colouredOutput:
             return "Enable colored output. Defaults to 'true'."
         case .versionsDirectory:

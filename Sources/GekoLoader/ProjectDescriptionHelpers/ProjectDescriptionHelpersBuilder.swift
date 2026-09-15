@@ -183,7 +183,15 @@ public final class ProjectDescriptionHelpersBuilder: ProjectDescriptionHelpersBu
         )
 
         let timer = clock.startTimer()
-        try System.shared.runAndPrint(command, verbose: false, environment: ProcessInfo.processInfo.environment)
+        if LogOutput.suppressesHumanOutput {
+            try System.shared.run(command)
+        } else {
+            try System.shared.runAndPrint(
+                command,
+                verbose: false,
+                environment: ProcessInfo.processInfo.environment
+            )
+        }
         let duration = timer.stop()
         let time = String(format: "%.3f", duration)
         logger.info("Built \(name) in (\(time)s)", metadata: .success)

@@ -7,6 +7,10 @@ private struct TargetsOutput: Encodable {
     let files: [FileOwnershipOutput]
 }
 
+private struct TargetOwnershipFileOutput: Encodable {
+    let outputFile: String
+}
+
 private struct FileOwnershipOutput: Encodable {
     let path: String
     let targets: [TargetOutput]
@@ -53,16 +57,24 @@ public final class InspectTargetsService: InspectTargetsServicing {
             try AbsolutePath(validating: $0, relativeTo: path)
         }
         let ownerships = try targetOwnershipResolver.resolve(inputFiles, graph: graph)
-        
+        let targetsOutput = makeOutput(
+            ownerships: ownerships,
+            rootPath: path
+        )
+
         if let output {
             try saveOutput(
-                ownerships: ownerships,
-                outputPath: output,
-                rootPath: path
+                targetsOutput,
+                outputPath: output
             )
+            CommandOutputStore.shared.set(
+                .targetOwnership,
+                value: TargetOwnershipFileOutput(outputFile: output.pathString)
+            )
+        } else {
+            consoleOutput(for: ownerships, rootPath: path)
+            CommandOutputStore.shared.set(.targetOwnership, value: targetsOutput)
         }
-        
-        consoleOutput(for: ownerships, rootPath: path)
     }
     
     // MARK: - Private
@@ -79,25 +91,13 @@ public final class InspectTargetsService: InspectTargetsServicing {
     }
     
     private func saveOutput(
-        ownerships: [FileTargetOwnership],
-        outputPath: AbsolutePath,
-        rootPath: AbsolutePath
+        _ output: TargetsOutput,
+        outputPath: AbsolutePath
     ) throws {
         if FileHandler.shared.exists(outputPath) {
             try FileHandler.shared.delete(outputPath)
         }
         
-        let output = TargetsOutput(files: ownerships.map { ownership in
-            FileOwnershipOutput(
-                path: ownership.file.relative(to: rootPath).pathString,
-                targets: ownership.targets.map { target in
-                    TargetOutput(
-                        name: target.target.name,
-                        projectPath: target.path.relative(to: rootPath).pathString
-                    )
-                }
-            )
-        })
         let jsonData = try JSONEncoder().encode(output)
         guard let content = String(data: jsonData, encoding: .utf8) else {
             throw FileHandlerError.invalidTextEncoding(outputPath)
@@ -108,6 +108,27 @@ public final class InspectTargetsService: InspectTargetsServicing {
             content,
             path: outputPath,
             atomically: true
+        )
+    }
+    
+    private func makeOutput(
+        ownerships: [FileTargetOwnership],
+        rootPath: AbsolutePath
+    ) -> TargetsOutput {
+        TargetsOutput(
+            files: ownerships.map { ownership in
+                FileOwnershipOutput(
+                    path: ownership.file.relative(to: rootPath).pathString,
+                    targets: ownership.targets.map { target in
+                        TargetOutput(
+                            name: target.target.name,
+                            projectPath: target.path
+                                .relative(to: rootPath)
+                                .pathString
+                        )
+                    }
+                )
+            }
         )
     }
 }

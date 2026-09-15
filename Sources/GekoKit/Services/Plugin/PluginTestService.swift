@@ -32,7 +32,12 @@ final class PluginTestService {
                 "--test-product", testProduct,
             ]
         }
-        try System.shared.runAndPrint(testCommand)
+        
+        if LogOutput.suppressesHumanOutput {
+            try System.shared.run(testCommand)
+        } else {
+            try System.shared.runAndPrint(testCommand)
+        }
     }
     
     private func isPackageExists(at path: String?) throws -> Bool {

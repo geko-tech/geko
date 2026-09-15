@@ -61,6 +61,14 @@ final class CacheWarmService {
             ignoreRemoteCache: ignoreRemoteCache,
             noOpen: noOpen
         )
+        storeOutput(
+            profile: profile,
+            destination: destination,
+            ignoreRemoteCache: ignoreRemoteCache,
+            focusDirectDependencies: focusDirectDependencies,
+            dependenciesOnly: dependenciesOnly,
+            unsafe: unsafe
+        )
         
         var context = CacheContext(
             path: path,
@@ -79,7 +87,11 @@ final class CacheWarmService {
         for task in tasks {
             try await task.run(context: &context)
         }
-     
+
+        if let workspacePath = context.workspacePath {
+            CommandOutputStore.shared.set(.workspacePath, value: workspacePath.pathString)
+        }
+
         logger.notice(timeTakenLoggerFormatter.timeTakenMessage(for: timer))
     }
     
@@ -198,4 +210,57 @@ final class CacheWarmService {
     private var currentPath: AbsolutePath {
         FileHandler.shared.currentPath
     }
+    
+    private func storeOutput(
+        profile: ProjectDescription.Cache.Profile,
+        destination: CacheFrameworkDestination,
+        ignoreRemoteCache: Bool,
+        focusDirectDependencies: Bool,
+        dependenciesOnly: Bool,
+        unsafe: Bool,
+    ) {
+        // Profile
+        CommandOutputStore.shared.set(CacheOutputKey.profile, value: profile.name)
+        CommandOutputStore.shared.set(CacheOutputKey.configuration, value: profile.configuration)
+        CommandOutputStore.shared.set(CacheOutputKey.destination, value: destination.rawValue)
+
+        let platforms = Dictionary(
+            uniqueKeysWithValues: profile.platforms.map { platform, options in
+                (
+                    platform.rawValue,
+                    CachePlatformOutput(
+                        arch: options.arch.rawValue,
+                        os: options.os?.description,
+                        device: options.device
+                    )
+                )
+            }
+        )
+        CommandOutputStore.shared.set(CacheOutputKey.platforms, value: platforms)
+
+        // Profile options
+        CommandOutputStore.shared.set(CacheOutputKey.swiftModuleCacheEnabled, value: profile.options.swiftModuleCacheEnabled)
+        CommandOutputStore.shared.set(CacheOutputKey.onlyActiveResourcesInBundles, value: profile.options.onlyActiveResourcesInBundles)
+        CommandOutputStore.shared.set(CacheOutputKey.exportCoverageProfiles, value: profile.options.exportCoverageProfiles)
+
+        // Cache options
+        if ignoreRemoteCache {
+            CommandOutputStore.shared.set(CacheOutputKey.ignoreRemoteCache, value: ignoreRemoteCache)
+        }
+        if focusDirectDependencies {
+            CommandOutputStore.shared.set(CacheOutputKey.focusDirectDependencies, value: focusDirectDependencies)
+        }
+        if dependenciesOnly {
+            CommandOutputStore.shared.set(CacheOutputKey.dependenciesOnly, value: dependenciesOnly)
+        }
+        if unsafe {
+            CommandOutputStore.shared.set(CacheOutputKey.unsafe, value: unsafe)
+        }
+    }
+}
+
+private struct CachePlatformOutput: Encodable {
+    let arch: String
+    let os: String?
+    let device: String?
 }

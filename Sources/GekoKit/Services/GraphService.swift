@@ -8,6 +8,11 @@ import GekoSupport
 import ProjectAutomation
 import ProjectDescription
 
+private struct GraphOutput: Encodable {
+    let format: String
+    let outputPath: String
+}
+
 final class GraphService {
     private let projectGraphLoader: ProjectGraphLoading
 
@@ -54,6 +59,11 @@ final class GraphService {
             let outputGraph = ProjectAutomation.Graph.from(graph: graph, targetsAndDependencies: filteredTargetsAndDependencies)
             try outputGraph.export(to: filePath)
         }
+        
+        CommandOutputStore.shared.set(
+            .graph,
+            value: GraphOutput(format: format.rawValue, outputPath: filePath.pathString)
+        )
 
         logger.notice("Graph exported to \(filePath.pathString)", metadata: .success)
     }

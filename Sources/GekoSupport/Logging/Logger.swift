@@ -9,6 +9,7 @@ public struct LoggingConfig {
         case detailed
         case osLog
         case quiet
+        case structured
     }
 
     public var loggerType: LoggerType
@@ -23,8 +24,11 @@ extension LoggingConfig {
         let detailed = env[Constants.EnvironmentVariables.detailedLog] != nil
         let verbose = env[Constants.EnvironmentVariables.verbose] != nil
         let quiet = env[Constants.EnvironmentVariables.quiet] != nil
-        
-        if quiet {
+        let structured = env[Constants.EnvironmentVariables.structured] != nil
+
+        if structured {
+            return .init(loggerType: .structured, verbose: false)
+        } else if quiet {
             return .init(loggerType: .quiet, verbose: false)
         } else if osLog {
             return .init(loggerType: .osLog, verbose: verbose)
@@ -38,9 +42,17 @@ extension LoggingConfig {
 
 public enum LogOutput {
     private static var currentConfig: LoggingConfig = .default
-    
+
     public static var isQuiet: Bool {
-        return currentConfig.loggerType == .quiet
+        currentConfig.loggerType == .quiet
+    }
+    
+    public static var isStructured: Bool {
+        currentConfig.loggerType == .structured
+    }
+
+    public static var suppressesHumanOutput: Bool {
+        isQuiet || isStructured
     }
 
     public static func bootstrap(config: LoggingConfig = .default) {
@@ -60,6 +72,8 @@ public enum LogOutput {
             handler = StandardLogHandler.self
         case .quiet:
             handler = QuietLogHandler.self
+        case .structured:
+            handler = JSONLogHandler.self
         }
 
         if config.verbose {
@@ -91,6 +105,12 @@ extension StandardLogHandler: VerboseLogHandler {
 extension QuietLogHandler: VerboseLogHandler {
     public static func verbose(label: String) -> LogHandler {
         QuietLogHandler(label: label)
+    }
+}
+
+extension JSONLogHandler: VerboseLogHandler {
+    public static func verbose(label: String) -> LogHandler {
+        JSONLogHandler(label: label)
     }
 }
 

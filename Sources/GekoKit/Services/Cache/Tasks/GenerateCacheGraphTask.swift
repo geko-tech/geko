@@ -35,7 +35,7 @@ final class GenerateCacheGraphTask: CacheTask {
         
         context.graph = buildGraph
         context.workspacePath = workspacePath
-        
+
         if !noOpen {
             try opener.open(path: workspacePath)
         }

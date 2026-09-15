@@ -67,6 +67,13 @@ struct InspectImplicitImportsCommand: AsyncParsableCommand {
             output: inspectOptions.outputPath
         )
 
+        if LogOutput.isStructured {
+            if !issues.isEmpty, inspectOptions.severity == .error {
+                throw StructuredInspectionFailure()
+            }
+            return
+        }
+
         if issues.isEmpty {
             logger.info("We did not find any implicit dependencies in your project.")
         } else {

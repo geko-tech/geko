@@ -34,10 +34,11 @@ struct MigrationSettingsToXCConfigCommand: ParsableCommand {
     var target: String?
 
     func run() throws {
-        try MigrationSettingsToXCConfigService().run(
+        let xcconfigPath = try MigrationSettingsToXCConfigService().run(
             xcodeprojPath: xcodeprojPath,
             xcconfigPath: xcconfigPath,
             target: target
         )
+        CommandOutputStore.shared.set(.xcconfigPath, value: xcconfigPath.pathString)
     }
 }

@@ -11,19 +11,21 @@ public protocol SettingsToXCConfigExtracting {
     ///   - xcodeprojPath: Path to the .xcodeproj file.
     ///   - targetName: Name of the target. When nil, it extracts the settings of the project.
     ///   - xcconfigPath: Path to the .xcconfig where the build settings will be extracted.
-    func extract(xcodeprojPath: AbsolutePath, targetName: String?, xcconfigPath: AbsolutePath) throws
+    func extract(xcodeprojPath: AbsolutePath, targetName: String?, xcconfigPath: AbsolutePath) throws -> AbsolutePath
 }
 
 public enum SettingsToXCConfigExtractorError: FatalError, Equatable {
     case missingXcodeProj(AbsolutePath)
     case missingProject
     case targetNotFound(String)
+    case missingBuildConfigurations
 
     public var description: String {
         switch self {
         case let .missingXcodeProj(path): return "Couldn't find Xcode project at path \(path.pathString)."
         case .missingProject: return "The project's pbxproj file contains no projects."
         case let .targetNotFound(name): return "Couldn't find target with name '\(name)' in the project."
+        case .missingBuildConfigurations: return "The list of configurations is empty."
         }
     }
 
@@ -35,6 +37,8 @@ public enum SettingsToXCConfigExtractorError: FatalError, Equatable {
             return .abort
         case .targetNotFound:
             return .abort
+        case .missingBuildConfigurations:
+            return .abort
         }
     }
 }
@@ -42,7 +46,7 @@ public enum SettingsToXCConfigExtractorError: FatalError, Equatable {
 public class SettingsToXCConfigExtractor: SettingsToXCConfigExtracting {
     public init() {}
 
-    public func extract(xcodeprojPath: AbsolutePath, targetName: String?, xcconfigPath: AbsolutePath) throws {
+    public func extract(xcodeprojPath: AbsolutePath, targetName: String?, xcconfigPath: AbsolutePath) throws -> AbsolutePath {
         guard FileHandler.shared.exists(xcodeprojPath)
         else { throw SettingsToXCConfigExtractorError.missingXcodeProj(xcodeprojPath) }
         let project = try XcodeProj(path: Path(xcodeprojPath.pathString))
@@ -50,8 +54,7 @@ public class SettingsToXCConfigExtractor: SettingsToXCConfigExtracting {
         let buildConfigurations = try buildConfigurations(pbxproj: pbxproj, targetName: targetName)
 
         if buildConfigurations.isEmpty {
-            logger.info("The list of configurations is empty. Exiting...")
-            return
+            throw SettingsToXCConfigExtractorError.missingBuildConfigurations
         }
 
         let repeatedBuildSettingsKeys = buildConfigurations.reduce(into: Set<String>()) { acc, next in
@@ -93,6 +96,7 @@ public class SettingsToXCConfigExtractor: SettingsToXCConfigExtracting {
         ].joined(separator: "\n\n")
         try FileHandler.shared.write(buildSettingsContent, path: xcconfigPath, atomically: true)
         logger.info("Build settings successfully extracted into \(xcconfigPath.pathString)", metadata: .success)
+        return xcconfigPath
     }
 
     private func buildConfigurations(pbxproj: PBXProj, targetName: String?) throws -> [XCBuildConfiguration] {
