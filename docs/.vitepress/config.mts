@@ -128,6 +128,18 @@ export default defineConfig(async () => {
                 ),
                 wrapSidebarSection(
                   await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/ai",
+                    baseUrl: "/guides/features/ai/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "AI & Agents",
+                    collapsed: true,
+                    link: "/guides/features/ai/"
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
                     scanDir: "docs/guides/contributing",
                     baseUrl: "/guides/contributing/",
                     useTitleFromFileHeading: true
