@@ -90,7 +90,7 @@ This allows tooling to reason about each individual `xcodebuild` execution inste
 
 Detailed build warnings are omitted by default.
 
-Large projects can produce a significant number of compiler warnings, which can greatly increase the size of structured output. By default, Geko therefore exposes the warning count without including every warning diagnostic.
+Large projects can produce a significant number of compiler warnings, which can greatly increase the size of structured output. Therefore Geko exposes the warning count by default without including every warning diagnostic.
 
 For commands that support detailed build warnings, use `--include-build-warnings`.
 
