@@ -3,6 +3,7 @@ public enum LogCategory: CaseIterable {
     case analytics
     case cacheHashes
     case inspect
+    case generateMetadata
 
     public var directoryName: String {
         switch self {
@@ -14,6 +15,8 @@ public enum LogCategory: CaseIterable {
             return "CacheHashes"
         case .inspect:
             return "Inspect"
+        case .generateMetadata:
+            return "GenerateMetadata"
         }
     }
 }
