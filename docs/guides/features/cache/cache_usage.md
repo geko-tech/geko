@@ -92,6 +92,25 @@ Relative plan paths are resolved from the current working directory, independent
 
 To simplify the focus, you can use the `-s, --scheme <scheme>` flag, in which case Geko will focus only on the targets specified in the scheme.
 
+## Using handoff focus
+
+The `--handoff` flag automatically adds targets affected by local changes to the current focus.
+
+Geko detects staged, unstaged, and untracked files in the current Git working tree, resolves their owning targets, and combines them with targets already provided through positional arguments or a focus plan.
+
+For example, if target `A` was changed locally:
+
+```bash
+geko generate App --cache --handoff
+```
+
+The resulting focus will contain both the explicitly provided `App` target and the affected `A` target:
+
+```swift
+App
+└── A
+```
+
 ## Using focus tests 
 
 The `--focus-tests` command will save all Unit/UI targets and their AppHost targets that are found in the projects specified in focus.
