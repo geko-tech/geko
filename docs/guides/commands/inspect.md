@@ -86,7 +86,7 @@ geko inspect redundant-imports --mode diff
 
 When running locally, Geko uses the current Git diff.
 
-In CI, Geko compares two Git refs. `GEKO_INSPECT_TARGET_REF` must be set, while `GEKO_INSPECT_SOURCE_REF` is optional and defaults to `HEAD`.
+In CI environment, Geko compares two Git refs. `GEKO_INSPECT_TARGET_REF` must be set, while `GEKO_INSPECT_SOURCE_REF` is optional and defaults to `HEAD`.
 
 ```bash
 GEKO_INSPECT_TARGET_REF=origin/main
