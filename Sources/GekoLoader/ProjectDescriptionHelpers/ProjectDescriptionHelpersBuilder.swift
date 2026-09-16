@@ -194,7 +194,7 @@ public final class ProjectDescriptionHelpersBuilder: ProjectDescriptionHelpersBu
         }
         let duration = timer.stop()
         let time = String(format: "%.3f", duration)
-        logger.info("Built \(name) in (\(time)s)", metadata: .success)
+        logger.info("Built \(name) in \(time)s", metadata: .success)
 
         return projectDescriptionHelpersModule
     }

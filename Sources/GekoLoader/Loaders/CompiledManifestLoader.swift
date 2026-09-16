@@ -108,6 +108,10 @@ public class CompiledManifestLoader: ManifestLoading {
     }
 
     public func loadProjects(at paths: [AbsolutePath]) throws -> [AbsolutePath: ProjectDescription.Project] {
+        guard paths.count > 0 else { return [:] }
+
+        logger.info("Loading projects", metadata: .section)
+
         let timer = clock.startTimer()
         let manifestObjects = try prepareManifestObjects(.project, at: paths.sorted())
         let groups = Dictionary(grouping: manifestObjects) {
@@ -369,6 +373,8 @@ extension CompiledManifestLoader {
 
     private func compileManifestObject(_ input: ManifestObjectInput) throws -> ManifestObject {
         if !fileHandler.exists(input.objectPath) {
+            let timer = clock.startTimer()
+
             let temporaryDirectory = try TemporaryDirectory(removeTreeOnDeinit: true)
             var mainPath = input.path
             if !input.extensions.isEmpty {
@@ -406,6 +412,9 @@ extension CompiledManifestLoader {
                 } else {
                     try fileHandler.move(from: temporaryObjectPath, to: input.objectPath)
                 }
+
+                let time = String(format: "%.3f", timer.stop())
+                logger.debug("Built \(input.path.pathString) in \(time)s", metadata: .success)
             } catch {
                 try? fileHandler.delete(temporaryObjectPath)
                 if !fileHandler.exists(input.objectPath) {
@@ -640,13 +649,13 @@ extension CompiledManifestLoader {
         }
         let result = try decodeManifest(T.self, manifestPath: manifestObject.path, data: data)
         let time = String(format: "%.3f", timer.stop())
-        logger.info("Loaded \(manifestObject.path.pathString) in (\(time)s)", metadata: .success)
+        logger.debug("Loaded \(manifestObject.path.pathString) in \(time)s", metadata: .success)
         return result
     }
 
     private func logLoadedManifestCount(_ count: Int, duration: TimeInterval) {
         let time = String(format: "%.3f", duration)
-        logger.info("Loaded \(count) manifests in (\(time)s)", metadata: .success)
+        logger.info("Loaded \(count) manifests in \(time)s", metadata: .success)
     }
 
     private func swiftCompilerPrefix() -> [String] {
