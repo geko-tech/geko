@@ -1,3 +1,39 @@
+## Geko 1.2.0
+• [patch] misc: prettify manifest compilation output log (#131)
+Geko [minor] --handoff option for generate (#129)
+Geko [minor] Structured xcodebuild json logs (#128)
+Geko [minor] Structured json logs (#127)
+Geko [minor] Add logs quiet mode & inspect targets for files command (#126)
+Geko [patch] Fix SPM bundles and dependencies sanitize (#125)
+Geko [patch] Fix issue - PBXResourcesBuildPhase is missing for buildable resource folders (#124)
+Geko [patch] speed up manifest loading (#112)
+* Geko [patch] speed up manifest loading
+* Geko [patch] Fix manifest extension initialization
+• [patch] fix swiftlangVersion parsing on linux (#121)
+Geko [patch] Add build progress bar (#119)
+Geko [patch] Prevent graph traversal stack overflows (#117)
+* Geko [patch] Make graph algorithms stack-safe
+* Geko [patch] Make GraphTraverser stack-safe
+* Geko [patch] Make ModuleMapMapper stack-safe
+* Geko [patch] Make static product linting stack-safe
+* Geko [patch] Make XCFramework traversal stack-safe
+* Geko [patch] Restore some comments
+* Geko [patch] Simplify iterative graph traversal
+* Geko [patch] Move traversal frame types closer to usage
+* Geko [patch] Simplify iterative graph traversal state
+• [minor] The '• test' and '• build' command interfaces have been extended (#108)
+Geko [patch] Fix unused external dependencies added as .path missing warning (#118)
+Geko [patch] Test coverage (#116)
+Geko [minor] add SwiftPM package traits support (#114)
+* Geko [minor] add SwiftPM package traits support
+* Geko [minor] support trait-conditioned SwiftPM build settings
+* Geko [patch] resolve root SwiftPM default traits
+Geko [patch] Fix issue with incorrect invalidate of swiftmodule hashes when updates (#115)
+Geko [patch] prevent duplicate SwiftPM dependency downloads (#113)
+* Geko [patch] prevent duplicate SwiftPM dependency downloads
+* Geko [patch] preserve configured Swift tools version
+Geko [patch] Fix dependencies-only cache focus (#111)
+
 ## Geko 1.1.0
 Geko [patch] Fixed extra focus on test modules of runnable target (#110)
 Geko [patch] Add logs for swiftmodule caching task (#109)
