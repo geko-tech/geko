@@ -5,6 +5,7 @@ import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoSupport
+import XcbeautifyLib
 
 enum TestServiceError: FatalError, Equatable {
     case schemeNotFound(scheme: String, existing: [String])
@@ -68,6 +69,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
 
     private let testsCacheTemporaryDirectory: TemporaryDirectory
     private let cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring
+    private let testsProgressLogger: TestsProgressLogging
 
     public convenience init(
         testsCacheTemporaryDirectory: TemporaryDirectory
@@ -92,7 +94,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
         buildGraphInspector: BuildGraphInspecting = BuildGraphInspector(),
         simulatorController: SimulatorControlling = SimulatorController(),
         contentHasher: ContentHashing = ContentHasher(),
-        cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory()
+        cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory(),
+        testsProgressLogger: TestsProgressLogging = TestsProgressLogger(),
     ) {
         self.testsCacheTemporaryDirectory = testsCacheTemporaryDirectory
         self.generatorFactory = generatorFactory
@@ -101,6 +104,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
         self.simulatorController = simulatorController
         self.contentHasher = contentHasher
         self.cacheDirectoryProviderFactory = cacheDirectoryProviderFactory
+        self.testsProgressLogger = testsProgressLogger
     }
 
     public func validateParameters(
@@ -399,7 +403,13 @@ public final class TestService { // swiftlint:disable:this type_body_length
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
             testPlanConfiguration: testPlanConfiguration,
-            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+            formattedLineHandler: formattedLineHandler
         )
+    }
+
+    private func formattedLineHandler(formattedLine: String, type: OutputType) {
+        guard type == .test || type == .testCase else { return }
+        testsProgressLogger.log(formattedLine)
     }
 }

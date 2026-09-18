@@ -123,7 +123,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
         testPlanConfiguration: TestPlanConfiguration?,
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        formattedLineHandler: ((String, OutputType) -> Void)?
     ) throws {
         var command = ["/usr/bin/xcrun", "xcodebuild"]
 
@@ -195,7 +196,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         }
 
         do {
-            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme)
+            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme, formattedLineHandler: formattedLineHandler)
         } catch let error as XcodeBuildError {
             switch error {
             case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
@@ -343,17 +344,18 @@ public final class XcodeBuildController: XcodeBuildControlling {
         command: [String],
         action: XcodeBuildAction,
         scheme: String?,
-        eventHandler: XcodeBuildEventHandler? = nil
+        eventHandler: XcodeBuildEventHandler? = nil,
+        formattedLineHandler: ((String, OutputType) -> Void)? = nil,
     ) throws {
         logger.debug("Running xcodebuild command: \(command.joined(separator: " "))")
 
         let logDate = Date()
         let rawBuildLogPath = try logFileStoreHandler.createPath(logFile: .rawBuildLog, date: logDate)
         let formattedBuildLogPath = try logFileStoreHandler.createPath(logFile: .buildLog, date: logDate)
-        
+
         var environment = ProcessInfo.processInfo.environment
         environment["NSUnbufferedIO"] = "YES"
-        
+
         // Collect and show only errors when build
         var errors: [String] = []
         var structuredParser = isStructuredOutputEnabled
@@ -375,6 +377,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         let outputCompletion: (String, OutputType) throws -> Void = { formattedLine, type in
             if type == .error { errors.append(formattedLine) }
             try self.logFileStoreHandler.write(formattedLine, logFile: .buildLog)
+            formattedLineHandler?(formattedLine, type)
         }
         
         do {
