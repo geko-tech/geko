@@ -4302,7 +4302,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             targetSettings: [:],
             projectOptions: nil,
             targetsToArtifactPaths: [:],
-            packageModuleAliases: [:]
+            packageModuleAliases: [:],
+            isLocal: false
         )
         
         XCTAssertNotNil(project)
@@ -4345,7 +4346,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             targetSettings: [:],
             projectOptions: nil,
             targetsToArtifactPaths: [:],
-            packageModuleAliases: [:]
+            packageModuleAliases: [:],
+            isLocal: false
         )) { error in
             let expectedError = "Default source path not found for target Target1 in package at \(packagePath.pathString). Source path must be one of [\"Sources/Target1\", \"Source/Target1\", \"src/Target1\", \"srcs/Target1\"]"
             XCTAssertEqual("\(error)", expectedError)
@@ -4389,7 +4391,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             targetSettings: [:],
             projectOptions: nil,
             targetsToArtifactPaths: [:],
-            packageModuleAliases: [:]
+            packageModuleAliases: [:],
+            isLocal: false
         )
         
         XCTAssertNotNil(project)
@@ -4440,7 +4443,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             targetSettings: [:],
             projectOptions: nil,
             targetsToArtifactPaths: [:],
-            packageModuleAliases: [:]
+            packageModuleAliases: [:],
+            isLocal: false
         )
         
         XCTAssertNotNil(project)
@@ -4493,7 +4497,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             targetSettings: [:],
             projectOptions: nil,
             targetsToArtifactPaths: [:],
-            packageModuleAliases: [:]
+            packageModuleAliases: [:],
+            isLocal: false
         )
         
         XCTAssertNotNil(project)
@@ -4551,7 +4556,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             projectOptions: nil,
             targetsToArtifactPaths: [:],
             packageModuleAliases: [:],
-            enabledTraits: ["default", "Unknown"]
+            enabledTraits: ["default", "Unknown"],
+            isLocal: false
         )
 
         let target = try XCTUnwrap(project?.targets.first)
@@ -4591,7 +4597,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             projectOptions: nil,
             targetsToArtifactPaths: [:],
             packageModuleAliases: [:],
-            enabledTraits: ["Feature"]
+            enabledTraits: ["Feature"],
+            isLocal: false
         )
 
         let target = try XCTUnwrap(project?.targets.first)
@@ -4696,7 +4703,8 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             projectOptions: nil,
             targetsToArtifactPaths: [:],
             packageModuleAliases: [:],
-            enabledTraits: enabledTraits
+            enabledTraits: enabledTraits,
+            isLocal: false
         )
     }
 
@@ -4795,6 +4803,73 @@ final class PackageInfoMapperTests: GekoUnitTestCase {
             enabledTraits: enabledTraits
         )
     }
+
+    func test_map_whenIsLocal_keepsExecutableAndTestTargetsAndEnablesAutomaticSchemes() throws {
+        let basePath = try temporaryPath()
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "MyPackage/Sources/MyLibrary")))
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "MyPackage/Sources/MyCLI")))
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "MyPackage/Tests/MyPackageTests")))
+
+        let project = try subject.map(
+            package: "MyPackage",
+            basePath: basePath,
+            packageInfos: [
+                "MyPackage": .test(
+                    name: "MyPackage",
+                    products: [
+                        .init(name: "MyPackage", type: .library(.automatic), targets: ["MyLibrary"]),
+                        .init(name: "MyCLI", type: .executable, targets: ["MyCLI"]),
+                    ],
+                    targets: [
+                        .test(name: "MyLibrary"),
+                        .test(name: "MyCLI", type: .executable, dependencies: [.target(name: "MyLibrary", condition: nil)]),
+                        .test(name: "MyPackageTests", type: .test, dependencies: [.target(name: "MyLibrary", condition: nil)]),
+                    ],
+                    platforms: [.ios]
+                ),
+            ],
+            isLocal: true
+        )
+
+        XCTAssertEqual(Set(project?.targets.map(\.name) ?? []), ["MyLibrary", "MyCLI", "MyPackageTests"])
+        switch project?.options.automaticSchemesOptions {
+        case .enabled:
+            XCTAssertTrue(true)
+        default:
+            XCTFail("Expected automatic schemes to be enabled for a local package")
+        }
+    }
+
+    func test_map_whenNotLocal_dropsExecutableAndTestTargetsAndDisablesAutomaticSchemes() throws {
+        let basePath = try temporaryPath()
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "MyPackage/Sources/MyLibrary")))
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "MyPackage/Sources/MyCLI")))
+        try fileHandler.createFolder(basePath.appending(try RelativePath(validating: "MyPackage/Tests/MyPackageTests")))
+
+        let project = try subject.map(
+            package: "MyPackage",
+            basePath: basePath,
+            packageInfos: [
+                "MyPackage": .test(
+                    name: "MyPackage",
+                    products: [
+                        .init(name: "MyPackage", type: .library(.automatic), targets: ["MyLibrary"]),
+                        .init(name: "MyCLI", type: .executable, targets: ["MyCLI"]),
+                    ],
+                    targets: [
+                        .test(name: "MyLibrary"),
+                        .test(name: "MyCLI", type: .executable, dependencies: [.target(name: "MyLibrary", condition: nil)]),
+                        .test(name: "MyPackageTests", type: .test, dependencies: [.target(name: "MyLibrary", condition: nil)]),
+                    ],
+                    platforms: [.ios]
+                ),
+            ],
+            isLocal: false
+        )
+
+        XCTAssertEqual(Set(project?.targets.map(\.name) ?? []), ["MyLibrary"])
+        XCTAssertEqual(project?.options.automaticSchemesOptions, .disabled)
+    }
 }
 
 private func defaultSpmResources(_ target: String, customPath: String? = nil) -> ProjectDescription.ResourceFileElements {
@@ -4823,7 +4898,8 @@ extension PackageInfoMapping {
         targetSettings: [String: Settings] = [:],
         projectOptions: Project.Options? = nil,
         packageModuleAliases: [String: [String: String]] = [:],
-        enabledTraits: Set<String> = []
+        enabledTraits: Set<String> = [],
+        isLocal: Bool = false
     ) throws -> ProjectDescription.Project? {
         let packageToTargetsToArtifactPaths: [String: [String: AbsolutePath]] = try packageInfos
             .reduce(into: [:]) { packagesResult, element in
@@ -4854,7 +4930,8 @@ extension PackageInfoMapping {
             projectOptions: projectOptions,
             targetsToArtifactPaths: packageToTargetsToArtifactPaths[package]!,
             packageModuleAliases: packageModuleAliases,
-            enabledTraits: enabledTraits
+            enabledTraits: enabledTraits,
+            isLocal: isLocal
         )
     }
 }

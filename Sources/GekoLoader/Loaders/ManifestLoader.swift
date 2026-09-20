@@ -87,6 +87,10 @@ public protocol ManifestLoading {
     /// - Parameter path: Path to the directory that contains Plugin.swift
     func loadPlugin(at path: AbsolutePath) throws -> ProjectDescription.Plugin
 
+    /// Loads `Package.swift`
+    /// - path: Path to the directory that contains Package.swift
+    func loadPackage(at path: AbsolutePath) throws -> PackageInfo
+
     /// List all the manifests in the given directory.
     /// - Parameter path: Path to the directory whose manifest files will be returned.
     func manifests(at path: AbsolutePath) -> Set<Manifest>

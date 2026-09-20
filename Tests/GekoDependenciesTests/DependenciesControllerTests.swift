@@ -42,6 +42,9 @@ final class DependenciesControllerTests: GekoUnitTestCase {
     func test_fetch_swiftPackageManger() async throws {
         // Given
         let rootPath = try temporaryPath()
+        let packagePath = rootPath
+            .appending(component: Constants.gekoDirectoryName)
+            .appending(component: Constants.DependenciesDirectory.packageSwiftName)
         let dependenciesDirectoryPath =
             rootPath
             .appending(component: Constants.gekoDirectoryName)
@@ -50,9 +53,9 @@ final class DependenciesControllerTests: GekoUnitTestCase {
         let stubbedPassthroughArguments = ["--replace-scm-with-registry"]
         let stubPackageSettings = PackageSettings.test(baseSettings: .default)
 
-        swiftPackageManagerInteractor.installStub = { depDir, packageSettings, arguments, shouldUpdate, version in
+        swiftPackageManagerInteractor.installStub = { packagePathAndSettings, depDir, arguments, shouldUpdate, version in
             XCTAssertEqual(depDir, dependenciesDirectoryPath)
-            XCTAssertEqual(packageSettings, packageSettings)
+            XCTAssertEqual(packagePathAndSettings.packageSettings, stubPackageSettings)
             XCTAssertEqual(arguments, stubbedPassthroughArguments)
             XCTAssertFalse(shouldUpdate)
             return .test()
@@ -66,6 +69,7 @@ final class DependenciesControllerTests: GekoUnitTestCase {
             config: .default,
             passthroughArguments: stubbedPassthroughArguments,
             cocoapodsDependencies: nil,
+            packagePath: packagePath,
             packageSettings: stubPackageSettings,
             repoUpdate: false,
             deployment: false
@@ -81,6 +85,9 @@ final class DependenciesControllerTests: GekoUnitTestCase {
     func test_fetch_swiftPackageManger_with_passthroughArguments() async throws {
         // Given
         let rootPath = try temporaryPath()
+        let packagePath = rootPath
+            .appending(component: Constants.gekoDirectoryName)
+            .appending(component: Constants.DependenciesDirectory.packageSwiftName)
         let dependenciesDirectoryPath =
             rootPath
             .appending(component: Constants.gekoDirectoryName)
@@ -106,9 +113,9 @@ final class DependenciesControllerTests: GekoUnitTestCase {
             cocoapodsUseBundler: false
         )
         
-        swiftPackageManagerInteractor.installStub = { depDir, packageSettings, arguments, shouldUpdate, version in
+        swiftPackageManagerInteractor.installStub = { packagePathAndSettings, depDir, arguments, shouldUpdate, version in
             XCTAssertEqual(depDir, dependenciesDirectoryPath)
-            XCTAssertEqual(packageSettings, packageSettings)
+            XCTAssertEqual(packagePathAndSettings.packageSettings, stubPackageSettings)
             XCTAssertEqual(arguments, ["--test"] + stubbedPassthroughArguments)
             XCTAssertFalse(shouldUpdate)
             return .test()
@@ -122,6 +129,7 @@ final class DependenciesControllerTests: GekoUnitTestCase {
             config: config,
             passthroughArguments: stubbedPassthroughArguments,
             cocoapodsDependencies: nil,
+            packagePath: packagePath,
             packageSettings: stubPackageSettings,
             repoUpdate: false,
             deployment: false

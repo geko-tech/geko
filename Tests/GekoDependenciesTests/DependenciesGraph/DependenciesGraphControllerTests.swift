@@ -127,6 +127,46 @@ public final class DependenciesGraphControllerTests: GekoUnitTestCase {
         XCTAssertEqual(try subject.load(at: root), .none)
     }
 
+    func test_load_whenSpmOnlyProject() throws {
+        // Given
+        let root = try temporaryPath()
+
+        let packagePath = root.appending(component: "Package.swift")
+        try fileHandler.touch(packagePath)
+
+        let graphPath = root.appending(components: "Geko", "Dependencies", "graph.json")
+        try fileHandler.touch(graphPath)
+        try fileHandler.write(GekoGraph.DependenciesGraph.testJson, path: graphPath, atomically: true)
+
+        // When
+        let got = try subject.load(at: root)
+
+        // Then
+        let expected = GekoGraph.DependenciesGraph(
+            externalDependencies: ["SwiftLint": []],
+            externalProjects: [:],
+            externalFrameworkDependencies: [:],
+            tree: ["SwiftLint": .init(version: "0.47.1", dependencies: [])]
+        )
+        XCTAssertEqual(got, expected)
+    }
+
+    func test_load_whenSpmOnlyProject_withoutGraph_throws() throws {
+        // Given
+        let root = try temporaryPath()
+
+        let gekoDirectory = root.appending(component: "Geko")
+        try fileHandler.touch(gekoDirectory)
+        let packagePath = root.appending(component: "Package.swift")
+        try fileHandler.touch(packagePath)
+
+        // When / Then
+        XCTAssertThrowsSpecific(
+            try subject.load(at: root),
+            DependenciesGraphControllerError.dependenciesWerentFetched
+        )
+    }
+
     func test_clean() throws {
         // Given
         let root = try temporaryPath()

@@ -43,7 +43,9 @@ extension Workspace {
                 .filter {
                     guard FileHandler.shared.isFolder($0) else { return false }
 
-                    return manifestLoader.manifests(at: $0).contains(.project)
+                    let manifests = manifestLoader.manifests(at: $0)
+                    // Include SPM-only projects (a directory with a root `Package.swift`).
+                    return manifests.contains(.project) || manifests.contains(.package)
                 }
 
             if projects.isEmpty {

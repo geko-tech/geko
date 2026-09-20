@@ -241,10 +241,22 @@ public final class ManifestFilesLocator: ManifestFilesLocating {
     }
 
     public func locatePackageManifest(at locatingPath: AbsolutePath) -> AbsolutePath? {
-        let subPath =
-            // swiftlint:disable:next force_try
-            try! RelativePath(validating: "\(Constants.gekoDirectoryName)/Package.swift")
-        return traverseAndLocate(at: locatingPath, appending: subPath)
+        let rootDirectory = locatingPath
+        let defaultPackageSwiftPath = rootDirectory.appending(
+            components: [
+                Constants.gekoDirectoryName,
+                Constants.DependenciesDirectory.packageSwiftName,
+            ]
+        )
+        let rootPackageSwiftPath = rootDirectory
+            .appending(component: Constants.DependenciesDirectory.packageSwiftName)
+        if FileHandler.shared.exists(defaultPackageSwiftPath) {
+            return defaultPackageSwiftPath
+        } else if FileHandler.shared.exists(rootPackageSwiftPath) {
+            return rootPackageSwiftPath
+        } else {
+            return nil
+        }
     }
 
     // MARK: - Helpers

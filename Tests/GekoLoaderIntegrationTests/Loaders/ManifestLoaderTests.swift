@@ -193,7 +193,7 @@ final class ManifestLoaderTests: GekoTestCase {
         )
 
         // When
-        let got = try subject.loadPackageSettings(at: temporaryPath)
+        let got = try subject.loadPackageSettings(at: temporaryPath.appending(component: Constants.gekoDirectoryName))
 
         // Then
         XCTAssertEqual(
@@ -236,7 +236,7 @@ final class ManifestLoaderTests: GekoTestCase {
         )
 
         // When
-        let got = try subject.loadPackageSettings(at: temporaryPath)
+        let got = try subject.loadPackageSettings(at: temporaryPath.appending(component: Constants.gekoDirectoryName))
 
         // Then
         XCTAssertEqual(

@@ -39,6 +39,9 @@ public final class MockManifestLoader: ManifestLoading {
     public var loadPluginCount: UInt = 0
     public var loadPluginStub: ((AbsolutePath) throws -> Plugin)?
 
+    public var loadPackageCount: UInt = 0
+    public var loadPackageStub: ((AbsolutePath) throws -> PackageInfo)?
+
     public init() {}
 
     public func loadProject(at path: AbsolutePath) throws -> Project {
@@ -68,7 +71,7 @@ public final class MockManifestLoader: ManifestLoading {
 
     public func validateHasProjectOrWorkspaceManifest(at path: AbsolutePath) throws {
         let manifests = manifests(at: path)
-        guard manifests.contains(.workspace) || manifests.contains(.project) else {
+        guard manifests.contains(.workspace) || manifests.contains(.project) || manifests.contains(.package) else {
             throw ManifestLoaderError.manifestNotFound(path)
         }
     }
@@ -101,6 +104,11 @@ public final class MockManifestLoader: ManifestLoading {
     public func loadPlugin(at path: AbsolutePath) throws -> Plugin {
         loadPluginCount += 1
         return try loadPluginStub?(path) ?? Plugin(name: "Plugin")
+    }
+
+    public func loadPackage(at path: AbsolutePath) throws -> PackageInfo {
+        loadPackageCount += 1
+        return try loadPackageStub?(path) ?? PackageInfo.test()
     }
 
     public var taskLoadArgumentsStub: ((AbsolutePath) throws -> [String])?

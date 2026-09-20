@@ -15,12 +15,18 @@ public protocol PackageSettingsLoading {
 
 public final class PackageSettingsLoader: PackageSettingsLoading {
     private let manifestLoader: ManifestLoading
+    private let manifestFilesLocator: ManifestFilesLocating
 
-    public init(manifestLoader: ManifestLoading = CompiledManifestLoader()) {
+    public init(
+        manifestLoader: ManifestLoading = CompiledManifestLoader(),
+        manifestFilesLocator: ManifestFilesLocating = ManifestFilesLocator()
+    ) {
         self.manifestLoader = manifestLoader
+        self.manifestFilesLocator = manifestFilesLocator
     }
 
     public func loadPackageSettings(at path: AbsolutePath, with plugins: Plugins) throws -> PackageSettings {
+        let path = manifestFilesLocator.locatePackageManifest(at: path)?.parentDirectory ?? path
         try manifestLoader.register(plugins: plugins)
         var manifest = try manifestLoader.loadPackageSettings(at: path)
         let generatorPaths = GeneratorPaths(manifestDirectory: path)

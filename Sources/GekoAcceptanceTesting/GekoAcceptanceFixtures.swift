@@ -67,6 +67,7 @@ public enum GekoAcceptanceFixtures {
     case plugin
     case projectWithFileHeaderTemplate
     case projectWithInlineFileHeaderTemplate
+    case spmPackage
     case visionosApp
     case workspaceWithFileHeaderTemplate
     case workspaceWithInlineFileHeaderTemplate
@@ -208,6 +209,8 @@ public enum GekoAcceptanceFixtures {
             return "project_with_file_header_template"
         case .projectWithInlineFileHeaderTemplate:
             return "project_with_inline_file_header_template"
+        case .spmPackage:
+            return "spm_package"
         case .visionosApp:
             return "visionos_app"
         case .workspaceWithFileHeaderTemplate:
