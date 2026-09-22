@@ -20,7 +20,9 @@ Framework3Tests ── Framework3
 
 ## Building and testing a single test target
 
-Enable scheme generation for all projects in the `Workspace` manifest so that a scheme is generated for every target:
+### Setup
+
+1. Enable scheme generation for all projects in the `Workspace` manifest so that a scheme is generated for every target:
 
 ```swift
 generationOptions: .options(
@@ -33,6 +35,22 @@ generationOptions: .options(
 ```
 
 [Learn more about scheme generation here](./schemes_generation.md)
+
+2. **Generate project with cache**
+
+```bash
+geko generate --no-open --cache
+```
+
+### Commands
+
+**Build a single test target:**
+
+```bash
+geko build Framework1Tests
+// or
+geko test --build-only Framework1Tests
+```
 
 **Run a single test target:**
 
@@ -56,7 +74,9 @@ Framework1Tests ── Framework1
 
 ## Building and testing multiple test targets
 
-For this you need to generate a test plan with all test targets and add it to the scheme of the main application target:
+### Setup
+
+1. For this you need to generate a test plan with all test targets and add it to the scheme of the main application target:
 
 ```swift
 generationOptions: .options(
@@ -76,10 +96,24 @@ generationOptions: .options(
 
 [Learn more about test plan generation here](./test_plan_generation.md)
 
+2. **Generate project with cache**
+
+```bash
+geko generate --no-open --cache
+```
+
+### Commands
+
+**Build without running tests:**
+
+```bash
+geko test MainApp --build-only --test-plan GeneratedTestPlan.xctestplan
+```
+
 **Run the entire test plan:**
 
 ```bash
-geko test --test-plan GeneratedTestPlan.xctestplan
+geko test MainApp --test-plan GeneratedTestPlan.xctestplan
 ```
 
 In this case the whole test plan is built and run, as expected:
@@ -98,7 +132,7 @@ Framework3Tests ── Framework3
 But if you only need to build and run specific test targets:
 
 ```bash
-geko test --test-plan GeneratedTestPlan.xctestplan --test-targets Framework1Tests Framework2Tests
+geko test MainApp --test-plan GeneratedTestPlan.xctestplan --test-targets Framework1Tests Framework2Tests
 ```
 
 Then the extra test target `Framework3Tests` is still built, even though it is not run:
@@ -125,7 +159,7 @@ A `--edit-test-plan` flag was added to the `geko test` command, which enables ed
 When running the previous command with the `--edit-test-plan` flag:
 
 ```bash
-geko test --test-plan GeneratedTestPlan.xctestplan --edit-test-plan --test-targets Framework1Tests Framework2Tests
+geko test MainApp --test-plan GeneratedTestPlan.xctestplan --edit-test-plan --test-targets Framework1Tests Framework2Tests
 ```
 
 the project build graph becomes more optimal and looks like this:

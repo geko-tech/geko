@@ -14,6 +14,7 @@ enum TestServiceError: FatalError, Equatable {
     case duplicatedTestTargets(Set<TestIdentifier>)
     case nothingToSkip(skipped: [TestIdentifier], included: [TestIdentifier])
     case actionInvalid
+    case editTestPlanWithoutTestPlan
     case generateMetadataNotFound(path: String)
     case testTargetNotExist(target: String)
     case testTargetWasNotAddedToFocus(target: String)
@@ -49,6 +50,8 @@ enum TestServiceError: FatalError, Equatable {
             return "Some of the targets specified in --skip-test-targets (\(skippedTargets.map(\.description).joined(separator: ", "))) will always be skipped as they are not included in the targets specified (\(includedTargets.map(\.description).joined(separator: ", ")))"
         case .actionInvalid:
             return "Cannot specify both --build-only and --without-building"
+        case .editTestPlanWithoutTestPlan:
+            return "The --edit-test-plan flag was passed, but the test plan was not provided via --test-plan."
         case let .generateMetadataNotFound(path):
             return "Couldn't find file '\(Constants.GekoUserCacheDirectory.generateMetadataName)'. You need to regenerate the project. Path - \(path)"
         case let .testTargetNotExist(target):
@@ -62,7 +65,7 @@ enum TestServiceError: FatalError, Equatable {
     var type: ErrorType {
         switch self {
         case .schemeNotFound, .schemeWithoutTestableTargets, .testPlanNotFound, .testIdentifierInvalid, .duplicatedTestTargets,
-                .nothingToSkip, .actionInvalid, .generateMetadataNotFound, .testTargetNotExist, .testTargetWasNotAddedToFocus:
+                .nothingToSkip, .actionInvalid, .editTestPlanWithoutTestPlan, .generateMetadataNotFound, .testTargetNotExist, .testTargetWasNotAddedToFocus:
             return .abort
         }
     }

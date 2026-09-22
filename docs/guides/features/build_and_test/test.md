@@ -43,6 +43,28 @@ The `--edit-test-plan` flag edits the list of test targets in the test plan (pas
 geko test MainApp --edit-test-plan
 ```
 
+## Controlling the test action
+
+By default, `geko test` runs the `xcodebuild test` action: it builds the project and then runs the tests. Two flags change this behaviour and map to different `xcodebuild` actions.
+
+### `--build-only`
+
+Build the tests but do not run them. This corresponds to the `xcodebuild build-for-testing` action and is useful for validating that the project compiles into test bundles without executing them:
+
+```bash
+geko test MainApp --build-only
+```
+
+### `--without-building`
+
+Run the tests without building. This corresponds to the `xcodebuild test-without-building` action and is useful when the test bundles were already built, for example to re-run tests from a previous build:
+
+```bash
+geko test MainApp --without-building
+```
+
+The two flags are mutually exclusive — passing both causes an error.
+
 ## Choosing a destination
 
 Pass a build destination directly to `xcodebuild` with the `-destination` flag:
@@ -50,3 +72,28 @@ Pass a build destination directly to `xcodebuild` with the `-destination` flag:
 ```bash
 geko test MainApp -- -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
 ```
+
+## Passing arguments to xcodebuild
+
+Any arguments placed after the `--` terminator are passed through to `xcodebuild` verbatim. This lets you use any `xcodebuild` option that is not exposed as a dedicated `geko test` flag, for example to select a destination or to enable parallel testing:
+
+```bash
+geko test MainApp -- -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -parallel-testing-enabled YES
+```
+
+### Arguments that cannot be passed through
+
+Some `xcodebuild` arguments are blocked and cannot be passed after the `--` terminator, because they are already handled by Geko itself through dedicated flags:
+
+| Argument | Why it is not available |
+| --- | --- |
+| `-scheme` | The scheme is chosen with the positional `scheme` argument (`geko test <scheme>`). |
+| `-workspace` | Geko generates and selects the workspace to test. |
+| `-project` | Geko generates and selects the Xcode project to test. |
+| `-testPlan` | Handled by the `--test-plan` flag. |
+| `-only-testing` | Handled by the `--test-targets` flag. |
+| `-skip-testing` | Handled by the `--skip-test-targets` flag. |
+| `-only-test-configuration` | Handled by the `--filter-configurations` flag. |
+| `-skip-test-configuration` | Handled by the `--skip-configurations` flag. |
+
+In addition, the `xcodebuild` action verbs `test`, `build-for-testing`, and `test-without-building` cannot be passed after the `--` terminator. `geko test` already picks the action based on its own flags: `test` by default, `build-for-testing` with `--build-only`, and `test-without-building` with `--without-building`. Passing one of these verbs would conflict with the action Geko chooses.
