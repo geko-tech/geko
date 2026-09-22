@@ -68,3 +68,25 @@ Specify a custom Derived Data path:
 ```bash
 geko build MainApp -- -derivedDataPath /custom/path/DerivedData
 ```
+
+## Passing arguments to xcodebuild
+
+Any arguments placed after the `--` terminator are passed through to `xcodebuild` verbatim. This lets you use any `xcodebuild` option that is not exposed as a dedicated `geko build` flag:
+
+```bash
+geko build MainApp -- -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+```
+
+```bash
+geko build MainApp -- -derivedDataPath /custom/path/DerivedData
+```
+
+### Arguments that cannot be passed through
+
+Some `xcodebuild` arguments are blocked and cannot be passed after the `--` terminator, because they are already handled by Geko itself:
+
+| Argument | Why it is not available |
+| --- | --- |
+| `-scheme` | The scheme is chosen with the positional `scheme` argument (`geko build <scheme>`). Passing `-scheme` would conflict with it. |
+| `-workspace` | Geko generates and selects the workspace to build. |
+| `-project` | Geko generates and selects the Xcode project to build. |

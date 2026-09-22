@@ -19,6 +19,8 @@ generationOptions: .options(
 )
 ```
 
+The test plan will be regenerated every time the project is generated using the `geko generate` command.
+
 ## `scheme` parameter
 
 Specifies the scheme into which the generated test plan should be added:

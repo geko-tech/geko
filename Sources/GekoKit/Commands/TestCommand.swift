@@ -227,6 +227,10 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
             testTargets: testTargets,
             skipTestTargets: skipTestTargets
         )
+
+        if editTestPlan && testPlan == nil {
+            throw TestServiceError.editTestPlanWithoutTestPlan
+        }
     }
 
     public func run() async throws {
