@@ -5,7 +5,7 @@ import GekoSupport
 struct RegistryPrepareCommand: AsyncParsableCommand {
     static var configuration: CommandConfiguration {
         CommandConfiguration(
-            commandName: "prepare",
+            commandName: "local-specs",
             _superCommandName: "registry",
             abstract: "Creates spec.json files in the .geko folder"
         )

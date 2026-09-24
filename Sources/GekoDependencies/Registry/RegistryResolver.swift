@@ -22,12 +22,13 @@ class RegistryResolver {
 
         for dependency in dependencies.dependencies {
             switch dependency {
-            case let .local(path):
+            case let .local(path, flavor):
                 let path = try generatorPaths.resolve(path: path)
                 let data = try FileHandler.shared.readFile(path)
                 let package = try jsonDecoder.decode(RegistryPackage.self, from: data)
                 packages.append(package)
                 print("package \(package.name) has been loaded")
+            case .remote: break
             }
         }
 
