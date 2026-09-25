@@ -44,7 +44,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
             [TestIdentifier],
             [TestIdentifier],
             TestPlanConfiguration?,
-            [String]
+            [String],
+            ((XcodeBuildEvent) -> Void)?
         )
             -> Void
     )?
@@ -63,7 +64,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         testTargets: [GekoCore.TestIdentifier],
         skipTestTargets: [GekoCore.TestIdentifier],
         testPlanConfiguration: GekoCore.TestPlanConfiguration?,
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        eventHandler: XcodeBuildEventHandler?,
     ) throws {
         if let testStub {
             testStub(
@@ -80,7 +82,8 @@ final class MockXcodeBuildController: XcodeBuildControlling {
                 testTargets,
                 skipTestTargets,
                 testPlanConfiguration,
-                passthroughXcodeBuildArguments
+                passthroughXcodeBuildArguments,
+                eventHandler
             )
             if let testErrorStub {
                 throw testErrorStub
