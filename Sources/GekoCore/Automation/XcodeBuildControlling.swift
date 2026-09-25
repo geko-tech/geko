@@ -1,7 +1,6 @@
 import Foundation
 import ProjectDescription
 import GekoSupport
-import XcbeautifyLib
 
 public enum XcodeBuildDestination: Equatable {
     case device(String)
@@ -168,7 +167,7 @@ public protocol XcodeBuildControlling {
         skipTestTargets: [TestIdentifier],
         testPlanConfiguration: TestPlanConfiguration?,
         passthroughXcodeBuildArguments: [String],
-        formattedLineHandler: ((String, OutputType) -> Void)?
+        eventHandler: XcodeBuildEventHandler?,
     ) throws
 
     /// Returns an observable that archives the given project using xcodebuild.
