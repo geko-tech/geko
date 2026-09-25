@@ -5,7 +5,6 @@ import GekoCore
 import GekoGraph
 import GekoLoader
 import GekoSupport
-import XcbeautifyLib
 
 enum TestServiceError: FatalError, Equatable {
     case schemeNotFound(scheme: String, existing: [String])
@@ -69,7 +68,6 @@ public final class TestService { // swiftlint:disable:this type_body_length
 
     private let testsCacheTemporaryDirectory: TemporaryDirectory
     private let cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring
-    private let testsProgressLogger: TestsProgressLogging
 
     public convenience init(
         testsCacheTemporaryDirectory: TemporaryDirectory
@@ -95,7 +93,6 @@ public final class TestService { // swiftlint:disable:this type_body_length
         simulatorController: SimulatorControlling = SimulatorController(),
         contentHasher: ContentHashing = ContentHasher(),
         cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory(),
-        testsProgressLogger: TestsProgressLogging = TestsProgressLogger(),
     ) {
         self.testsCacheTemporaryDirectory = testsCacheTemporaryDirectory
         self.generatorFactory = generatorFactory
@@ -104,7 +101,6 @@ public final class TestService { // swiftlint:disable:this type_body_length
         self.simulatorController = simulatorController
         self.contentHasher = contentHasher
         self.cacheDirectoryProviderFactory = cacheDirectoryProviderFactory
-        self.testsProgressLogger = testsProgressLogger
     }
 
     public func validateParameters(
@@ -384,6 +380,12 @@ public final class TestService { // swiftlint:disable:this type_body_length
             )
         }
 
+        let logSpinner = LogSpinner()
+        var executedTestsCount = 0
+        var failedTestsCount = 0
+
+        logSpinner.start(message: "Starting tests")
+
         try xcodebuildController.test(
             .workspace(graphTraverser.workspace.xcWorkspacePath),
             scheme: scheme.name,
@@ -404,12 +406,40 @@ public final class TestService { // swiftlint:disable:this type_body_length
             skipTestTargets: skipTestTargets,
             testPlanConfiguration: testPlanConfiguration,
             passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
-            formattedLineHandler: formattedLineHandler
+            eventHandler: { event in
+                var additionalText: String?
+
+                switch event {
+                case let .testCaseStarted(suite, testCase):
+                    // TODO: There is a bug in LogSpinner if the text is wider than the terminal. Uncomment the following line after fixing the bug.
+                    // additionalText = "testing '\(suite).\(testCase)'"
+                    break
+                case .testCasePassed, .parallelTestCasePassed:
+                    executedTestsCount += 1
+                case .testCaseFailed, .parallelTestCaseFailed:
+                    executedTestsCount += 1
+                    failedTestsCount += 1
+                case .allTestsCompleted:
+                    logSpinner.stop(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: "tests completed"))
+                default:
+                    return
+                }
+
+                logSpinner.update(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: additionalText))
+            }
         )
     }
 
-    private func formattedLineHandler(formattedLine: String, type: OutputType) {
-        guard type == .test || type == .testCase else { return }
-        testsProgressLogger.log(formattedLine)
+    private func progressMessage(
+        executedTestsCount: Int,
+        failedTestsCount: Int,
+        additionalText: String?
+    ) -> String {
+        let baseMessage = "Executed \(executedTestsCount) tests, with \(failedTestsCount) failures"
+        if let additionalText {
+            return "\(baseMessage), \(additionalText)."
+        } else {
+            return "\(baseMessage)."
+        }
     }
 }

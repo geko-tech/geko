@@ -124,7 +124,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         skipTestTargets: [TestIdentifier],
         testPlanConfiguration: TestPlanConfiguration?,
         passthroughXcodeBuildArguments: [String],
-        formattedLineHandler: ((String, OutputType) -> Void)?
+        eventHandler: XcodeBuildEventHandler?,
     ) throws {
         var command = ["/usr/bin/xcrun", "xcodebuild"]
 
@@ -196,7 +196,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         }
 
         do {
-            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme, formattedLineHandler: formattedLineHandler)
+            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme, eventHandler: eventHandler)
         } catch let error as XcodeBuildError {
             switch error {
             case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
@@ -345,7 +345,6 @@ public final class XcodeBuildController: XcodeBuildControlling {
         action: XcodeBuildAction,
         scheme: String?,
         eventHandler: XcodeBuildEventHandler? = nil,
-        formattedLineHandler: ((String, OutputType) -> Void)? = nil,
     ) throws {
         logger.debug("Running xcodebuild command: \(command.joined(separator: " "))")
 
@@ -377,7 +376,6 @@ public final class XcodeBuildController: XcodeBuildControlling {
         let outputCompletion: (String, OutputType) throws -> Void = { formattedLine, type in
             if type == .error { errors.append(formattedLine) }
             try self.logFileStoreHandler.write(formattedLine, logFile: .buildLog)
-            formattedLineHandler?(formattedLine, type)
         }
         
         do {
