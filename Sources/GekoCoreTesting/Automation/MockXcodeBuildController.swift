@@ -2,7 +2,6 @@ import Foundation
 import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoSupport
-import XcbeautifyLib
 @testable import GekoSupportTesting
 
 final class MockXcodeBuildController: XcodeBuildControlling {
@@ -46,7 +45,7 @@ final class MockXcodeBuildController: XcodeBuildControlling {
             [TestIdentifier],
             TestPlanConfiguration?,
             [String],
-            ((String, OutputType) -> Void)?
+            ((XcodeBuildEvent) -> Void)?
         )
             -> Void
     )?
@@ -66,7 +65,7 @@ final class MockXcodeBuildController: XcodeBuildControlling {
         skipTestTargets: [GekoCore.TestIdentifier],
         testPlanConfiguration: GekoCore.TestPlanConfiguration?,
         passthroughXcodeBuildArguments: [String],
-        formattedLineHandler: ((String, OutputType) -> Void)?
+        eventHandler: XcodeBuildEventHandler?,
     ) throws {
         if let testStub {
             testStub(
@@ -84,7 +83,7 @@ final class MockXcodeBuildController: XcodeBuildControlling {
                 skipTestTargets,
                 testPlanConfiguration,
                 passthroughXcodeBuildArguments,
-                formattedLineHandler
+                eventHandler
             )
             if let testErrorStub {
                 throw testErrorStub

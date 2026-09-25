@@ -203,7 +203,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -238,7 +238,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -274,7 +274,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -312,7 +312,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -350,7 +350,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -383,7 +383,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -416,7 +416,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
             skipTestTargets: [],
             testPlanConfiguration: nil,
             passthroughXcodeBuildArguments: [],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then
@@ -463,7 +463,7 @@ final class XcodeBuildControllerTests: GekoUnitTestCase {
                 skipConfigurations: ["Nightly"]
             ),
             passthroughXcodeBuildArguments: ["ENABLE_TESTABILITY=YES"],
-            formattedLineHandler: nil
+            eventHandler: nil
         )
 
         // Then

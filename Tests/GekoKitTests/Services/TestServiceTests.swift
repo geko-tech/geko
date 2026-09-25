@@ -802,7 +802,7 @@ final class TestServiceTests: GekoUnitTestCase {
         XCTAssertEqual(updatedPlan.testTargets, metadataTargets)
     }
 
-    func test_ignores_non_test_lines_in_progress_logger() async throws {
+    func test_ignores_non_test_events_in_progress_tracking() async throws {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [(.root, Scheme.test(name: "TestScheme"))]
@@ -813,11 +813,11 @@ final class TestServiceTests: GekoUnitTestCase {
         generator.generateWithGraphStub = { path in
             (path, Graph.test())
         }
-        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, _, _, _, _, _, _, formattedLineHandler in
-            formattedLineHandler?("CompileSwift normal target in target 'App' from project 'Project'", .task)
-            formattedLineHandler?("AppTests", .test)
-            formattedLineHandler?("    ✔ testHello (0.010 seconds)", .testCase)
-            formattedLineHandler?("error: something failed", .error)
+        xcodebuildController.testStub = { _, _, _, _, _, _, _, _, _, _, _, _, _, _, eventHandler in
+            eventHandler?(.targetCompilationStarted(targetName: "App"))
+            eventHandler?(.testCasePassed(suite: "AppTests", testCase: "testHello"))
+            eventHandler?(.testCaseFailed(suite: "AppTests", testCase: "testWorld"))
+            eventHandler?(.allTestsCompleted)
         }
         try fileHandler.touch(testsCacheTemporaryDirectory.path.appending(component: "A"))
         try fileHandler.touch(testsCacheTemporaryDirectory.path.appending(component: "B"))
@@ -826,12 +826,10 @@ final class TestServiceTests: GekoUnitTestCase {
         try await subject.testRun(schemeName: "ProjectSchemeOne", path: try temporaryPath())
 
         // Then
-        XCTAssertEqual(
-            testsProgressLogger.loggedMessages,
-            [
-                "AppTests",
-                "    ✔ testHello (0.010 seconds)"
-            ]
+        XCTAssertPrinterContains(
+            "Executed 2 tests, with 1 failures, tests completed.",
+            at: .notice,
+            >=
         )
     }
 }
