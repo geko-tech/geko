@@ -209,6 +209,7 @@ public final class SwiftPackageManagerController: SwiftPackageManagerControlling
         ])
     }
 
+// TODO: Support swift 6.4
 #if !os(macOS)
     public func buildReleaseBinary(
         for arch: PluginBinaryArch,
