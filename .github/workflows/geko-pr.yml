@@ -63,7 +63,7 @@ jobs:
       - id: only_docs_changes
         uses: ./.github/actions/only-docs-changes
 
-      - uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v3
         if: steps.only_docs_changes.outputs.run == 'true'
         with:
           swift-version: "6.3.3"
