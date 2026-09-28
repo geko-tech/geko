@@ -287,8 +287,9 @@ final class SchemeDescriptorsGenerator: SchemeDescriptorsGenerating {
         var postActions: [XCScheme.ExecutionAction] = []
 
         let testPlans: [XCScheme.TestPlanReference]? = testAction.testPlans?.map {
+            guard let path = $0.path else { fatalError("replace me") }
             XCScheme.TestPlanReference(
-                reference: "container:\($0.path.relative(to: rootPath))",
+                reference: "container:\(path.relative(to: rootPath))",
                 default: $0.isDefault
             )
         }

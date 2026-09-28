@@ -126,8 +126,8 @@ public final class BuildGraphInspector: BuildGraphInspecting {
         graphTraverser: GraphTraversing,
         action: XcodeBuildTestAction
     ) -> GraphTarget? {
-        func isIncluded(_ testTarget: TestableTarget) -> Bool {
-            if testTarget.isSkipped {
+        func isIncluded(_ testTarget: TestPlan.TestableTarget) -> Bool {
+            if testTarget.skipped == true {
                 return false
             } else if testTargets.isEmpty {
                 return !skipTestTargets.contains { $0.target == testTarget.target.name }

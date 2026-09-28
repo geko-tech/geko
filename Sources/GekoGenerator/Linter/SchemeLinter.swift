@@ -61,7 +61,7 @@ extension SchemeLinter {
                 )
             }
             testAction.testPlans?.forEach { testPlan in
-                if !FileHandler.shared.exists(testPlan.path) {
+                if !isGenerated, let path = testPlan.path, !FileHandler.shared.exists(path) {
                     issues.append(
                         LintingIssue(
                             reason: "Test Plan not found at path \(testPlan.path.pathString)",

@@ -6,6 +6,7 @@ import ProjectDescription
 extension TestAction {
     public static func test(
         targets: [TestableTarget] = [TestableTarget(target: TargetReference(projectPath: "/Project", name: "AppTests"))],
+        targetFilters: [TestableTargetFilter] = [],
         arguments: Arguments? = Arguments.test(),
         configurationName: String = BuildConfiguration.debug.name,
         attachDebugger: Bool = true,
@@ -23,6 +24,7 @@ extension TestAction {
     ) -> TestAction {
         TestAction(
             targets: targets,
+            targetFilters: targetFilters,
             arguments: arguments,
             configurationName: configurationName,
             attachDebugger: attachDebugger,

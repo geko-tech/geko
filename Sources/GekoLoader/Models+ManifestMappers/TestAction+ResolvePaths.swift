@@ -6,11 +6,37 @@ import ProjectDescription
 
 extension TestAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
-        if let plans = testPlans {
-            self.testPlans = try plans.enumerated().compactMap { index, plan in
-                let resolvedPath = try generatorPaths.resolve(path: plan.path)
-                guard FileHandler.shared.exists(resolvedPath) else { return nil }
-                return try TestPlan(path: resolvedPath, isDefault: index == 0, generatorPaths: generatorPaths)
+        if var plans = testPlans {
+            for i in 0 ..< plans.count {
+                guard let path = plans[i].path else { continue }
+                plans[i].path = try generatorPaths.resolve(path: path)
+            }
+            self.testPlans = try plans.compactMap { plan -> TestPlan? in
+                guard !plan.isGenerated else { return plan }
+                guard let path = plan.path else { return nil }
+                guard FileHandler.shared.exists(path) else { return nil }
+
+                let testPlanData = try Data(contentsOf: path.asURL)
+                let xcTestPlan: XCTestPlan = try parseJson(testPlanData, context: .file(path: path))
+
+                var newPlan = plan
+
+                // TODO: configuration options
+                // newPlan.defaultOptions = xcTestPlan.defaultOptions
+
+                newPlan.testTargets = try xcTestPlan.testTargets.compactMap { testTarget in
+                    guard let path = testTarget.target.projectPath() else { return nil }
+                    return try TestPlan.TestableTarget(
+                        target: TargetReference(
+                            projectPath: generatorPaths.resolve(path: FilePath.relativeToRoot(path)),
+                            name: testTarget.target.name
+                        ),
+                        isSkipped: testTarget.enabled == false
+                    )
+                }
+                newPlan.testTargetFilters = []
+
+                return newPlan
             }
 
             // not used when using test plans
