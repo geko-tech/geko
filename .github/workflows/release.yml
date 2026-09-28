@@ -26,6 +26,7 @@ jobs:
         if: runner.os == 'Linux'
         with:
           swift-version: "6.3.3"
+          skip-verify-signature: true
       - uses: ./.github/actions/show-swift-version
         if: runner.os == 'Linux'
       - name: Fetch last tag
