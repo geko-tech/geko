@@ -70,6 +70,7 @@ jobs:
         if: steps.only_docs_changes.outputs.run == 'true'
         run: |
           swift test \
+            --build-system native \
             --parallel \
             --filter GekoAcceptanceTests \
             --filter GekoSupportTests \
