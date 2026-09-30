@@ -47,7 +47,7 @@ final class GekoGeneratorPerformanceTests: GekoTestCase {
                 // When
                 startMeasuring()
                 let graphTraverser = GraphTraverser(graph: graph)
-                _ = try subject.generateWorkspace(graphTraverser: graphTraverser)
+                _ = try subject.generateWorkspace(graphTraverser: graphTraverser, sideTable: GraphSideTable())
                 stopMeasuring()
 
             } catch {

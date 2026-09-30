@@ -13,7 +13,8 @@ extension WorkspaceDescriptor {
         xcworkspacePath: AbsolutePath = try! AbsolutePath(validatingAbsolutePath: "/Test/Project.xcworkspace"),
         projects: [ProjectDescriptor] = [],
         schemes: [SchemeDescriptor] = [],
-        sideEffects: [SideEffectDescriptor] = []
+        sideEffects: [SideEffectDescriptor] = [],
+        generateMetadata: GenerateMetadata = GenerateMetadata(workspaceName: "WorkspaceTest", cacheEnabled: false, focusedTargets: [], allTestTargets: [])
     ) -> WorkspaceDescriptor {
         WorkspaceDescriptor(
             path: path,
@@ -21,7 +22,8 @@ extension WorkspaceDescriptor {
             xcworkspace: XCWorkspace(),
             projectDescriptors: projects,
             schemeDescriptors: schemes,
-            sideEffectDescriptors: sideEffects
+            sideEffectDescriptors: sideEffects,
+            generateMetadata: generateMetadata
         )
     }
 }
