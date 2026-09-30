@@ -50,7 +50,7 @@ jobs:
           path: ~/.geko/BuildLogs
 
   build_and_test_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       GH_PAT: ${{ secrets.GH_PAT }}
       GH_USER: ${{ secrets.GH_USER }}
@@ -62,6 +62,12 @@ jobs:
 
       - id: only_docs_changes
         uses: ./.github/actions/only-docs-changes
+
+      - uses: swift-actions/setup-swift@v3
+        if: steps.only_docs_changes.outputs.run == 'true'
+        with:
+          swift-version: "6.3.3"
+          skip-verify-signature: true
 
       - uses: ./.github/actions/show-swift-version
         if: steps.only_docs_changes.outputs.run == 'true'
