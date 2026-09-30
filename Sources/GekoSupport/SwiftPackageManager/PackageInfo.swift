@@ -605,10 +605,12 @@ extension PackageInfo.Product.ProductType: Decodable {
 
 extension PackageInfo.Target.TargetType {
     /// Defines if the target would be processed when processing the package
-    public var isSupported: Bool {
+    public func isSupported(isLocal: Bool) -> Bool {
         switch self {
         case .regular, .system, .macro:
             return true
+        case .test, .executable:
+            return isLocal
         default:
             return false
         }

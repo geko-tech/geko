@@ -42,6 +42,8 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
     private let graphMapper: GraphMapping
     private let cocoapodsPodspecLoader: CocoapodsPodspecLoading
     private let dependenciesModelLoader: DependenciesModelLoading
+    private let manifestFilesLocator: ManifestFilesLocating
+    private let packageSettingsLoader: PackageSettingsLoading
 
     public convenience init(
         manifestLoader: ManifestLoading,
@@ -51,7 +53,10 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         self.init(
             configLoader: ConfigLoader(manifestLoader: manifestLoader),
             manifestLoader: manifestLoader,
-            recursiveManifestLoader: RecursiveManifestLoader(manifestLoader: manifestLoader),
+            recursiveManifestLoader: RecursiveManifestLoader(
+                manifestLoader: manifestLoader,
+                packageInfoMapper: PackageInfoMapper(),
+            ),
             converter: ManifestModelConverter(
                 manifestLoader: manifestLoader
             ),
@@ -65,7 +70,9 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
             workspaceMapper: workspaceMapper,
             graphMapper: graphMapper,
             cocoapodsPodspecLoader: CocoapodsPodspecLoader(),
-            dependenciesModelLoader: DependenciesModelLoader()
+            dependenciesModelLoader: DependenciesModelLoader(),
+            manifestFilesLocator: ManifestFilesLocator(),
+            packageSettingsLoader: PackageSettingsLoader(),
         )
     }
 
@@ -84,7 +91,9 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         workspaceMapper: WorkspaceMapping,
         graphMapper: GraphMapping,
         cocoapodsPodspecLoader: CocoapodsPodspecLoading,
-        dependenciesModelLoader: DependenciesModelLoading
+        dependenciesModelLoader: DependenciesModelLoading,
+        manifestFilesLocator: ManifestFilesLocating,
+        packageSettingsLoader: PackageSettingsLoading,
     ) {
         self.configLoader = configLoader
         self.manifestLoader = manifestLoader
@@ -101,6 +110,8 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         self.graphMapper = graphMapper
         self.cocoapodsPodspecLoader = cocoapodsPodspecLoader
         self.dependenciesModelLoader = dependenciesModelLoader
+        self.manifestFilesLocator = manifestFilesLocator
+        self.packageSettingsLoader = packageSettingsLoader
     }
 
     // swiftlint:disable:next large_tuple
@@ -118,7 +129,14 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
             return try dependenciesGraphController.load(at: path)
         }
 
-        let allManifests = try recursiveManifestLoader.loadWorkspace(at: path)
+        let packageSettings: PackageSettings?
+        if let packagePath = manifestFilesLocator.locatePackageManifest(at: path) {
+            packageSettings = try packageSettingsLoader.loadPackageSettings(at: packagePath.parentDirectory, with: plugins)
+        } else {
+            packageSettings = nil
+        }
+
+        let allManifests = try recursiveManifestLoader.loadWorkspace(at: path, packageSettings: packageSettings)
         var (workspaceModels, manifestProjects) = (
             try converter.convert(manifest: allManifests.workspace, path: allManifests.path),
             allManifests.projects

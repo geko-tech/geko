@@ -1,7 +1,6 @@
 import Foundation
 import ProjectDescription
 import struct ProjectDescription.AbsolutePath
-import GekoSupport
 import XCTest
 
 @testable import GekoLoader
@@ -11,8 +10,10 @@ import XCTest
 final class RecursiveManifestLoaderTests: GekoUnitTestCase {
     private var path: AbsolutePath!
     private var manifestLoader: MockManifestLoader!
+    private var packageInfoMapper: MockPackageInfoMapping!
     private var projectManifests: [AbsolutePath: Project] = [:]
     private var workspaceManifests: [AbsolutePath: Workspace] = [:]
+    private var packageManifestPaths: Set<AbsolutePath> = []
 
     private var subject: RecursiveManifestLoader!
 
@@ -25,9 +26,11 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
         }
 
         manifestLoader = createManifestLoader()
+        packageInfoMapper = MockPackageInfoMapping()
         subject = RecursiveManifestLoader(
             manifestLoader: manifestLoader,
-            fileHandler: fileHandler
+            fileHandler: fileHandler,
+            packageInfoMapper: packageInfoMapper
         )
     }
 
@@ -40,13 +43,53 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
 
     // MARK: - Tests
 
+    func test_loadPackageProject_whenSpmOnlyProject() throws {
+        // Given
+        let rootPath = path.appending(try RelativePath(validating: "Some/Path"))
+        packageManifestPaths.insert(rootPath)
+        try fileHandler.touch(rootPath.appending(component: "Package.swift"))
+        let packageProject = Project.manifestTest(
+            name: "MyPackage",
+            targets: [Target.manifestTest(name: "MyCLI")]
+        )
+        packageInfoMapper.mapStub = { _, _, _, _, _, _, _, _, _, _ in
+            packageProject
+        }
+
+        // When
+        let manifests = try subject.loadWorkspace(at: rootPath, packageSettings: PackageSettings())
+
+        // Then
+        XCTAssertEqual(manifests.path, rootPath)
+        XCTAssertEqual(manifests.projects, [rootPath: packageProject])
+        XCTAssertEqual(manifests.workspace.name, "MyPackage")
+        XCTAssertEqual(manifests.workspace.projects, ["."])
+    }
+
+    func test_loadPackageProject_whenProjectManifestExists_doesNotLoadPackage() throws {
+        // Given
+        let rootPath = path.appending(try RelativePath(validating: "Some/Path"))
+        packageManifestPaths.insert(rootPath)
+        let projectA = createProject(name: "ProjectA")
+        try stub(manifest: projectA, at: try RelativePath(validating: "Some/Path"))
+        packageInfoMapper.mapStub = { _, _, _, _, _, _, _, _, _, _ in Project.manifestTest(name: "MyPackage") }
+
+        // When
+        let manifests = try subject.loadWorkspace(at: rootPath, packageSettings: PackageSettings())
+
+        // Then
+        XCTAssertEqual(manifests.projects, [rootPath: projectA])
+    }
+
+    // MARK: - Helpers
+
     func test_loadProject_loadingSingleProject() throws {
         // Given
         let projectA = createProject(name: "ProjectA")
         try stub(manifest: projectA, at: try RelativePath(validating: "Some/Path/A"))
 
         // When
-        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")))
+        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")), packageSettings: nil)
 
         // Then
         XCTAssertEqual(withRelativePaths(manifests.projects), [
@@ -82,7 +125,7 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
         try stub(manifest: projectC, at: try RelativePath(validating: "Some/Path/C"))
 
         // When
-        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")))
+        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")), packageSettings: nil)
 
         // Then
         XCTAssertEqual(withRelativePaths(manifests.projects), [
@@ -134,7 +177,7 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
         try stub(manifest: projectE, at: try RelativePath(validating: "Some/Path/E"))
 
         // When
-        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")))
+        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")), packageSettings: nil)
 
         // Then
         XCTAssertEqual(withRelativePaths(manifests.projects), [
@@ -160,7 +203,7 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
 
         // When / Then
         XCTAssertThrowsSpecific(
-            try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A"))),
+            try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path/A")), packageSettings: nil),
             ManifestLoaderError.manifestNotFound(.project, path.appending(try RelativePath(validating: "Some/Path/B")))
         )
     }
@@ -200,7 +243,7 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
         try stub(manifest: workspace, at: try RelativePath(validating: "Some/Path"))
 
         // When
-        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path")))
+        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path")), packageSettings: nil)
 
         // Then
         XCTAssertEqual(manifests.path, path.appending(try RelativePath(validating: "Some/Path")))
@@ -256,7 +299,7 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
         try stub(manifest: workspace, at: try RelativePath(validating: "Some/Path"))
 
         // When
-        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path")))
+        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path")), packageSettings: nil)
 
         // Then
         XCTAssertEqual(manifests.path, path.appending(try RelativePath(validating: "Some/Path")))
@@ -291,7 +334,7 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
         try stub(manifest: workspace, at: try RelativePath(validating: "Some/Path"))
 
         // When
-        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path")))
+        let manifests = try subject.loadWorkspace(at: path.appending(try RelativePath(validating: "Some/Path")), packageSettings: nil)
 
         // Then
         XCTAssertEqual(manifests.path, path.appending(try RelativePath(validating: "Some/Path")))
@@ -374,6 +417,9 @@ final class RecursiveManifestLoaderTests: GekoUnitTestCase {
             }
             if let _ = workspaceManifests[path] {
                 manifests.insert(.workspace)
+            }
+            if packageManifestPaths.contains(path) {
+                manifests.insert(.package)
             }
             return manifests
         }

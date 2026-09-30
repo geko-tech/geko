@@ -150,9 +150,8 @@ public class CompiledManifestLoader: ManifestLoading {
     }
 
     public func loadPackageSettings(at path: AbsolutePath) throws -> ProjectDescription.PackageSettings {
-        let packageManifestPath = path.appending(components: Constants.gekoDirectoryName)
         do {
-            return try loadManifest(.package, at: packageManifestPath)
+            return try loadManifest(.package, at: path)
         } catch let error as ManifestLoaderError {
             switch error {
             case let .manifestLoadingFailed(path: _, data: data, context: _):
@@ -171,13 +170,17 @@ public class CompiledManifestLoader: ManifestLoading {
         try loadManifest(.plugin, at: path)
     }
 
+    public func loadPackage(at path: AbsolutePath) throws -> PackageInfo {
+        try swiftPackageManagerController.loadPackageInfo(at: path)
+    }
+
     public func manifests(at path: AbsolutePath) -> Set<Manifest> {
         Set(manifestFilesLocator.locateManifests(at: path).map(\.0))
     }
 
     public func validateHasProjectOrWorkspaceManifest(at path: AbsolutePath) throws {
         let manifests = manifests(at: path)
-        guard manifests.contains(.workspace) || manifests.contains(.project) else {
+        guard manifests.contains(.workspace) || manifests.contains(.project) || manifests.contains(.package)  else {
             throw ManifestLoaderError.manifestNotFound(path)
         }
     }

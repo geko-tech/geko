@@ -792,6 +792,17 @@ final class GenerateAcceptanceTestiOSAppWithImplicitDependencies: GekoAcceptance
     }
 }
 
+final class GenerateAcceptanceTestSPMPackage: GekoAcceptanceTestCase {
+    func test_spm_package() async throws {
+        try setUpFixture(.spmPackage)
+        try await run(FetchCommand.self)
+        try await run(GenerateCommand.self)
+        try await run(BuildCommand.self, "MyPackage", "--platform", "ios")
+        try await run(BuildCommand.self, "MyCLI")
+        try await run(TestCommand.self, "--platform", "macos")
+    }
+}
+
 final class GenerateAcceptanceTestAppWithGoogleMaps: GekoAcceptanceTestCase {
     func test_app_with_google_maps() async throws {
         try setUpFixture(.appWithGoogleMaps)

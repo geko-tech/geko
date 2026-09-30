@@ -4,6 +4,7 @@ import GekoCore
 import GekoGraph
 import GekoSupport
 import Yams
+import GekoLoader
 
 // MARK: - Swift Package Manager Interactor Errors
 
@@ -38,29 +39,39 @@ enum SwiftPackageManagerInteractorError: FatalError, Equatable {
     }
 }
 
+public struct PackagePathAndSettings {
+    public let packagePath: AbsolutePath
+    public let packageSettings: PackageSettings
+
+    public init(packagePath: AbsolutePath, packageSettings: PackageSettings) {
+        self.packagePath = packagePath
+        self.packageSettings = packageSettings
+    }
+}
+
 // MARK: - Swift Package Manager Interacting
 
 public protocol SwiftPackageManagerInteracting {
     /// Installs `Swift Package Manager` dependencies.
     /// - Parameters:
+    ///   - packagePathAndSettings: The path to the `Package.swift` and user defined `Swift Package Manager` settings.
     ///   - dependenciesDirectory: The path to the `Geko/Dependencies/` directory.
-    ///   - packageSettings: User defined `Swift Package Manager` settings.
     ///   - shouldUpdate: Indicates whether dependencies should be updated or fetched based on the lockfile.
     ///   - swiftToolsVersion: The Swift tools version written to `Package.swift` and used when generating dependency build settings.
     ///     If `nil`, `Package.swift` is not modified.
     func install(
+        packagePathAndSettings: PackagePathAndSettings,
         dependenciesDirectory: AbsolutePath,
-        packageSettings: PackageSettings,
         arguments: [String],
         shouldUpdate: Bool,
         swiftToolsVersion: Version?
     ) throws -> GekoCore.DependenciesGraph
 
     /// Removes all cached `Swift Package Manager` dependencies.
-    /// - Parameter dependenciesDirectory: The path to the `Geko/Dependencies/` directory.
-    func clean(dependenciesDirectory: AbsolutePath) throws
-    
-    func needFetch(path: AbsolutePath) throws -> Bool 
+    /// - Parameter path: The path to the root project directory.
+    func clean(at path: AbsolutePath) throws
+
+    func needFetch(path: AbsolutePath, packagePath: AbsolutePath) throws -> Bool
 }
 
 // MARK: - Swift Package Manager Interactor
@@ -69,29 +80,39 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
     private let fileHandler: FileHandling
     private let swiftPackageManagerController: SwiftPackageManagerControlling
     private let swiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGenerating
+    private let manifestFilesLocator: ManifestFilesLocating
 
     public init(
         fileHandler: FileHandling = FileHandler.shared,
         swiftPackageManagerController: SwiftPackageManagerControlling = SwiftPackageManagerController(),
         swiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGenerating = SwiftPackageManagerGraphGenerator(
             swiftPackageManagerController: SwiftPackageManagerController()
-        )
+        ),
+        manifestFilesLocator: ManifestFilesLocating = ManifestFilesLocator(),
     ) {
         self.fileHandler = fileHandler
         self.swiftPackageManagerController = swiftPackageManagerController
         self.swiftPackageManagerGraphGenerator = swiftPackageManagerGraphGenerator
+        self.manifestFilesLocator = manifestFilesLocator
     }
 
     public func install(
+        packagePathAndSettings: PackagePathAndSettings,
         dependenciesDirectory: AbsolutePath,
-        packageSettings: PackageSettings,
         arguments: [String],
         shouldUpdate: Bool,
         swiftToolsVersion: Version?
     ) throws -> GekoCore.DependenciesGraph {
         logger.info("Installing Swift Package Manager dependencies.", metadata: .subsection)
 
-        let pathsProvider = SwiftPackageManagerPathsProvider(dependenciesDirectory: dependenciesDirectory)
+        let packageSettings = packagePathAndSettings.packageSettings
+        let packageResolvedPath = packageResolvedPath(packagePath: packagePathAndSettings.packagePath)
+
+        let pathsProvider = SwiftPackageManagerPathsProvider(
+            dependenciesDirectory: dependenciesDirectory,
+            packageSwiftPath: packagePathAndSettings.packagePath,
+            packageResolvedPath: packageResolvedPath
+        )
 
         if let swiftToolsVersion = swiftToolsVersion {
             try swiftPackageManagerController.setToolsVersion(
@@ -116,7 +137,6 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
         try saveLockfile(pathsProvider: pathsProvider)
         
         let resolvedDependenciesVersions: [String: String?]
-        let packageResolvedPath = pathsProvider.packageResolvedPath
         /// If Package.resolved exists then there are external dependencies
         if FileHandler.shared.exists(packageResolvedPath) {
             let resolvedData = try FileHandler.shared.readFile(packageResolvedPath)
@@ -142,12 +162,25 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
         return dependenciesGraph
     }
 
-    public func clean(dependenciesDirectory: AbsolutePath) throws {
-        let pathsProvider = SwiftPackageManagerPathsProvider(dependenciesDirectory: dependenciesDirectory)
-        try fileHandler.delete(pathsProvider.buildDirectory)
+    public func clean(at path: AbsolutePath) throws {
+        let packageBuildPaths = [
+            path
+                .appending(component: Constants.gekoDirectoryName)
+                .appending(component: Constants.DependenciesDirectory.packageBuildDirectoryName),
+            path
+                .appending(component: Constants.DependenciesDirectory.packageBuildDirectoryName)
+        ]
+
+        for path in packageBuildPaths {
+            try fileHandler.delete(path)
+        }
     }
-    
-    public func needFetch(path: AbsolutePath) throws -> Bool {
+
+    private func packageResolvedPath(packagePath: AbsolutePath) -> AbsolutePath {
+        packagePath.parentDirectory.appending(component: Constants.DependenciesDirectory.packageResolvedName)
+    }
+
+    public func needFetch(path: AbsolutePath, packagePath: AbsolutePath) throws -> Bool {
         let clock = WallClock()
         let timer = clock.startTimer()
 
@@ -156,22 +189,13 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
             Constants.DependenciesDirectory.packageSandboxName
         ])
         
-        let packageResolvedFilePath = path.appending(components: [
-            Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.packageResolvedName
-        ])
+        let packageResolvedFilePath = packageResolvedPath(packagePath: packagePath)
         
-        let packagePath = path.appending(components: [
-            Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.packageSwiftName
-        ])
-        
-        let workspaceStatePath = path.appending(components: [
-            Constants.gekoDirectoryName,
+        let workspaceStatePath = packagePath.parentDirectory.appending(components: [
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
-        
+
         guard FileHandler.shared.exists(sandboxPackageFilePath) else {
             logger.debug("PackageSandbox.lock is not present. Fetching...")
             return true
@@ -236,7 +260,12 @@ public final class SwiftPackageManagerInteractor: SwiftPackageManagerInteracting
         let encoder = YAMLEncoder()
         encoder.options.sortKeys = true
         let encodedLockfile = try encoder.encode(lockfile)
-        
+
+        let parentLockfilePath = pathsProvider.lockfilePath.parentDirectory
+        // SPM-only project
+        if !fileHandler.exists(parentLockfilePath) {
+            try fileHandler.createFolder(parentLockfilePath)
+        }
         try FileHandler.shared.write(encodedLockfile, path: pathsProvider.lockfilePath, atomically: true)
     }
     
@@ -288,14 +317,14 @@ private struct SwiftPackageManagerPathsProvider {
     let buildDirectory: AbsolutePath
     let lockfilePath: AbsolutePath
 
-    init(dependenciesDirectory: AbsolutePath) {
+    init(dependenciesDirectory: AbsolutePath, packageSwiftPath: AbsolutePath, packageResolvedPath: AbsolutePath) {
         let gekoDirectory = dependenciesDirectory.removingLastComponent()
-        packageDirectory = gekoDirectory
-        packageSwiftPath = gekoDirectory.appending(component: Constants.DependenciesDirectory.packageSwiftName)
-        packageResolvedPath = gekoDirectory.appending(component: Constants.DependenciesDirectory.packageResolvedName)
-        buildDirectory = gekoDirectory.appending(component: Constants.DependenciesDirectory.packageBuildDirectoryName)
-        workspaceStatePath = buildDirectory.appending(component: Constants.DependenciesDirectory.workspaceStateName)
-        lockfilePath = gekoDirectory.removingLastComponent().appending(components: [
+        self.packageDirectory = packageSwiftPath.parentDirectory
+        self.packageSwiftPath = packageSwiftPath
+        self.packageResolvedPath = packageResolvedPath
+        self.buildDirectory = packageDirectory.appending(component: Constants.DependenciesDirectory.packageBuildDirectoryName)
+        self.workspaceStatePath = buildDirectory.appending(component: Constants.DependenciesDirectory.workspaceStateName)
+        self.lockfilePath = gekoDirectory.removingLastComponent().appending(components: [
             Constants.GekoUserCacheDirectory.name,
             Constants.DependenciesDirectory.packageSandboxName
         ])

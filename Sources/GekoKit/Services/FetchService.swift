@@ -36,6 +36,8 @@ final class FetchService {
     private let rootDirectoryLocator: RootDirectoryLocating
     private let scriptsExecutor: ScriptsExecuting
     private let fileHandler: FileHandling
+    private let manifestFilesLocator: ManifestFilesLocating
+    private let swiftPackageManagerInteractor: SwiftPackageManagerInteracting
 
     init(
         pluginsFacade: PluginsFacading = PluginsFacade(),
@@ -47,7 +49,9 @@ final class FetchService {
         converter: ManifestModelConverting = ManifestModelConverter(),
         rootDirectoryLocator: RootDirectoryLocating = RootDirectoryLocator(),
         scriptsExecutor: ScriptsExecuting = ScriptsExecutor(),
-        fileHandler: FileHandling = FileHandler.shared
+        fileHandler: FileHandling = FileHandler.shared,
+        manifestFilesLocator: ManifestFilesLocating = ManifestFilesLocator(),
+        swiftPackageManagerInteractor: SwiftPackageManagerInteracting = SwiftPackageManagerInteractor()
     ) {
         self.pluginsFacade = pluginsFacade
         self.configLoader = configLoader
@@ -59,6 +63,8 @@ final class FetchService {
         self.rootDirectoryLocator = rootDirectoryLocator
         self.scriptsExecutor = scriptsExecutor
         self.fileHandler = fileHandler
+        self.manifestFilesLocator = manifestFilesLocator
+        self.swiftPackageManagerInteractor = swiftPackageManagerInteractor
     }
 
     func run(
@@ -95,23 +101,21 @@ final class FetchService {
             Manifest.dependencies.fileName(path)
         )
         
-        let packageManifestPath = path.appending(
-            components: Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.packageSwiftName
-        ) 
-        
+        let packageManifestPath = manifestFilesLocator.locatePackageManifest(at: path)
+
         var cocoapodsDependencies: CocoapodsDependencies? = nil
         var packageSettings: PackageSettings? = nil
         if fileHandler.exists(dependenciesManifestPath) {
             cocoapodsDependencies = try dependenciesModelLoader.loadDependencies(at: path, with: plugins).cocoapods
         }
         
-        if fileHandler.exists(packageManifestPath) {
-            packageSettings = try packageSettingsLoader.loadPackageSettings(at: path, with: plugins)
+        if let packageManifestPath {
+            packageSettings = try packageSettingsLoader.loadPackageSettings(at: packageManifestPath.parentDirectory, with: plugins)
         }
         
         return try dependenciesController.needFetch(
             cocoapodsDependencies: cocoapodsDependencies,
+            packagePath: packageManifestPath,
             packageSettings: packageSettings,
             path: path,
             cache: cache
@@ -185,12 +189,8 @@ final class FetchService {
             components: Constants.gekoDirectoryName,
             Manifest.dependencies.fileName(path)
         )
-        let packageManifestPath = path.appending(
-            components: Constants.gekoDirectoryName,
-            Constants.DependenciesDirectory.packageSwiftName
-        )
-
-        guard fileHandler.exists(dependenciesManifestPath) || fileHandler.exists(packageManifestPath) else {
+        let packageManifestPath = manifestFilesLocator.locatePackageManifest(at: path)
+        guard fileHandler.exists(dependenciesManifestPath) || packageManifestPath != nil else {
             return
         }
 
@@ -208,8 +208,8 @@ final class FetchService {
             cocoapodsDependencies = try dependenciesModelLoader.loadDependencies(at: path, with: plugins).cocoapods
         }
         
-        if fileHandler.exists(packageManifestPath) {
-            packageSettings = try packageSettingsLoader.loadPackageSettings(at: path, with: plugins)
+        if let packageManifestPath {
+            packageSettings = try packageSettingsLoader.loadPackageSettings(at: packageManifestPath.parentDirectory, with: plugins)
         }
         
         if update {
@@ -218,6 +218,7 @@ final class FetchService {
                 config: config,
                 passthroughArguments: passthroughArguments,
                 cocoapodsDependencies: cocoapodsDependencies,
+                packagePath: packageManifestPath,
                 packageSettings: packageSettings
             )
         } else {
@@ -226,6 +227,7 @@ final class FetchService {
                 config: config,
                 passthroughArguments: passthroughArguments,
                 cocoapodsDependencies: cocoapodsDependencies,
+                packagePath: packageManifestPath,
                 packageSettings: packageSettings,
                 repoUpdate: repoUpdate,
                 deployment: deployment
