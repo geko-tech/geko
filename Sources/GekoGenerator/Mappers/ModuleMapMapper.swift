@@ -258,7 +258,7 @@ public final class ModuleMapMapper: GraphMapping {
             dependentProject = resolvedProject
             dependentTarget = resolvedTarget
 
-        case .framework, .xcframework, .library, .sdk, .xctest, .bundle, .external, .local:
+        case .framework, .xcframework, .library, .sdk, .xctest, .bundle, .external, .local, .macro:
             return nil
         }
 

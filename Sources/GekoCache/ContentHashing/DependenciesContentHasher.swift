@@ -131,6 +131,9 @@ public final class DependenciesContentHasher: DependenciesContentHashing {
         case let .bundle(path, _):
             let hash = try cachedHash(path: path, hashedPaths: hashedPaths)
             return (relativePathConverter.convert(path).pathString, hash)
+        case let .macro(path, _):
+            let hash = try cachedHash(path: path, hashedPaths: hashedPaths)
+            return (relativePathConverter.convert(path).pathString, hash)
         case let .library(path, publicHeaders, swiftModuleMap, _):
             let libraryHash = try cachedHash(path: path, hashedPaths: hashedPaths)
             let publicHeadersHash = try contentHasher.hash(path: publicHeaders)
@@ -165,7 +168,7 @@ public final class DependenciesContentHasher: DependenciesContentHashing {
             return pathHash
         }
     }
-    
+
     private func xcframeworkCachedHash(
         path: AbsolutePath,
         hashedPaths: Atomic<[AbsolutePath: String]>,

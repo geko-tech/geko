@@ -16,5 +16,6 @@ public enum TargetDependency: Equatable, Hashable, Codable {
     case library(path: String, publicHeaders: String, swiftModuleMap: String?)
     case sdk(name: String, status: LinkingStatus)
     case bundle(path: String)
+    case macro(path: String)
     case xctest
 }

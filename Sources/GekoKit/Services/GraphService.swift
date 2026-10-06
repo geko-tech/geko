@@ -201,6 +201,8 @@ extension ProjectAutomation.Target {
             return .sdk(name: name, status: projectAutomationStatus)
         case let .bundle(path, _):
             return .bundle(path: path.pathString)
+        case let .macro(path, _):
+            return .macro(path: path.pathString)
         case .xctest:
             return .xctest
         }

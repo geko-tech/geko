@@ -8,7 +8,7 @@ struct ProjectDescriptionVersionCommand: ParsableCommand {
             abstract: "Outputs the current version of ProjectDescription"
         )
     }
-    
+
     func run() throws {
         try VersionService().projectDescription()
     }
