@@ -162,7 +162,7 @@ public class CircularDependencyLinter: CircularDependencyLinting {
                             }
                         }
 
-                    case .framework, .library, .sdk, .xcframework, .bundle, .xctest:
+                    case .framework, .library, .sdk, .xcframework, .bundle, .macro, .xctest:
                         break
                     }
                 }

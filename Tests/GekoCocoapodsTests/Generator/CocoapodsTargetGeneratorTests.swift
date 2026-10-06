@@ -1177,6 +1177,8 @@ extension ProjectDescription.TargetDependency {
             return path.pathString
         case let .bundle(path, _):
             return path.pathString
+        case let .macro(path, _):
+            return path.pathString
         case .xctest:
             return "XCTest"
         case let .external(name, _):
