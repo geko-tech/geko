@@ -6,6 +6,9 @@ let settings: Settings = .settings(base: [
 
 let project = Project(
     name: "MainApp",
+    options: .options(
+        automaticSchemesOptions: .disabled
+    ),
     settings: settings,
     targets: [
         Target(
@@ -32,5 +35,33 @@ let project = Project(
                 .target(name: "App"),
             ]
         ),
+    ],
+    schemes: [
+        Scheme(
+            name: "MainAppScheme",
+            testAction: .testPlans([
+                .generated(
+                    name: "GeneratedTestPlan.xctestplan",
+                    directory: "TestPlans/Geko",
+                    configurations: [
+                        .configuration(
+                            name: "ConfigurationName1",
+                            options: .options(
+                                targetForVariableExpansion: "AppTests"
+                            )
+                        )
+                    ],
+                    defaultOptions: .options(
+                        environmentVariableEntries: [
+                            .variable(key: "isUnitTesting", value: "YES"), 
+                            .variable(key: "isEnableAnimations", value: "YES", enabled: false)
+                        ],
+                        targetForVariableExpansion: "Framework1",
+                    ),
+                    targetSelection: [.all()]
+                ),
+                "AllTestPlan.xctestplan"
+            ])
+        )
     ]
 )

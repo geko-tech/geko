@@ -1,0 +1,57 @@
+{
+  "configurations" : [
+    {
+      "id" : "C9C9A7C0-0A16-FBD9-0306-0BAE6DD14F6E",
+      "name" : "ConfigurationName1",
+      "options" : {
+        "targetForVariableExpansion" : {
+          "containerPath" : "container:MainApp.xcodeproj",
+          "identifier" : "2ECC90040E978BD985E46417",
+          "name" : "AppTests"
+        }
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "isUnitTesting",
+        "value" : "YES"
+      },
+      {
+        "enabled" : false,
+        "key" : "isEnableAnimations",
+        "value" : "YES"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Framework1/Framework1.xcodeproj",
+      "identifier" : "006F8DE332EBBD68331EC394",
+      "name" : "Framework1"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:MainApp.xcodeproj",
+        "identifier" : "2ECC90040E978BD985E46417",
+        "name" : "AppTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Framework1/Framework1.xcodeproj",
+        "identifier" : "EFF0B5A15CBE7E069F225B51",
+        "name" : "Framework1Tests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Framework2/Framework2.xcodeproj",
+        "identifier" : "F3682B21822ACCED34432D09",
+        "name" : "Framework2Tests"
+      }
+    }
+  ],
+  "version" : 1
+}

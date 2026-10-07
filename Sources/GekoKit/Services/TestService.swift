@@ -240,7 +240,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
             buildGraphInspector.workspaceSchemes(graphTraverser: graphTraverser)
         logger.log(
             level: .debug,
-            "Found the following testable schemes: \(Set(testableSchemes.map(\.name)).joined(separator: ", "))"
+            "Found the following testable schemes: \(Set(testableSchemes.map(\.scheme.name)).joined(separator: ", "))"
         )
 
         let derivedDataPath = try derivedDataPath.map {
@@ -271,15 +271,15 @@ public final class TestService { // swiftlint:disable:this type_body_length
         }
 
         if let schemeName {
-            guard let scheme = testableSchemes.first(where: { $0.name == schemeName })
+            guard let schemeWithPath = testableSchemes.first(where: { $0.scheme.name == schemeName })
             else {
                 throw TestServiceError.schemeNotFound(
                     scheme: schemeName,
-                    existing: testableSchemes.map(\.name)
+                    existing: testableSchemes.map(\.scheme.name)
                 )
             }
 
-            switch (testPlanConfiguration?.testPlan, scheme.testAction?.targets.isEmpty, scheme.testAction?.testPlans?.isEmpty) {
+            switch (testPlanConfiguration?.testPlan, schemeWithPath.scheme.testAction?.targets.isEmpty, schemeWithPath.scheme.testAction?.testPlans?.isEmpty) {
             case (_, false, _), (_, _, false):
                 break
             case (nil, true, _), (nil, nil, _):
@@ -292,34 +292,30 @@ public final class TestService { // swiftlint:disable:this type_body_length
                 break
             }
 
-            let testSchemes: [Scheme] = [scheme]
-
-            for testScheme in testSchemes {
-                try await self.testScheme(
-                    scheme: testScheme,
-                    graphTraverser: graphTraverser,
-                    clean: clean,
-                    configuration: configuration,
-                    version: version,
-                    deviceName: deviceName,
-                    platform: platform,
-                    action: action,
-                    rosetta: rosetta,
-                    resultBundlePath: resultBundlePath,
-                    derivedDataPath: derivedDataPath,
-                    retryCount: retryCount,
-                    testTargets: testTargets,
-                    skipTestTargets: skipTestTargets,
-                    testPlanConfiguration: testPlanConfiguration,
-                    passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
-                    generateMetadata: generateMetadata,
-                    editTestPlan: editTestPlan
-                )
-            }
+            try await self.testScheme(
+                schemeWithPath: schemeWithPath,
+                graphTraverser: graphTraverser,
+                clean: clean,
+                configuration: configuration,
+                version: version,
+                deviceName: deviceName,
+                platform: platform,
+                action: action,
+                rosetta: rosetta,
+                resultBundlePath: resultBundlePath,
+                derivedDataPath: derivedDataPath,
+                retryCount: retryCount,
+                testTargets: testTargets,
+                skipTestTargets: skipTestTargets,
+                testPlanConfiguration: testPlanConfiguration,
+                passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+                generateMetadata: generateMetadata,
+                editTestPlan: editTestPlan
+            )
         } else {
-            let testSchemes: [Scheme] = buildGraphInspector.workspaceSchemes(graphTraverser: graphTraverser)
+            let testSchemes: [(AbsolutePath, Scheme)] = buildGraphInspector.workspaceSchemes(graphTraverser: graphTraverser)
                 .filter {
-                    $0.testAction.map { !$0.targets.isEmpty } ?? false
+                    $0.scheme.testAction.map { !$0.targets.isEmpty } ?? false
                 }
 
             if testSchemes.isEmpty {
@@ -329,7 +325,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
 
             for testScheme in testSchemes {
                 try await self.testScheme(
-                    scheme: testScheme,
+                    schemeWithPath: testScheme,
                     graphTraverser: graphTraverser,
                     clean: clean,
                     configuration: configuration,
@@ -358,7 +354,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
 
     // swiftlint:disable:next function_body_length
     private func testScheme(
-        scheme: Scheme,
+        schemeWithPath: (path: AbsolutePath, scheme: Scheme),
         graphTraverser: GraphTraversing,
         clean: Bool,
         configuration: String?,
@@ -377,31 +373,31 @@ public final class TestService { // swiftlint:disable:this type_body_length
         generateMetadata: GenerateMetadata,
         editTestPlan: Bool
     ) async throws {
-        logger.log(level: .notice, "Testing scheme \(scheme.name)", metadata: .section)
+        logger.log(level: .notice, "Testing scheme \(schemeWithPath.scheme.name)", metadata: .section)
 
-        if let testPlan = testPlanConfiguration?.testPlan, let testPlans = scheme.testAction?.testPlans {
+        if let testPlan = testPlanConfiguration?.testPlan, let testPlans = schemeWithPath.scheme.testAction?.testPlans {
             guard let foundedTestPlan = testPlans.first(where: { $0.name == testPlan }) else {
                 throw TestServiceError.testPlanNotFound(
-                    scheme: scheme.name,
+                    scheme: schemeWithPath.scheme.name,
                     testPlan: testPlan,
                     existing: testPlans.map(\.name)
                 )
             }
 
             if editTestPlan {
-                try processEditTestPlan(scheme: scheme, graphTraverser: graphTraverser, testTargets: testTargets, testPlan: foundedTestPlan, generateMetadata: generateMetadata)
+                try processEditTestPlan(schemeWithPath: schemeWithPath, graphTraverser: graphTraverser, testTargets: testTargets, testPlan: foundedTestPlan, generateMetadata: generateMetadata)
             }
         }
 
         guard let buildableTarget = buildGraphInspector.testableTarget(
-            scheme: scheme,
+            scheme: schemeWithPath.scheme,
             testPlan: testPlanConfiguration?.testPlan,
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
             graphTraverser: graphTraverser,
             action: action
         ) else {
-            throw TestServiceError.schemeWithoutTestableTargets(scheme: scheme.name, testPlan: testPlanConfiguration?.testPlan)
+            throw TestServiceError.schemeWithoutTestableTargets(scheme: schemeWithPath.scheme.name, testPlan: testPlanConfiguration?.testPlan)
         }
 
         let buildPlatform: Platform
@@ -420,7 +416,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
             destination = try await XcodeBuildDestination.find(
                 for: buildableTarget.target,
                 on: buildPlatform,
-                scheme: scheme,
+                scheme: schemeWithPath.scheme,
                 version: version,
                 deviceName: deviceName,
                 graphTraverser: graphTraverser,
@@ -430,7 +426,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
 
         try xcodebuildController.test(
             .workspace(graphTraverser.workspace.xcWorkspacePath),
-            scheme: scheme.name,
+            scheme: schemeWithPath.scheme.name,
             clean: clean,
             destination: destination,
             action: action,
@@ -464,23 +460,35 @@ public final class TestService { // swiftlint:disable:this type_body_length
     }
 
     private func processEditTestPlan(
-        scheme: Scheme,
+        schemeWithPath: (path: AbsolutePath, scheme: Scheme),
         graphTraverser: GraphTraversing,
         testTargets: [TestIdentifier],
         testPlan: TestPlan,
         generateMetadata: GenerateMetadata
     ) throws {
-        let autogeneratedXCTestPlanRepo = JSONRepository<AutogeneratedXCTestPlan>(url: testPlan.path.asURL)
-        var autogeneratedXCTestPlan = try autogeneratedXCTestPlanRepo.fetch()
+        let xcTestPlanRepo = JSONRepository<XCTestPlan>(url: testPlan.path.asURL)
+        var xcTestPlan = try xcTestPlanRepo.fetch()
 
         if testTargets.isEmpty {
-            autogeneratedXCTestPlan.testTargets = generateMetadata.allTestTargets
+            xcTestPlan.testTargets = generateMetadata.allTestTargets
         } else {
-            autogeneratedXCTestPlan.testTargets = generateMetadata.allTestTargets.filter { availableTestTarget in
+            xcTestPlan.testTargets = generateMetadata.allTestTargets.filter { availableTestTarget in
                 testTargets.contains { $0.target == availableTestTarget.target.name }
             }
         }
 
-        try autogeneratedXCTestPlanRepo.save(autogeneratedXCTestPlan)
+        if schemeWithPath.path != graphTraverser.workspace.path {
+            let rootRelativePath = graphTraverser.workspace.path.relative(to: schemeWithPath.path)
+
+            xcTestPlan.testTargets = try xcTestPlan.testTargets.map {
+                var testTarget = $0
+                let projectPath = try AbsolutePath(validating: $0.target.containerPath.dropPrefix("container:"))
+                let containerPath = rootRelativePath.appending(projectPath).pathString
+                testTarget.target.containerPath = "container:\(containerPath)"
+                return testTarget
+            }
+        }
+
+        try xcTestPlanRepo.save(xcTestPlan)
     }
 }

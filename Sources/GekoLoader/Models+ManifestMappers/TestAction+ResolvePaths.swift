@@ -8,9 +8,46 @@ extension TestAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         if let plans = testPlans {
             self.testPlans = try plans.enumerated().compactMap { index, plan in
-                let resolvedPath = try generatorPaths.resolve(path: plan.path)
-                guard FileHandler.shared.exists(resolvedPath) else { return nil }
-                return try TestPlan(path: resolvedPath, isDefault: index == 0, generatorPaths: generatorPaths)
+                switch plan {
+                case let .file(_, path, _, isDefault):
+                    let resolvedPath = try generatorPaths.resolve(path: path)
+                    guard FileHandler.shared.exists(resolvedPath) else { return nil }
+                    let testPlanData = try Data(contentsOf: resolvedPath.asURL)
+                    let xcTestPlan: XCTestPlan = try parseJson(testPlanData, context: .file(path: resolvedPath))
+
+                    return try .file(
+                        path: resolvedPath,
+                        testTargets: xcTestPlan.testTargets.compactMap { testTarget in
+                            guard let projectPath = testTarget.target.projectPath() else { return nil }
+                            return try TestableTarget(
+                                target: TargetReference(
+                                    projectPath: generatorPaths.resolve(path: FilePath.relativeToRoot(projectPath))
+                                        .removingLastComponent(),
+                                    name: testTarget.target.name
+                                ),
+                                skipped: !(testTarget.enabled ?? true)
+                            )
+                        },
+                        isDefault: isDefault
+                    )
+                case let .generated(generatedTestPlan):
+                    var generatedTestPlan = generatedTestPlan
+                    let path = try {
+                        if let directory = generatedTestPlan.directory {
+                            try generatorPaths.resolve(path: directory)
+                                .appending(component: "\(generatedTestPlan.name).xctestplan")
+                        } else {
+                            generatorPaths.manifestDirectory
+                                .appending(components: [
+                                    Constants.DerivedDirectory.name,
+                                    Constants.DerivedDirectory.testPlans,
+                                    "\(generatedTestPlan.name).xctestplan",
+                                ])
+                        }
+                    }()
+                    generatedTestPlan.path = path
+                    return .generated(generatedTestPlan)
+                }
             }
 
             // not used when using test plans

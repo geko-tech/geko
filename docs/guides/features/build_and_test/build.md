@@ -17,7 +17,7 @@ To build a specific scheme, pass its name, for example the scheme of the main ap
 geko build MainApp
 ```
 
-To build a specific module, for example `Framework1`, which was generated with the help of [automatic scheme generation](./schemes_generation.md):
+To build a specific module, for example `Framework1`, which is described in a scheme via [scheme generation](./schemes_generation.md):
 
 ```bash
 geko build Framework1
