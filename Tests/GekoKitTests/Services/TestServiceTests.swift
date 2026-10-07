@@ -178,8 +178,8 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "App-Workspace"),
-                Scheme.test(name: "TestScheme"),
+                (.root, Scheme.test(name: "App-Workspace")),
+                (.root, Scheme.test(name: "TestScheme")),
             ]
         }
         buildGraphInspector.testableTargetStub = { scheme, _, _, _, _, _ in
@@ -212,8 +212,8 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "App-Workspace"),
-                Scheme.test(name: "TestScheme"),
+                (.root, Scheme.test(name: "App-Workspace")),
+                (.root, Scheme.test(name: "TestScheme")),
             ]
         }
         buildGraphInspector.testableTargetStub = { scheme, _, _, _, _, _ in
@@ -245,13 +245,13 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "TestScheme"),
+                (.root, Scheme.test(name: "TestScheme")),
             ]
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectSchemeOne"),
-                Scheme.test(name: "ProjectSchemeTwo"),
+                (.root, Scheme.test(name: "ProjectSchemeOne")),
+                (.root, Scheme.test(name: "ProjectSchemeTwo")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -287,13 +287,13 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "TestScheme"),
+                (.root, Scheme.test(name: "TestScheme")),
             ]
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectSchemeOne"),
-                Scheme.test(name: "ProjectSchemeTwo"),
+                (.root, Scheme.test(name: "ProjectSchemeOne")),
+                (.root, Scheme.test(name: "ProjectSchemeTwo")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -324,7 +324,7 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectSchemeOneTests"),
+                (.root, Scheme.test(name: "ProjectSchemeOneTests")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -351,7 +351,7 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectScheme"),
+                (.root, Scheme.test(name: "ProjectScheme")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -420,7 +420,7 @@ final class TestServiceTests: GekoUnitTestCase {
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectScheme"),
+                (.root, Scheme.test(name: "ProjectScheme")),
             ]
         }
 
@@ -450,8 +450,8 @@ final class TestServiceTests: GekoUnitTestCase {
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectScheme"),
-                Scheme.test(name: "ProjectScheme2"),
+                (.root, Scheme.test(name: "ProjectScheme")),
+                (.root, Scheme.test(name: "ProjectScheme2")),
             ]
         }
 
@@ -473,12 +473,12 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "TestScheme"),
+                (.root, Scheme.test(name: "TestScheme")),
             ]
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectSchemeOne"),
+                (.root, Scheme.test(name: "ProjectSchemeOne")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -505,12 +505,12 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "TestScheme"),
+                (.root, Scheme.test(name: "TestScheme")),
             ]
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectSchemeOne"),
+                (.root, Scheme.test(name: "ProjectSchemeOne")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -538,13 +538,13 @@ final class TestServiceTests: GekoUnitTestCase {
         let testPlanPath = try AbsolutePath(validating: "/testPlan/\(testPlan)")
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "App-Workspace"),
-                Scheme.test(
+                (.root, Scheme.test(name: "App-Workspace")),
+                (.root, Scheme.test(
                     name: "TestScheme",
                     testAction: .test(
                         testPlans: [.init(path: testPlanPath, testTargets: [], isDefault: true)]
                     )
-                ),
+                )),
             ]
         }
         var passedTestPlan: String?
@@ -582,18 +582,18 @@ final class TestServiceTests: GekoUnitTestCase {
         let testPlanPath = try AbsolutePath(validating: "/testPlan/\(testPlan)")
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(name: "App-Workspace"),
-                Scheme.test(
+                (.root, Scheme.test(name: "App-Workspace")),
+                (.root, Scheme.test(
                     name: "TestScheme",
                     testAction: .test(
                         testPlans: [.init(path: testPlanPath, testTargets: [], isDefault: true)]
                     )
-                ),
+                )),
             ]
         }
         buildGraphInspector.workspaceSchemesStub = { _ in
             [
-                Scheme.test(name: "ProjectSchemeOne"),
+                (.root, Scheme.test(name: "ProjectSchemeOne")),
             ]
         }
         generator.generateWithGraphStub = { path in
@@ -622,7 +622,7 @@ final class TestServiceTests: GekoUnitTestCase {
     func test_run_throws_when_test_target_does_not_exist() async throws {
         // Given
         buildGraphInspector.testableSchemesStub = { _ in
-            [Scheme.test(name: "App-Workspace")]
+            [(.root, Scheme.test(name: "App-Workspace"))]
         }
         generator.generateWithGraphStub = { path in
             (path, Graph.test())
@@ -652,7 +652,7 @@ final class TestServiceTests: GekoUnitTestCase {
         )
 
         buildGraphInspector.testableSchemesStub = { _ in
-            [Scheme.test(name: "App-Workspace")]
+            [(.root, Scheme.test(name: "App-Workspace"))]
         }
         generator.generateWithGraphStub = { path in
             (path, Graph.test(
@@ -675,8 +675,8 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         let planName = "Plan"
         let planPath = try temporaryPath().appending(component: planName)
-        try JSONRepository<AutogeneratedXCTestPlan>(url: planPath.asURL).save(
-            AutogeneratedXCTestPlan(testTargets: [])
+        try JSONRepository<XCTestPlan>(url: planPath.asURL).save(
+            XCTestPlan(testTargets: [])
         )
 
         let framework1 = Target.test(name: "Framework1")
@@ -693,19 +693,19 @@ final class TestServiceTests: GekoUnitTestCase {
         )
 
         let metadataTargets = [
-            AutogeneratedXCTestPlan.TestTarget(target: .init(containerPath: "container:App.xcodeproj", identifier: "ID-1", name: "AppTests")),
-            AutogeneratedXCTestPlan.TestTarget(target: .init(containerPath: "container:Framework1/Framework1.xcodeproj", identifier: "ID-1", name: "Framework1Tests"))
+            XCTestPlan.TestTarget(target: .init(containerPath: "container:App.xcodeproj", identifier: "ID-1", name: "AppTests")),
+            XCTestPlan.TestTarget(target: .init(containerPath: "container:Framework1/Framework1.xcodeproj", identifier: "ID-1", name: "Framework1Tests"))
         ]
         try writeGenerateMetadata(allTestTargets: metadataTargets)
 
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(
+                (.root, Scheme.test(
                     name: "TestScheme",
                     testAction: .test(
                         testPlans: [.init(path: planPath, testTargets: [], isDefault: true)]
                     )
-                ),
+                )),
             ]
         }
         buildGraphInspector.testableTargetStub = { scheme, _, _, _, _, _ in
@@ -730,9 +730,9 @@ final class TestServiceTests: GekoUnitTestCase {
         )
 
         // Then
-        let updatedPlan = try JSONRepository<AutogeneratedXCTestPlan>(url: planPath.asURL).fetch()
+        let updatedPlan = try JSONRepository<XCTestPlan>(url: planPath.asURL).fetch()
         XCTAssertEqual(updatedPlan.testTargets, [
-            AutogeneratedXCTestPlan.TestTarget(target: .init(containerPath: "container:Framework1/Framework1.xcodeproj", identifier: "ID-1", name: "Framework1Tests"))
+            XCTestPlan.TestTarget(target: .init(containerPath: "container:Framework1/Framework1.xcodeproj", identifier: "ID-1", name: "Framework1Tests"))
         ])
     }
 
@@ -740,8 +740,8 @@ final class TestServiceTests: GekoUnitTestCase {
         // Given
         let planName = "Plan"
         let planPath = try temporaryPath().appending(component: planName)
-        try JSONRepository<AutogeneratedXCTestPlan>(url: planPath.asURL).save(
-            AutogeneratedXCTestPlan(testTargets: [])
+        try JSONRepository<XCTestPlan>(url: planPath.asURL).save(
+            XCTestPlan(testTargets: [])
         )
 
         let framework1 = Target.test(name: "Framework1")
@@ -758,19 +758,19 @@ final class TestServiceTests: GekoUnitTestCase {
         )
 
         let metadataTargets = [
-            AutogeneratedXCTestPlan.TestTarget(target: .init(containerPath: "container:App.xcodeproj", identifier: "ID-1", name: "AppTests")),
-            AutogeneratedXCTestPlan.TestTarget(target: .init(containerPath: "container:Framework1/Framework1.xcodeproj", identifier: "ID-1", name: "Framework1Tests"))
+            XCTestPlan.TestTarget(target: .init(containerPath: "container:App.xcodeproj", identifier: "ID-1", name: "AppTests")),
+            XCTestPlan.TestTarget(target: .init(containerPath: "container:Framework1/Framework1.xcodeproj", identifier: "ID-1", name: "Framework1Tests"))
         ]
         try writeGenerateMetadata(allTestTargets: metadataTargets)
 
         buildGraphInspector.testableSchemesStub = { _ in
             [
-                Scheme.test(
+                (.root, Scheme.test(
                     name: "TestScheme",
                     testAction: .test(
                         testPlans: [.init(path: planPath, testTargets: [], isDefault: true)]
                     )
-                ),
+                )),
             ]
         }
         buildGraphInspector.testableTargetStub = { scheme, _, _, _, _, _ in
@@ -794,7 +794,7 @@ final class TestServiceTests: GekoUnitTestCase {
         )
 
         // Then
-        let updatedPlan = try JSONRepository<AutogeneratedXCTestPlan>(url: planPath.asURL).fetch()
+        let updatedPlan = try JSONRepository<XCTestPlan>(url: planPath.asURL).fetch()
         XCTAssertEqual(updatedPlan.testTargets, metadataTargets)
     }
 }
@@ -807,7 +807,7 @@ extension TestServiceTests {
     private func writeGenerateMetadata(
         cacheEnabled: Bool = false,
         focusedTargets: Set<String> = [],
-        allTestTargets: [AutogeneratedXCTestPlan.TestTarget] = []
+        allTestTargets: [XCTestPlan.TestTarget] = []
     ) throws {
         let logDirectory = try logDirectoriesProvider.logDirectory(for: .generateMetadata)
         try FileHandler.shared.createFolder(logDirectory)

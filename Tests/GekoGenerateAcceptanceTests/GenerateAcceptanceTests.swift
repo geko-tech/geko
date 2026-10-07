@@ -906,17 +906,18 @@ final class GenerateAcceptanceTestAppWithGeneratedTestPlan: GekoAcceptanceTestCa
             pathString: fixturePath.appending(component: "MainApp.xcodeproj").pathString
         )
         let scheme = try XCTUnwrap(
-            xcodeproj.sharedData?.schemes.first { $0.name == "MainApp" }
+            xcodeproj.sharedData?.schemes.first { $0.name == "MainAppScheme" }
         )
         let planReferences = try XCTUnwrap(scheme.testAction?.testPlans)
         XCTAssertEqual(
             planReferences.map(\.reference),
             [
-                "container:TestPlans/Geko/GeneratedTestPlan.xctestplan"
+                "container:TestPlans/Geko/GeneratedTestPlan.xctestplan",
+                "container:AllTestPlan.xctestplan"
             ]
         )
 
-        try await run(TestCommand.self, "MainApp", "--test-plan", "GeneratedTestPlan")
+        try await run(TestCommand.self, "MainAppScheme", "--test-plan", "GeneratedTestPlan")
     }
 }
 

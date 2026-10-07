@@ -586,6 +586,11 @@ final class MockGraphTraverser: GraphTraversing {
         schemesStub?() ?? []
     }
 
+    var schemesWithPathStub: (() -> [(path: AbsolutePath, scheme: Scheme)])?
+    func schemesWithPath() -> [(path: AbsolutePath, scheme: Scheme)] {
+        schemesWithPathStub?() ?? []
+    }
+
     var invokedExtensionKitExtensionDependencies = false
     var invokedExtensionKitExtensionDependenciesCount = 0
     var invokedExtensionKitExtensionDependenciesParameters: (path: AbsolutePath, name: String)?

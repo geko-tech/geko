@@ -73,6 +73,18 @@ public class GraphTraverser: GraphTraversing {
         projects.values.flatMap(\.schemes) + graph.workspace.schemes
     }
 
+    public func schemesWithPath() -> [(path: AbsolutePath, scheme: Scheme)] {
+        let projectSchemes = projects.values.flatMap { project in
+            project.schemes.map { scheme in
+                (project.path, scheme)
+            }
+        }
+        let workspaceSchemes = graph.workspace.schemes.map { scheme in
+            (graph.workspace.path, scheme)
+        }
+        return projectSchemes + workspaceSchemes
+    }
+
     public func precompiledFrameworksPaths() -> Set<AbsolutePath> {
         var result = Set<AbsolutePath>()
 

@@ -2,6 +2,9 @@ import ProjectDescription
 
 let project = Project(
     name: "Framework2",
+    options: .options(
+        automaticSchemesOptions: .disabled
+    ),
     targets: [
         Target(
             name: "Framework2-iOS",

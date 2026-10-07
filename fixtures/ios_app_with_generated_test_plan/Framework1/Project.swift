@@ -16,6 +16,9 @@ let infoPlist: [String: Plist.Value] = [
 
 let project = Project(
     name: "Framework1",
+    options: .options(
+        automaticSchemesOptions: .disabled
+    ),
     targets: [
         Target(
             name: "Framework1",
