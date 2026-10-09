@@ -342,9 +342,9 @@ final class SchemeDescriptorsGenerator: SchemeDescriptorsGenerating {
             environments = environmentVariables(arguments.environmentVariables)
         }
 
-        let codeCoverageTargets = try testAction.codeCoverageTargets
+        let codeCoverageTargets: [XCScheme.BuildableReference] = try (testAction.options.codeCoverageTargets + testAction.codeCoverableTargets)
             .compactMap { (target: TargetReference) -> XCScheme.BuildableReference? in
-                guard let graphTarget = graphTraverser.target(path: target.projectPath!, name: target.name) else { return nil }
+                guard let graphTarget = graphTraverser.allInternalTargets().first(where: { $0.target.name == target.name }) else { return nil }
                 return try testCoverageTargetReferences(
                     graphTarget: graphTarget,
                     graphTraverser: graphTraverser,

@@ -600,7 +600,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
 
         // Then
         XCTAssertEqual(
-            got,
+            got.map(\.scheme),
             [
                 coreScheme,
                 coreTestsScheme,
@@ -703,7 +703,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
 
         // Then
         XCTAssertEqual(
-            got,
+            got.map(\.scheme),
             [
                 .test(name: "WorkspaceName-Workspace-iOS"),
                 .test(name: "WorkspaceName-Workspace-macOS"),
@@ -729,7 +729,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
 
         // Then
         XCTAssertEqual(
-            got,
+            got.map(\.scheme),
             [
                 .test(name: "WorkspaceName-Workspace"),
             ]

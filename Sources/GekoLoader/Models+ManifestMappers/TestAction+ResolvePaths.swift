@@ -8,9 +8,50 @@ extension TestAction {
     mutating func resolvePaths(generatorPaths: GeneratorPaths) throws {
         if let plans = testPlans {
             self.testPlans = try plans.enumerated().compactMap { index, plan in
-                let resolvedPath = try generatorPaths.resolve(path: plan.path)
-                guard FileHandler.shared.exists(resolvedPath) else { return nil }
-                return try TestPlan(path: resolvedPath, isDefault: index == 0, generatorPaths: generatorPaths)
+                switch plan {
+                case let .file(fileTestPlan):
+                    let resolvedPath = try generatorPaths.resolve(path: fileTestPlan.path)
+                    guard FileHandler.shared.exists(resolvedPath) else { return nil }
+                    let testPlanData = try Data(contentsOf: resolvedPath.asURL)
+                    let xcTestPlan: XCTestPlan = try parseJson(testPlanData, context: .file(path: resolvedPath))
+                    let testTargets: [TestableTarget] = try xcTestPlan.testTargets.compactMap { testTarget in
+                        guard let projectPath = testTarget.target.projectPath() else { return nil }
+                        return try TestableTarget(
+                            target: TargetReference(
+                                projectPath: generatorPaths.resolve(path: FilePath.relativeToRoot(projectPath))
+                                    .removingLastComponent(),
+                                name: testTarget.target.name
+                            ),
+                            skipped: !(testTarget.enabled ?? true)
+                        )
+                    }
+
+                    var fileTestPlan = fileTestPlan
+                    fileTestPlan.path = resolvedPath
+                    fileTestPlan.testTargets = testTargets
+                    fileTestPlan.isDefault = index == 0
+                    return .file(fileTestPlan)
+
+                case let .generated(generatedTestPlan):
+                    var generatedTestPlan = generatedTestPlan
+                    let path = try {
+                        if let directory = generatedTestPlan.directory {
+                            try generatorPaths.resolve(path: directory)
+                                .appending(component: "\(generatedTestPlan.name).xctestplan")
+                        } else {
+                            generatorPaths.manifestDirectory
+                                .appending(components: [
+                                    Constants.DerivedDirectory.name,
+                                    Constants.DerivedDirectory.testPlans,
+                                    "\(generatedTestPlan.name).xctestplan",
+                                ])
+                        }
+                    }()
+
+                    generatedTestPlan.path = path
+                    generatedTestPlan.isDefault = index == 0
+                    return .generated(generatedTestPlan)
+                }
             }
 
             // not used when using test plans

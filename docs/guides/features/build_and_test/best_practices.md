@@ -1,0 +1,180 @@
+---
+title: Best practices
+order: 2
+---
+
+# Best practices
+
+For a better understanding, we will use the following example project structure:
+
+```text
+MainApp
+ ├── Framework1 ── Framework2
+ ├── Framework2
+ └── Framework3
+
+Framework1Tests ── Framework1
+Framework2Tests ── Framework2
+Framework3Tests ── Framework3
+```
+
+## Building and testing a single test target
+
+### Setup
+
+1. Enable automatic scheme generation in the `Project` manifest via `automaticSchemesOptions` so that a scheme is generated for every target. Use `targetSchemesGrouping: .notGrouped` to generate a separate scheme per target:
+
+```swift
+let project = Project(
+    name: "Framework1",
+    options: .options(
+        automaticSchemesOptions: .enabled(
+            targetSchemesGrouping: .notGrouped
+        )
+    ),
+    targets: [...],
+)
+```
+
+[Learn more about scheme generation here](./schemes_generation.md)
+
+2. **Generate project with cache**
+
+```bash
+geko generate --no-open --cache
+```
+
+### Commands
+
+**Build a single test target:**
+
+```bash
+geko build Framework1Tests
+// or
+geko test --build-only Framework1Tests
+```
+
+**Run a single test target:**
+
+```bash
+geko test Framework1Tests
+```
+
+**Run a single test from a test target:**
+
+```bash
+geko test Framework1Tests --test-targets Framework1Tests/MyPublicClassTests/testHello
+```
+
+This approach optimizes build time by building only the needed target and its dependencies (without building the main target and its dependencies):
+
+```text
+Framework1 ── Framework2
+
+Framework1Tests ── Framework1
+```
+
+## Building and testing multiple test targets
+
+### Setup
+
+1. For this you need to generate a test plan with all test targets and add it to the scheme of the main application target:
+
+```swift
+let project = Project(
+    name: "MainApp",
+    targets: [...],
+    schemes: [
+        Scheme(
+            name: "MainApp",
+            testAction: .testPlans([
+                .generated(
+                    name: "GeneratedTestPlan.xctestplan",
+                    directory: "TestPlans/Geko",
+                    targetSelection: [.all()]
+                )
+            ])
+        )
+    ]
+)
+```
+
+[Learn more about test plan generation here](./test_plan_generation.md)
+
+2. **Generate project with cache**
+
+```bash
+geko generate --no-open --cache
+```
+
+### Commands
+
+**Build without running tests:**
+
+```bash
+geko test MainApp --build-only --test-plan GeneratedTestPlan.xctestplan
+```
+
+**Run the entire test plan:**
+
+```bash
+geko test MainApp --test-plan GeneratedTestPlan.xctestplan
+```
+
+In this case the whole test plan is built and run, as expected:
+
+```text
+MainApp
+ ├── Framework1 ── Framework2
+ ├── Framework2
+ └── Framework3
+
+Framework1Tests ── Framework1
+Framework2Tests ── Framework2
+Framework3Tests ── Framework3
+```
+
+But if you only need to build and run specific test targets:
+
+```bash
+geko test MainApp --test-plan GeneratedTestPlan.xctestplan --test-targets Framework1Tests Framework2Tests
+```
+
+Then the extra test target `Framework3Tests` is still built, even though it is not run:
+
+```text
+MainApp
+ ├── Framework1 ── Framework2
+ ├── Framework2
+ └── Framework3
+
+Framework1Tests ── Framework1
+Framework2Tests ── Framework2
+Framework3Tests ── Framework3
+```
+
+### Problem: unnecessary test targets are built from the test plan
+
+Xcode builds all the test targets listed in the test plan. Even if you explicitly specify which test targets to run via the `-only-testing` parameter, Xcode still builds all test targets from the test plan. Extra test targets can also pull in the build of extra modules (for example mocks, etc.), which can significantly hurt build time when there are many targets in the focus.
+
+### Solution
+
+A `--edit-test-plan` flag was added to the `geko test` command, which enables editing of the test plan. On each run of `geko test`, the list of targets passed via `--test-targets` is written into the test plan. If the `--test-targets` list is empty, all available test targets (or only those in the focus) are added to the test plan.
+
+When running the previous command with the `--edit-test-plan` flag:
+
+```bash
+geko test MainApp --test-plan GeneratedTestPlan.xctestplan --edit-test-plan --test-targets Framework1Tests Framework2Tests
+```
+
+the project build graph becomes more optimal and looks like this:
+
+```text
+MainApp
+ ├── Framework1 ── Framework2
+ ├── Framework2
+ └── Framework3
+
+Framework1Tests ── Framework1
+Framework2Tests ── Framework2
+```

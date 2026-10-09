@@ -29,6 +29,9 @@ public protocol GraphTraversing {
     /// - Returns: All the schemes of the graph
     func schemes() -> [Scheme]
 
+    /// - Returns: All the schemes of the graph with paths
+    func schemesWithPath() -> [(path: AbsolutePath, scheme: Scheme)]
+
     /// Returns the targets from the project that lives in the directory from which the graph has been loaded.
     func rootTargets() -> Set<GraphTarget>
 

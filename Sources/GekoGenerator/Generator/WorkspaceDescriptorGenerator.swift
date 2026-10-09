@@ -1,9 +1,10 @@
 import Foundation
-import struct ProjectDescription.AbsolutePath
-import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoSupport
 import XcodeProj
+import GekoLoader
+import GekoGraph
+import ProjectDescription
 
 enum WorkspaceDescriptorGeneratorError: FatalError {
     case projectNotFound(path: AbsolutePath)
@@ -27,9 +28,10 @@ protocol WorkspaceDescriptorGenerating: AnyObject {
     ///
     /// - Parameters:
     ///   - graphTraverser: Graph traverser.
+    ///   - sideTable: Graph side table.
     /// - Returns: Generated workspace descriptor
     /// - Throws: An error if the generation fails.
-    func generate(graphTraverser: GraphTraversing) throws -> WorkspaceDescriptor
+    func generate(graphTraverser: GraphTraversing, sideTable: GraphSideTable) throws -> (descriptor: WorkspaceDescriptor, sideEffects: [SideEffectDescriptor])
 }
 
 final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
@@ -48,6 +50,7 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
     private let workspaceStructureGenerator: WorkspaceStructureGenerating
     private let schemeDescriptorsGenerator: SchemeDescriptorsGenerating
     private let workspaceSettingsGenerator: WorkspaceSettingsDescriptorGenerating
+    private let xcTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating
     private let config: Config
 
     // MARK: - Init
@@ -69,6 +72,7 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
             workspaceStructureGenerator: WorkspaceStructureGenerator(),
             schemeDescriptorsGenerator: SchemeDescriptorsGenerator(),
             workspaceSettingsGenerator: WorkspaceSettingsDescriptorGenerator(),
+            xcTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerator(),
             config: config
         )
     }
@@ -78,6 +82,7 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
         workspaceStructureGenerator: WorkspaceStructureGenerating,
         schemeDescriptorsGenerator: SchemeDescriptorsGenerating,
         workspaceSettingsGenerator: WorkspaceSettingsDescriptorGenerating,
+        xcTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating,
         config: Config = .default
     ) {
         self.projectDescriptorGenerator = projectDescriptorGenerator
@@ -85,12 +90,13 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
         self.schemeDescriptorsGenerator = schemeDescriptorsGenerator
         self.workspaceSettingsGenerator = workspaceSettingsGenerator
         self.config = config
+        self.xcTestPlanDescriptorGenerator = xcTestPlanDescriptorGenerator
     }
 
     // MARK: - WorkspaceGenerating
 
     // swiftlint:disable:next function_body_length
-    func generate(graphTraverser: GraphTraversing) throws -> WorkspaceDescriptor {
+    func generate(graphTraverser: GraphTraversing, sideTable: GraphSideTable) throws -> (descriptor: WorkspaceDescriptor, sideEffects: [SideEffectDescriptor]) {
         let workspaceName = "\(graphTraverser.name).xcworkspace"
 
         graphTraverser.warmup()
@@ -159,15 +165,24 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
             try ReferenceGenerator(outputSettings: PBXOutputSettings()).generateReferences(proj: $0.xcodeProj.pbxproj)
         }
 
-        return WorkspaceDescriptor(
+        let (xcTestPlanDescriptors, generateMetadata) = try xcTestPlanDescriptorGenerator.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: sideTable
+        )
+        let sideEffects = try xcTestPlanDescriptors.sideEffectDescriptors()
+
+        let descriptor = WorkspaceDescriptor(
             path: graphTraverser.workspace.path,
             xcworkspacePath: graphTraverser.workspace.xcWorkspacePath,
             xcworkspace: xcWorkspace,
             projectDescriptors: projects,
             schemeDescriptors: schemes,
             sideEffectDescriptors: [],
-            workspaceSettingsDescriptor: workspaceSettingsGenerator.generateWorkspaceSettings(workspace: graphTraverser.workspace)
+            workspaceSettingsDescriptor: workspaceSettingsGenerator.generateWorkspaceSettings(workspace: graphTraverser.workspace),
+            generateMetadata: generateMetadata
         )
+        return (descriptor, sideEffects)
     }
 
     /// Create a XCWorkspaceDataElement.file from a path string.
