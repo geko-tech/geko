@@ -170,13 +170,7 @@ final class WorkspaceDescriptorGenerator: WorkspaceDescriptorGenerating {
             generatedProjects: generatedProjects,
             sideTable: sideTable
         )
-        let deleteOldTestsPlansSideEffects = xcTestPlanDescriptors.map {
-            SideEffectDescriptor.file(FileDescriptor(path: $0.path, state: .absent))
-        }
-        let createTestPlansSideEffects = try xcTestPlanDescriptors.map {
-            SideEffectDescriptor.file(FileDescriptor(path: $0.path, contents: try $0.encode()))
-        }
-        let sideEffects = deleteOldTestsPlansSideEffects + createTestPlansSideEffects
+        let sideEffects = try xcTestPlanDescriptors.sideEffectDescriptors()
 
         let descriptor = WorkspaceDescriptor(
             path: graphTraverser.workspace.path,

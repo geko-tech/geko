@@ -23,6 +23,52 @@ public struct XCTestPlan: Codable, Equatable, Sendable {
             public static func off() -> Self? { nil }
         }
 
+        public enum Coverage: Codable, Equatable, Sendable {
+            case disabled
+            case enabled
+            case targets([TestTargetReference])
+
+            private enum CodingKeys: String, CodingKey {
+                case targets
+            }
+
+            public init(from decoder: any Decoder) throws {
+                let single = try decoder.singleValueContainer()
+                if let isEnabled = try? single.decode(Bool.self) {
+                    self = isEnabled ? .enabled : .disabled
+                    return
+                }
+
+                if let keyed = try? decoder.container(keyedBy: CodingKeys.self) {
+                    self = .targets(try keyed.decode([TestTargetReference].self, forKey: .targets))
+                    return
+                }
+
+                throw DecodingError.dataCorrupted(
+                    .init(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Expected `false` or an object with `targets`, found an unsupported value."
+                    )
+                )
+            }
+
+            public func encode(to encoder: any Encoder) throws {
+                switch self {
+                case .enabled:
+                    var container = encoder.singleValueContainer()
+                    try container.encode(true)
+
+                case .disabled:
+                    var container = encoder.singleValueContainer()
+                    try container.encode(false)
+
+                case .targets(let targets):
+                    var container = encoder.container(keyedBy: CodingKeys.self)
+                    try container.encode(targets, forKey: .targets)
+                }
+            }
+        }
+
         public let commandLineArgumentEntries: [GeneratedTestPlan.Options.CommandLineArgumentEntry]?
         public let environmentVariableEntries: [GeneratedTestPlan.Options.VariableEntity]?
         public let targetForVariableExpansion: TestTargetReference?
@@ -42,7 +88,7 @@ public struct XCTestPlan: Codable, Equatable, Sendable {
         public let testRepetitionMode: GeneratedTestPlan.Options.TestRepetitionMode?
         public let maximumTestRepetitions: Int?
         public let repeatInNewRunnerProcess: Bool?
-        public let codeCoverage: Bool?
+        public let codeCoverage: Coverage?
         public let addressSanitizer: GeneratedTestPlan.Options.AddressSanitizer?
         public let threadSanitizerEnabled: Bool?
         public let undefinedBehaviorSanitizerEnabled: Bool?
@@ -75,7 +121,7 @@ public struct XCTestPlan: Codable, Equatable, Sendable {
             testRepetitionMode: GeneratedTestPlan.Options.TestRepetitionMode?,
             maximumTestRepetitions: Int?,
             repeatInNewRunnerProcess: Bool?,
-            codeCoverage: Bool?,
+            codeCoverage: Coverage?,
             addressSanitizer: GeneratedTestPlan.Options.AddressSanitizer?,
             threadSanitizerEnabled: Bool?,
             undefinedBehaviorSanitizerEnabled: Bool?,
@@ -121,7 +167,7 @@ public struct XCTestPlan: Codable, Equatable, Sendable {
             self.mallocStackLoggingOptions = mallocStackLoggingOptions
         }
 
-        static let empty = Self(
+        public static let empty = Self(
             commandLineArgumentEntries: nil,
             environmentVariableEntries: nil,
             targetForVariableExpansion: nil,

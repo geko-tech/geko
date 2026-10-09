@@ -9,27 +9,29 @@ extension TestAction {
         if let plans = testPlans {
             self.testPlans = try plans.enumerated().compactMap { index, plan in
                 switch plan {
-                case let .file(_, path, _, isDefault):
-                    let resolvedPath = try generatorPaths.resolve(path: path)
+                case let .file(fileTestPlan):
+                    let resolvedPath = try generatorPaths.resolve(path: fileTestPlan.path)
                     guard FileHandler.shared.exists(resolvedPath) else { return nil }
                     let testPlanData = try Data(contentsOf: resolvedPath.asURL)
                     let xcTestPlan: XCTestPlan = try parseJson(testPlanData, context: .file(path: resolvedPath))
+                    let testTargets: [TestableTarget] = try xcTestPlan.testTargets.compactMap { testTarget in
+                        guard let projectPath = testTarget.target.projectPath() else { return nil }
+                        return try TestableTarget(
+                            target: TargetReference(
+                                projectPath: generatorPaths.resolve(path: FilePath.relativeToRoot(projectPath))
+                                    .removingLastComponent(),
+                                name: testTarget.target.name
+                            ),
+                            skipped: !(testTarget.enabled ?? true)
+                        )
+                    }
 
-                    return try .file(
-                        path: resolvedPath,
-                        testTargets: xcTestPlan.testTargets.compactMap { testTarget in
-                            guard let projectPath = testTarget.target.projectPath() else { return nil }
-                            return try TestableTarget(
-                                target: TargetReference(
-                                    projectPath: generatorPaths.resolve(path: FilePath.relativeToRoot(projectPath))
-                                        .removingLastComponent(),
-                                    name: testTarget.target.name
-                                ),
-                                skipped: !(testTarget.enabled ?? true)
-                            )
-                        },
-                        isDefault: isDefault
-                    )
+                    var fileTestPlan = fileTestPlan
+                    fileTestPlan.path = resolvedPath
+                    fileTestPlan.testTargets = testTargets
+                    fileTestPlan.isDefault = index == 0
+                    return .file(fileTestPlan)
+
                 case let .generated(generatedTestPlan):
                     var generatedTestPlan = generatedTestPlan
                     let path = try {
@@ -45,7 +47,9 @@ extension TestAction {
                                 ])
                         }
                     }()
+
                     generatedTestPlan.path = path
+                    generatedTestPlan.isDefault = index == 0
                     return .generated(generatedTestPlan)
                 }
             }

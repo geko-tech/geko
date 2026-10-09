@@ -53,13 +53,13 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
 
         // Then
         let descriptor = try XCTUnwrap(descriptors.first)
-        XCTAssertEqual(descriptor.testTargets.compactMap { $0.pbxTarget.name }, ["AppTests", "FrameworkTests"])
+        XCTAssertEqual(descriptor.plan?.testTargets.map { $0.target.name }, ["AppTests", "FrameworkTests"])
         XCTAssertEqual(
-            descriptor.testTargets.map(\.containerPath),
+            descriptor.plan?.testTargets.map(\.target.containerPath),
             ["container:App.xcodeproj", "container:Framework/Framework.xcodeproj"]
         )
-        XCTAssertEqual(descriptor.testTargets.map(\.isEnabled), [true, false])
-        XCTAssertEqual(descriptor.testTargets.map(\.isParallelizable), [false, true])
+        XCTAssertEqual(descriptor.plan?.testTargets.map(\.enabled), [nil, false])
+        XCTAssertEqual(descriptor.plan?.testTargets.map(\.parallelizable), [nil, true])
     }
 
     func test_whenTestTargetMissing_andPolicyFail_throws() throws {
@@ -110,7 +110,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEmpty(descriptors)
+        XCTAssertEmpty(descriptors.compactMap { $0.plan })
     }
 
     func test_whenTestTargetMissing_andPolicyExcludeTarget_excludesOnlyMissingTarget() throws {
@@ -137,7 +137,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
 
         // Then
         let descriptor = try XCTUnwrap(descriptors.first)
-        XCTAssertEqual(descriptor.testTargets.compactMap { $0.pbxTarget.name }, ["AppTests"])
+        XCTAssertEqual(descriptor.plan?.testTargets.map { $0.target.name }, ["AppTests"])
     }
 
     // MARK: - Options
@@ -175,17 +175,17 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
 
         // Then
         let descriptor = try XCTUnwrap(descriptors.first)
-        let configuration = try XCTUnwrap(descriptor.configurations.first)
-        XCTAssertEqual(configuration.configuration.options?.environmentVariableEntries, [.variable(key: "isUnitTesting", value: "YES")])
-        XCTAssertEqual(configuration.targetForVariableExpansion?.pbxTarget.name, "AppTests")
-        XCTAssertEqual(descriptor.defaultOptions?.commandLineArgumentEntries, [.argument(argument: "--arg", enabled: true)])
-        XCTAssertEqual(descriptor.defaultOptionsTargetForVariableExpansion?.pbxTarget.name, "FrameworkTests")
+        let configuration = try XCTUnwrap(descriptor.plan?.configurations?.first)
+        XCTAssertEqual(configuration.options?.environmentVariableEntries, [.variable(key: "isUnitTesting", value: "YES")])
+        XCTAssertEqual(configuration.options?.targetForVariableExpansion?.name, "AppTests")
+        XCTAssertEqual(descriptor.plan?.defaultOptions?.commandLineArgumentEntries, [.argument(argument: "--arg", enabled: true)])
+        XCTAssertEqual(descriptor.plan?.defaultOptions?.targetForVariableExpansion?.name, "FrameworkTests")
         XCTAssertEqual(
-            configuration.targetForVariableExpansion?.containerPath,
+            configuration.options?.targetForVariableExpansion?.containerPath,
             "container:App.xcodeproj"
         )
         XCTAssertEqual(
-            descriptor.defaultOptionsTargetForVariableExpansion?.containerPath,
+            descriptor.plan?.defaultOptions?.targetForVariableExpansion?.containerPath,
             "container:Framework/Framework.xcodeproj"
         )
     }
@@ -216,8 +216,8 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
                 sideTable: .init()
             )
         ) { error in
-            guard case XCTestPlanDescriptorGeneratorError.targetForVariableExpansionNotFound(let target) = error else {
-                return XCTFail("Expected targetForVariableExpansionNotFound, got \(error)")
+            guard case XCTestPlanDescriptorGeneratorError.targetReferenceNotFound(let target) = error else {
+                return XCTFail("Expected targetReferenceNotFound, got \(error)")
             }
             XCTAssertEqual(target, "MissingTarget")
         }
@@ -249,7 +249,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEmpty(descriptors)
+        XCTAssertEmpty(descriptors.compactMap { $0.plan })
     }
 
     func test_whenVariableExpansionTargetNotFound_andPolicyExcludeTarget_ignoresExpansionTarget() throws {
@@ -278,9 +278,124 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
 
         // Then
+        let plan = try XCTUnwrap(descriptors.first?.plan)
+        XCTAssertNil(plan.configurations?.first?.options?.targetForVariableExpansion)
+        XCTAssertNotEmpty(plan.testTargets)
+    }
+
+    func test_whenCodeCoverageTargets_resolvesReferences() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(
+                    name: "Plan.xctestplan",
+                    defaultOptions: .options(
+                        codeCoverage: .selected(["AppTests", "FrameworkTests"])
+                    ),
+                    testTargets: ["AppTests", "FrameworkTests"]
+                ),
+            ]
+        )
+
+        // When
+        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: .init()
+        )
+
+        // Then
         let descriptor = try XCTUnwrap(descriptors.first)
-        XCTAssertNil(descriptor.configurations.first?.targetForVariableExpansion)
-        XCTAssertNotEmpty(descriptor.testTargets)
+        let coverage = try XCTUnwrap(descriptor.plan?.defaultOptions?.codeCoverage)
+        guard case let .targets(references) = coverage else {
+            return XCTFail("Expected .targets coverage, got \(coverage)")
+        }
+        XCTAssertEqual(references.map(\.name), ["AppTests", "FrameworkTests"])
+        XCTAssertEqual(
+            references.map(\.containerPath),
+            ["container:App.xcodeproj", "container:Framework/Framework.xcodeproj"]
+        )
+    }
+
+    func test_whenCodeCoverageTargetMissing_andPolicyFail_throws() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(
+                    name: "Plan.xctestplan",
+                    defaultOptions: .options(codeCoverage: .selected(["MissingTarget"])),
+                    testTargets: ["AppTests", "FrameworkTests"],
+                    missingTargetPolicy: .fail
+                ),
+            ]
+        )
+
+        // When / Then
+        XCTAssertThrowsError(
+            try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+                graphTraverser: graphTraverser,
+                generatedProjects: generatedProjects,
+                sideTable: .init()
+            )
+        ) { error in
+            guard case XCTestPlanDescriptorGeneratorError.targetReferenceNotFound(let target) = error else {
+                return XCTFail("Expected targetReferenceNotFound, got \(error)")
+            }
+            XCTAssertEqual(target, "MissingTarget")
+        }
+    }
+
+    func test_whenCodeCoverageTargetMissing_andPolicySkipTestPlan_skipsPlan() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(
+                    name: "Plan.xctestplan",
+                    defaultOptions: .options(codeCoverage: .selected(["MissingTarget"])),
+                    testTargets: ["AppTests", "FrameworkTests"],
+                    missingTargetPolicy: .skipTestPlan()
+                ),
+            ]
+        )
+
+        // When
+        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: .init()
+        )
+
+        // Then
+        XCTAssertEmpty(descriptors.compactMap { $0.plan })
+    }
+
+    func test_whenCodeCoverageTargetMissing_andPolicyExcludeTarget_excludesOnlyMissingTarget() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(
+                    name: "Plan.xctestplan",
+                    defaultOptions: .options(codeCoverage: .selected(["AppTests", "MissingTarget"])),
+                    testTargets: ["AppTests", "FrameworkTests"],
+                    missingTargetPolicy: .skipTarget()
+                ),
+            ]
+        )
+
+        // When
+        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: .init()
+        )
+
+        // Then
+        let descriptor = try XCTUnwrap(descriptors.first)
+        let coverage = try XCTUnwrap(descriptor.plan?.defaultOptions?.codeCoverage)
+        guard case let .targets(references) = coverage else {
+            return XCTFail("Expected .targets coverage, got \(coverage)")
+        }
+        XCTAssertEqual(references.map(\.name), ["AppTests"])
     }
 
     // MARK: - Path
@@ -561,15 +676,14 @@ private extension GeneratedTestPlan {
 
         var plan = GeneratedTestPlan(
             name: name,
-            directory: directory,
+            directory: directory.map { FilePath($0.pathString) },
             configurations: configurations,
             defaultOptions: defaultOptions,
             testTargets: testTargets,
             targetSelection: [],
-            isDefault: false,
             missingTargetPolicy: missingTargetPolicy
         )
-        plan.path = resolvedPath
+        plan.path = FilePath(resolvedPath.pathString)
         return plan
     }
 }

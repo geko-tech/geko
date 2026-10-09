@@ -39,7 +39,7 @@ let project = Project(
     schemes: [
         Scheme(
             name: "MainAppScheme",
-            testAction: .testPlans([
+            testAction: .testPlans(list: [
                 .generated(
                     name: "GeneratedTestPlan.xctestplan",
                     directory: "TestPlans/Geko",
@@ -57,8 +57,19 @@ let project = Project(
                             .variable(key: "isEnableAnimations", value: "YES", enabled: false)
                         ],
                         targetForVariableExpansion: "Framework1",
+                        codeCoverage: .all
                     ),
-                    targetSelection: [.all()]
+                    testTargets: [
+                        .target(TestableTarget(
+                            target: "AppTests", 
+                            skipped: true,
+                            parallelizable: true,
+                            randomExecutionOrdering: true
+                        )),
+                    ],
+                    targetSelection: [
+                        .all()
+                    ]
                 ),
                 "AllTestPlan.xctestplan"
             ])

@@ -2,22 +2,23 @@ import ProjectDescription
 
 extension GeneratedTestPlan.Options {
 
-    func map(
-        targetForVariableExpansion: XCTestPlanDescriptor.TestTarget?
+    public func map(
+        targetForVariableExpansion: XCTestPlan.TestTargetReference?,
+        codeCoverageTargets: [XCTestPlan.TestTargetReference]
     ) -> XCTestPlan.Options {
-
-        let targetForVariableExpansion = targetForVariableExpansion.map { target in
-            XCTestPlan.TestTargetReference(
-                containerPath: target.containerPath,
-                identifier: target.pbxTarget.uuid,
-                name: target.pbxTarget.name
-            )
-        }
 
         let convertedMallocStackLoggingOptions: XCTestPlan.Options.MallocStackLoggingOptions? = {
             switch mallocStackLoggingOptions {
             case .on: .on()
             case .off, .none: nil
+            }
+        }()
+
+        let codeCoverageMapped: XCTestPlan.Options.Coverage? = {
+            switch codeCoverage {
+            case .all, .none: nil
+            case .disabled: .disabled
+            case .selected: .targets(codeCoverageTargets)
             }
         }()
 
@@ -41,7 +42,7 @@ extension GeneratedTestPlan.Options {
             testRepetitionMode: testRepetitionMode,
             maximumTestRepetitions: maximumTestRepetitions,
             repeatInNewRunnerProcess: repeatInNewRunnerProcess,
-            codeCoverage: codeCoverage,
+            codeCoverage: codeCoverageMapped,
             addressSanitizer: addressSanitizer,
             threadSanitizerEnabled: threadSanitizerEnabled,
             undefinedBehaviorSanitizerEnabled: undefinedBehaviorSanitizerEnabled,

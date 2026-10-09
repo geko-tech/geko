@@ -545,16 +545,10 @@ final class SchemeTargetSelectionResolverTests: GekoUnitTestCase {
         let targets = allTargets([targetApp, targetAppTests], at: projectPath)
 
         let filePlanPath = "/some/path/Plan.xctestplan"
-        let fileTarget = TestableTarget(target: TargetReference(projectPath: projectPath, name: "AppTests"))
         let testAction = TestAction.test(
             targets: [],
             testPlans: [
-                TestPlan.file(
-                    name: "Plan",
-                    path: FilePath(filePlanPath),
-                    testTargets: [fileTarget],
-                    isDefault: true
-                ),
+                TestPlan.file(path: FilePath(filePlanPath)),
             ]
         )
         var schemes = [Scheme.test(testAction: testAction)]
@@ -565,10 +559,10 @@ final class SchemeTargetSelectionResolverTests: GekoUnitTestCase {
         // Then
         let resolved = try XCTUnwrap(schemes.first)
         let plan = try XCTUnwrap(resolved.testAction?.testPlans?.first)
-        guard case let .file(_, path, _, _) = plan else {
+        guard case let .file(fileTestPlan) = plan else {
             return XCTFail("Expected file test plan, got \(plan)")
         }
-        XCTAssertEqual(path, FilePath(filePlanPath))
+        XCTAssertEqual(fileTestPlan.path, FilePath(filePlanPath))
     }
 
     func test_multipleSchemes() throws {

@@ -33,18 +33,20 @@ public final class SchemeTargetSelectionResolver {
             var scheme = schemes[index]
 
             if var buildAction = scheme.buildAction, !buildAction.targetSelection.isEmpty {
-                buildAction.targets = try buildAction.targets + resolveBuildTargets(
+                let resolvedBuildTargets = try resolveBuildTargets(
                     scopes: buildAction.targetSelection,
                     allTargets: buildAndTestTargets
                 )
+                buildAction.targets = (buildAction.targets + resolvedBuildTargets).uniqued(by: \.name)
                 scheme.buildAction = buildAction
             }
 
             if var testAction = scheme.testAction, !testAction.targetSelection.isEmpty {
-                testAction.targets = try testAction.targets + resolveTestTargets(
+                let resolvedTestTargets = try resolveTestTargets(
                     scopes: testAction.targetSelection,
                     allTargets: buildAndTestTargets
                 )
+                testAction.targets = (testAction.targets + resolvedTestTargets).uniqued(by: \.target.name)
                 scheme.testAction = testAction
             }
 
@@ -56,7 +58,7 @@ public final class SchemeTargetSelectionResolver {
                         let testTargets = try resolveTestTargets(scopes: generatedTestPlan.targetSelection, allTargets: testPlanTargets).map {
                             GeneratedTestPlanTestableTarget($0)
                         }
-                        generatedTestPlan.testTargets = generatedTestPlan.testTargets + testTargets
+                        generatedTestPlan.testTargets = (generatedTestPlan.testTargets + testTargets).uniqued(by: \.target.target.name)
                         testPlans[i] = .generated(generatedTestPlan)
                     }
                 }
@@ -77,7 +79,9 @@ public final class SchemeTargetSelectionResolver {
             let selected = try selectedTargets(scope: scope, allTargets: allTargets)
             references.append(contentsOf: selected.map { TargetReference(projectPath: $0.path, name: $0.target.name) })
         }
-        return Array(Set(references)).sorted(by: { $0.name < $1.name })
+        return references
+            .uniqued(by: \.name)
+            .sorted(by: { $0.name < $1.name })
     }
 
     private func resolveTestTargets(
@@ -95,7 +99,9 @@ public final class SchemeTargetSelectionResolver {
                 )
             })
         }
-        return Array(Set(testableTargets)).sorted(by: { $0.target.name < $1.target.name })
+        return testableTargets
+            .uniqued(by: \.target.name)
+            .sorted(by: { $0.target.name < $1.target.name })
     }
 
     private func selectedTargets(

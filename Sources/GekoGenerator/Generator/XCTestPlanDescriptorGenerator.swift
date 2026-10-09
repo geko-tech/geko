@@ -4,23 +4,24 @@ import GekoSupport
 import GekoCore
 import GekoGraph
 import GekoLoader
+import Crypto
 
 enum XCTestPlanDescriptorGeneratorError: FatalError {
-    case targetForVariableExpansionNotFound(target: String)
+    case targetReferenceNotFound(target: String)
     case specificTestableTargetNotFound(testPlan: String, target: String)
     case generatedProjectNotFound(targetName: String, path: String)
 
     var type: ErrorType {
         switch self {
-        case .targetForVariableExpansionNotFound, .specificTestableTargetNotFound, .generatedProjectNotFound:
+        case .targetReferenceNotFound, .specificTestableTargetNotFound, .generatedProjectNotFound:
             return .abort
         }
     }
 
     var description: String {
         switch self {
-        case let .targetForVariableExpansionNotFound(target):
-            return "Target '\(target)' specified for variable expansion not found."
+        case let .targetReferenceNotFound(target):
+            return "Target '\(target)' specified as a test plan reference (variable expansion or code coverage) was not found. Verify that the target exists and is spelled correctly, or change the missing target policy to '.excludeTarget' or '.skipTestPlan'."
         case let .specificTestableTargetNotFound(testPlan, target):
             return "Test plan '\(testPlan)'. Target '\(target)' specified for testing was not found. Verify that the target exists and is spelled correctly, or change the missing target policy to '.excludeTarget' or '.skipTestPlan'."
         case let .generatedProjectNotFound(targetName, path):
@@ -37,14 +38,22 @@ protocol XCTestPlanDescriptorGenerating: AnyObject {
     ) throws -> ([XCTestPlanDescriptor], GenerateMetadata)
 }
 
-/// Outcome of resolving a variable-expansion target for a test plan.
-private enum VariableExpansionTargetResolution {
-    /// No variable-expansion target was configured, or a missing one was excluded.
-    case none
-    /// The variable-expansion target was resolved.
-    case resolved(XCTestPlanDescriptor.TestTarget)
-    /// A requested target is missing and the policy is `.skipTestPlan`.
-    case skipTestPlan
+/// Internal control-flow signal: a referenced target is missing and the policy is `.skipTestPlan`,
+/// so the whole test plan should be skipped.
+private enum TestPlanSkip: Error {
+    case skip
+}
+
+private final class GeneratedTestPlanDescriptorContext {
+    let allTargets: Set<GraphTarget>
+    let rootPath: AbsolutePath
+    let generatedProjects: [AbsolutePath: GeneratedProject]
+
+    init(allTargets: Set<GraphTarget>, rootPath: AbsolutePath, generatedProjects: [AbsolutePath : GeneratedProject]) {
+        self.allTargets = allTargets
+        self.rootPath = rootPath
+        self.generatedProjects = generatedProjects
+    }
 }
 
 final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
@@ -59,6 +68,7 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
 
         let allTargets = graphTraverser.allInternalTargets()
         let rootPath = graphTraverser.workspace.xcWorkspacePath.parentDirectory
+        let context = GeneratedTestPlanDescriptorContext(allTargets: allTargets, rootPath: rootPath, generatedProjects: generatedProjects)
 
         let testPlanDescriptors = try graphTraverser.projects.flatMap { (path, project) in
             var generatedTestPlans: [GeneratedTestPlan] = []
@@ -76,17 +86,11 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
 
             return try mapXCTestPlanDescriptors(
                 generatedTestPlans: generatedTestPlans,
-                generatedProjects: generatedProjects,
-                allTargets: allTargets,
-                rootPath: path
+                context: context
             )
         }
 
-        let allTestTargets = try mapAllTargetsToTestTargets(
-            allTargets: allTargets,
-            rootPath: rootPath,
-            generatedProjects: generatedProjects
-        ).mapTestTargets()
+        let allTestTargets = try mapAllTargetsToTestTargets(context: context)
 
         let generateMetadata = GenerateMetadata(
             workspaceName: graphTraverser.workspace.name,
@@ -102,16 +106,12 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
 
     private func mapXCTestPlanDescriptors(
         generatedTestPlans: [GeneratedTestPlan],
-        generatedProjects: [AbsolutePath: GeneratedProject],
-        allTargets: Set<GraphTarget>,
-        rootPath: AbsolutePath,
+        context: GeneratedTestPlanDescriptorContext
     ) throws -> [XCTestPlanDescriptor] {
-        try generatedTestPlans.compactMap { generatedTestPlan in
+        try generatedTestPlans.map { generatedTestPlan in
             try descriptor(
                 for: generatedTestPlan,
-                generatedProjects: generatedProjects,
-                allTargets: allTargets,
-                rootPath: rootPath
+                context: context
             )
         }
     }
@@ -119,89 +119,119 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
     /// Builds the descriptor for a single test plan, or `nil` when the plan should be skipped
     /// (e.g. a requested target is missing and the policy is `.skipTestPlan`).
     private func descriptor(
-        for generatedTestPlan: GeneratedTestPlan,
-        generatedProjects: [AbsolutePath: GeneratedProject],
-        allTargets: Set<GraphTarget>,
-        rootPath: AbsolutePath,
-    ) throws -> XCTestPlanDescriptor? {
-        var descriptiorConfigurations: [XCTestPlanDescriptor.Configuration] = []
-        for configuration in generatedTestPlan.configurations {
-            let configurationOptionsTargetForVariableExpansion: XCTestPlanDescriptor.TestTarget?
-            switch try descriptorTestTargetForVariableExpansion(
-                target: configuration.options?.targetForVariableExpansion,
-                missingTargetPolicy: generatedTestPlan.missingTargetPolicy,
-                testPlan: generatedTestPlan.name,
-                allTargets: allTargets,
-                rootPath: rootPath,
-                generatedProjects: generatedProjects
-            ) {
-            case .none:
-                configurationOptionsTargetForVariableExpansion = nil
-            case let .resolved(testTarget):
-                configurationOptionsTargetForVariableExpansion = testTarget
-            case .skipTestPlan:
-                return nil
+        for testPlan: GeneratedTestPlan,
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> XCTestPlanDescriptor {
+        do {
+            let configurations: [XCTestPlan.Configuration] = try testPlan.configurations.map { configuration in
+                XCTestPlan.Configuration(
+                    id: configurationID(path: testPlan.path, name: configuration.name),
+                    name: configuration.name,
+                    options: try resolveOptions(
+                        configuration.options,
+                        testPlan: testPlan,
+                        context: context
+                    )
+                )
             }
 
-            descriptiorConfigurations.append(
-                XCTestPlanDescriptor.Configuration(configuration: configuration, targetForVariableExpansion: configurationOptionsTargetForVariableExpansion)
+            let defaultOptions = try resolveOptions(
+                testPlan.defaultOptions,
+                testPlan: testPlan,
+                context: context
+            )
+
+            guard let testGraphTargets = try resolveTestTargets(testPlan: testPlan, context: context) else {
+                return XCTestPlanDescriptor(
+                    path: testPlan.path,
+                    plan: nil
+                )
+            }
+            let testTargets = try mapTargetsToTestTargets(targets: testGraphTargets, context: context)
+
+            let plan = XCTestPlan(
+                testTargets: testTargets,
+                configurations: configurations,
+                defaultOptions: defaultOptions ?? .empty,
+                version: 1
+            )
+
+            return XCTestPlanDescriptor(
+                path: testPlan.path,
+                plan: plan
+            )
+        } catch TestPlanSkip.skip {
+            return XCTestPlanDescriptor(
+                path: testPlan.path,
+                plan: nil
             )
         }
+    }
 
-        let defaultOptionsTargetForVariableExpansion: XCTestPlanDescriptor.TestTarget?
-        switch try descriptorTestTargetForVariableExpansion(
-            target: generatedTestPlan.defaultOptions?.targetForVariableExpansion,
-            missingTargetPolicy: generatedTestPlan.missingTargetPolicy,
-            testPlan: generatedTestPlan.name,
-            allTargets: allTargets,
-            rootPath: rootPath,
-            generatedProjects: generatedProjects
-        ) {
-        case .none:
-            defaultOptionsTargetForVariableExpansion = nil
-        case let .resolved(testTarget):
-            defaultOptionsTargetForVariableExpansion = testTarget
-        case .skipTestPlan:
-            return nil
-        }
+    /// Resolves a `GeneratedTestPlan.Options` into the corresponding plan options, expanding its target references.
+    ///
+    /// Returns `nil` when no options are configured. Throws `TestPlanSkip` when a referenced target is missing
+    /// and the policy is `.skipTestPlan`, meaning the whole test plan should be skipped.
+    private func resolveOptions(
+        _ options: GeneratedTestPlan.Options?,
+        testPlan: GeneratedTestPlan,
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> XCTestPlan.Options? {
+        guard let options else { return nil }
 
-        guard let testGraphTargets = try resolveTestTargets(
-            generatedTestPlan.testTargets,
-            missingTargetPolicy: generatedTestPlan.missingTargetPolicy,
-            testPlan: generatedTestPlan.name,
-            allTargets: allTargets
-        ) else {
-            return nil
-        }
-        let testTargets = try mapTargetsToTestTargets(targets: testGraphTargets, rootPath: rootPath, generatedProjects: generatedProjects)
-
-        return XCTestPlanDescriptor(
-            path: generatedTestPlan.path,
-            configurations: descriptiorConfigurations,
-            defaultOptions: generatedTestPlan.defaultOptions,
-            defaultOptionsTargetForVariableExpansion: defaultOptionsTargetForVariableExpansion,
-            testTargets: testTargets
+        let targetForVariableExpansion = try resolveTestTargetReference(
+            target: options.targetForVariableExpansion?.name,
+            testPlan: testPlan,
+            context: context
         )
+
+        let codeCoverageTargets = try resolveCodeCoverageTargets(
+            codeCoverage: options.codeCoverage,
+            testPlan: testPlan,
+            context: context
+        )
+
+        return options.map(
+            targetForVariableExpansion: targetForVariableExpansion,
+            codeCoverageTargets: codeCoverageTargets
+        )
+    }
+
+    /// Resolves the code-coverage target references for an options set.
+    ///
+    /// Throws `TestPlanSkip` when a requested coverage target is missing and the policy is `.skipTestPlan`.
+    private func resolveCodeCoverageTargets(
+        codeCoverage: GeneratedTestPlan.Options.Coverage?,
+        testPlan: GeneratedTestPlan,
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> [XCTestPlan.TestTargetReference] {
+        guard case let .selected(targets) = codeCoverage else { return [] }
+
+        return try targets.compactMap { target in
+            try resolveTestTargetReference(
+                target: target.name,
+                testPlan: testPlan,
+                context: context
+            )
+        }
     }
 
     /// Resolves the explicitly listed targets, honoring the missing-target policy.
     ///
     /// Returns `nil` when the whole test plan should be skipped (`.skipTestPlan` policy).
     private func resolveTestTargets(
-        _ testTargets: [GeneratedTestPlanTestableTarget],
-        missingTargetPolicy: GeneratedTestPlan.MissingTargetPolicy,
-        testPlan: String,
-        allTargets: Set<GraphTarget>,
+        testPlan: GeneratedTestPlan,
+        context: GeneratedTestPlanDescriptorContext
     ) throws -> [(GeneratedTestPlanTestableTarget, GraphTarget)]? {
         var graphTargets: [(GeneratedTestPlanTestableTarget, GraphTarget)] = []
 
-        for testTarget in testTargets {
-            guard let graphTarget = allTargets.first(where: { $0.target.name == testTarget.target.target.targetName }) else {
-                switch missingTargetPolicy {
+        for testTarget in testPlan.testTargets {
+            guard let graphTarget = context.allTargets.first(where: { $0.target.name == testTarget.target.target.targetName }) else {
+                switch testPlan.missingTargetPolicy {
                 case let .skipTestPlan(notification):
                     warnIfNeeded(
                         notification,
-                        testPlan: testPlan,
+                        testPlan: testPlan.name,
                         target: testTarget.target.target.name,
                         action: "The test plan will be skipped."
                     )
@@ -209,14 +239,14 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
                 case let .skipTarget(notification):
                     warnIfNeeded(
                         notification,
-                        testPlan: testPlan,
+                        testPlan: testPlan.name,
                         target: testTarget.target.target.name,
                         action: "The target will be excluded from the test plan."
                     )
                     continue
                 case .fail:
                     throw XCTestPlanDescriptorGeneratorError.specificTestableTargetNotFound(
-                        testPlan: testPlan,
+                        testPlan: testPlan.name,
                         target: testTarget.target.target.name
                     )
                 }
@@ -240,82 +270,91 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         )
     }
 
-    private func descriptorTestTargetForVariableExpansion(
+    /// Resolves an optional target reference, honoring the missing-target policy.
+    ///
+    /// Returns `nil` when no target is configured or a missing one was excluded (`.skipTarget` policy).
+    /// Throws `TestPlanSkip` when the whole test plan should be skipped (`.skipTestPlan` policy).
+    private func resolveTestTargetReference(
         target: String?,
-        missingTargetPolicy: GeneratedTestPlan.MissingTargetPolicy,
-        testPlan: String,
-        allTargets: Set<GraphTarget>,
-        rootPath: AbsolutePath,
-        generatedProjects: [AbsolutePath: GeneratedProject],
-    ) throws -> VariableExpansionTargetResolution {
-        guard let target else { return .none }
+        testPlan: GeneratedTestPlan,
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> XCTestPlan.TestTargetReference? {
+        guard let target else { return nil }
 
-        guard let graphTarget = allTargets.first(where: { $0.target.name == target }) else {
-            switch missingTargetPolicy {
+        guard let graphTarget = context.allTargets.first(where: { $0.target.name == target }) else {
+            switch testPlan.missingTargetPolicy {
             case let .skipTestPlan(notification):
                 warnIfNeeded(
                     notification,
-                    testPlan: testPlan,
+                    testPlan: testPlan.name,
                     target: target,
                     action: "The test plan will be skipped."
                 )
-                return .skipTestPlan
+                throw TestPlanSkip.skip
             case let .skipTarget(notification):
                 warnIfNeeded(
                     notification,
-                    testPlan: testPlan,
+                    testPlan: testPlan.name,
                     target: target,
-                    action: "The variable expansion target will be ignored."
+                    action: "The target will be ignored."
                 )
-                return .none
+                return nil
             case .fail:
-                throw XCTestPlanDescriptorGeneratorError.targetForVariableExpansionNotFound(target: target)
+                throw XCTestPlanDescriptorGeneratorError.targetReferenceNotFound(target: target)
             }
         }
 
-        let testTarget = try descriptorTestTarget(
-            rootPath: rootPath,
-            generatedProjects: generatedProjects,
-            target: (GeneratedTestPlanTestableTarget(TestableTarget(stringLiteral: target)), graphTarget)
+        return try testTargetReference(
+            graphTarget: graphTarget,
+            context: context
         )
-        return .resolved(testTarget)
     }
 
     // MARK: - Test targets
 
-    private func mapAllTargetsToTestTargets(
-        allTargets: Set<GraphTarget>,
-        rootPath: AbsolutePath,
-        generatedProjects: [AbsolutePath: GeneratedProject],
-    ) throws -> [XCTestPlanDescriptor.TestTarget] {
-        let targets = allTargets.filter(\.target.product.testsBundle).map { graphTarget in
-            (GeneratedTestPlanTestableTarget(TestableTarget(target: TargetReference(stringLiteral: graphTarget.target.name))), graphTarget)
-        }
-        return try mapTargetsToTestTargets(targets: targets, rootPath: rootPath, generatedProjects: generatedProjects)
+    private func mapAllTargetsToTestTargets(context: GeneratedTestPlanDescriptorContext) throws -> [XCTestPlan.TestTarget] {
+        let targets = context.allTargets
+            .filter(\.target.product.testsBundle)
+            .map { graphTarget in
+                (GeneratedTestPlanTestableTarget(stringLiteral: graphTarget.target.name), graphTarget)
+            }
+        return try mapTargetsToTestTargets(targets: targets, context: context)
     }
 
     private func mapTargetsToTestTargets(
         targets: [(testableTarget: GeneratedTestPlanTestableTarget, graphTarget: GraphTarget)],
-        rootPath: AbsolutePath,
-        generatedProjects: [AbsolutePath: GeneratedProject],
-    ) throws -> [XCTestPlanDescriptor.TestTarget] {
-        let descriptoTargets = try targets.map { target in
-            try descriptorTestTarget(rootPath: rootPath, generatedProjects: generatedProjects, target: target)
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> [XCTestPlan.TestTarget] {
+        let testTargets = try targets.map { target in
+            try testTarget(target: target, context: context)
         }
-        return descriptoTargets.sorted(by: { $0.pbxTarget.name < $1.pbxTarget.name })
+        return testTargets.sorted(by: { $0.target.name < $1.target.name })
     }
 
-    private func descriptorTestTarget(
-        rootPath: AbsolutePath,
-        generatedProjects: [AbsolutePath: GeneratedProject],
-        target: (testableTarget: GeneratedTestPlanTestableTarget, graphTarget: GraphTarget)
-    ) throws -> XCTestPlanDescriptor.TestTarget {
+    private func testTarget(
+        target: (testableTarget: GeneratedTestPlanTestableTarget, graphTarget: GraphTarget),
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> XCTestPlan.TestTarget {
 
         let (testableTarget, graphTarget) = target
+
+        return XCTestPlan.TestTarget(
+            target: try testTargetReference(graphTarget: graphTarget, context: context),
+            selectedTests: testableTarget.selectedTests.isEmpty ? nil : testableTarget.selectedTests,
+            skippedTests: testableTarget.skippedTests.isEmpty ? nil : testableTarget.skippedTests,
+            enabled: testableTarget.target.isSkipped ? false : nil,
+            parallelizable: testableTarget.target.isParallelizable ? true : nil
+        )
+    }
+
+    private func testTargetReference(
+        graphTarget: GraphTarget,
+        context: GeneratedTestPlanDescriptorContext
+    ) throws -> XCTestPlan.TestTargetReference {
         let xcodeProjectPath = graphTarget.project.xcodeProjPath
 
         guard
-            let generatedProject = generatedProjects[xcodeProjectPath],
+            let generatedProject = context.generatedProjects[xcodeProjectPath],
             let pbxTarget = generatedProject.targets[graphTarget.target.name]
         else {
             throw XCTestPlanDescriptorGeneratorError.generatedProjectNotFound(
@@ -324,15 +363,22 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
             )
         }
 
-        let containerRelativePath = xcodeProjectPath.relative(to: rootPath).pathString
+        let containerRelativePath = xcodeProjectPath.relative(to: context.rootPath).pathString
 
-        return XCTestPlanDescriptor.TestTarget(
-            pbxTarget: pbxTarget,
+        return XCTestPlan.TestTargetReference(
             containerPath: "container:\(containerRelativePath)",
-            isEnabled: !testableTarget.target.isSkipped,
-            isParallelizable: testableTarget.target.isParallelizable,
-            selectedTests: testableTarget.selectedTests,
-            skippedTests: testableTarget.skippedTests
+            identifier: pbxTarget.uuid,
+            name: pbxTarget.name,
         )
+    }
+
+    private func configurationID(path: AbsolutePath, name: String) -> UUID {
+        let digest = Array(SHA256.hash(data: Data((path.pathString + name).utf8)).prefix(16))
+        return UUID(uuid: (
+            digest[0], digest[1], digest[2], digest[3],
+            digest[4], digest[5], digest[6], digest[7],
+            digest[8], digest[9], digest[10], digest[11],
+            digest[12], digest[13], digest[14], digest[15]
+        ))
     }
 }
