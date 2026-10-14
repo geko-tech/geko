@@ -381,10 +381,16 @@ public final class TestService { // swiftlint:disable:this type_body_length
         }
 
         let logSpinner = LogSpinner()
+        var isSpinnedStoped = false
         var executedTestsCount = 0
         var failedTestsCount = 0
 
         logSpinner.start(message: "Starting tests")
+        defer {
+            if !isSpinnedStoped {
+                logSpinner.stop(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: "tests stopped"))
+            }
+        }
 
         try xcodebuildController.test(
             .workspace(graphTraverser.workspace.xcWorkspacePath),
@@ -421,6 +427,8 @@ public final class TestService { // swiftlint:disable:this type_body_length
                     failedTestsCount += 1
                 case .allTestsCompleted:
                     logSpinner.stop(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: "tests completed"))
+                    isSpinnedStoped = true
+                    return
                 default:
                     return
                 }
