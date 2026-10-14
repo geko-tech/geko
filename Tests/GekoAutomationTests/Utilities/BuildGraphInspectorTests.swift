@@ -31,14 +31,14 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         let target2 = Target.test(name: "Test2")
         let targetReference2 = TargetReference(projectPath: projectPath, name: target2.name)
 
-        let testPlan1 = TestPlan(
+        let testPlan1 = makeTestPlan(
             path: path.appending(component: "Test1.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference1, skipped: true),
             ],
             isDefault: true
         )
-        let testPlan2 = TestPlan(
+        let testPlan2 = makeTestPlan(
             path: path.appending(component: "Test2.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference2, skipped: false),
@@ -218,7 +218,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         let target2 = Target.test(name: "Test2")
         let targetReference2 = TargetReference(projectPath: projectPath, name: target2.name)
 
-        let testPlan = TestPlan(
+        let testPlan = makeTestPlan(
             path: path.appending(component: "Test.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference1, skipped: true),
@@ -265,7 +265,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         let target2 = Target.test(name: "Test2")
         let targetReference2 = TargetReference(projectPath: projectPath, name: target2.name)
 
-        let testPlan = TestPlan(
+        let testPlan = makeTestPlan(
             path: path.appending(component: "Test.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference1, skipped: false),
@@ -312,7 +312,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         let target2 = Target.test(name: "Test2")
         let targetReference2 = TargetReference(projectPath: projectPath, name: target2.name)
 
-        let testPlan = TestPlan(
+        let testPlan = makeTestPlan(
             path: path.appending(component: "Test.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference1, skipped: false),
@@ -359,7 +359,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         let target2 = Target.test(name: "Test2")
         let targetReference2 = TargetReference(projectPath: projectPath, name: target2.name)
 
-        let testPlan = TestPlan(
+        let testPlan = makeTestPlan(
             path: path.appending(component: "Test.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference1, skipped: true),
@@ -555,7 +555,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
             )
         )
         let coreTarget = Target.test(name: "Core")
-        let coreTestPlan = TestPlan(
+        let coreTestPlan = makeTestPlan(
             path: projectPath,
             testTargets: [TestableTarget(
                 target: TargetReference(projectPath: projectPath, name: coreTarget.name),
@@ -745,7 +745,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         let target2 = Target.test(name: "Test2")
         let targetReference2 = TargetReference(projectPath: projectPath, name: target2.name)
 
-        let testPlan = TestPlan(
+        let testPlan = makeTestPlan(
             path: path.appending(component: "Test.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference1, skipped: false),
@@ -753,7 +753,7 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
             isDefault: true
         )
 
-        let testPlan2 = TestPlan(
+        let testPlan2 = makeTestPlan(
             path: path.appending(component: "Test2.testplan"),
             testTargets: [
                 TestableTarget(target: targetReference2, skipped: false),
@@ -791,5 +791,18 @@ final class BuildGraphInspectorTests: GekoUnitTestCase {
         // Then
         XCTAssertEqual(got?.project, project)
         XCTAssertEqual(got?.target, target2)
+    }
+
+    // MARK: - Helpers
+
+    private func makeTestPlan(
+        path: AbsolutePath,
+        testTargets: [TestableTarget],
+        isDefault: Bool
+    ) -> TestPlan {
+        var fileTestPlan = FileTestPlan(path: FilePath(path.pathString))
+        fileTestPlan.testTargets = testTargets
+        fileTestPlan.isDefault = isDefault
+        return .file(fileTestPlan)
     }
 }

@@ -60,12 +60,7 @@ let project = Project(
                         codeCoverage: .all
                     ),
                     testTargets: [
-                        .target(TestableTarget(
-                            target: "AppTests", 
-                            skipped: true,
-                            parallelizable: true,
-                            randomExecutionOrdering: true
-                        )),
+                        .target("AppTests"),
                     ],
                     targetSelection: [
                         .all()

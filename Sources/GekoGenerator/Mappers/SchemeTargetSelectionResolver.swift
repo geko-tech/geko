@@ -11,7 +11,7 @@ public final class SchemeTargetSelectionResolver {
         _ schemes: inout [Scheme],
         allTargets: [(path: AbsolutePath, target: Target)]
     ) throws {
-        try resolveSchemes(&schemes, buildAndTestTargets: allTargets, testPlanTargets: allTargets)
+        try resolveSchemes(&schemes, buildAndTestTargets: allTargets, allTargets: allTargets)
     }
 
     public func resolveProjectSchemes(
@@ -19,7 +19,7 @@ public final class SchemeTargetSelectionResolver {
         allTargets: [(path: AbsolutePath, target: Target)],
         projectTargets: [(path: AbsolutePath, target: Target)],
     ) throws {
-        try resolveSchemes(&schemes, buildAndTestTargets: projectTargets, testPlanTargets: allTargets)
+        try resolveSchemes(&schemes, buildAndTestTargets: projectTargets, allTargets: allTargets)
     }
 
     // MARK: - Private
@@ -27,7 +27,7 @@ public final class SchemeTargetSelectionResolver {
     private func resolveSchemes(
         _ schemes: inout [Scheme],
         buildAndTestTargets: [(path: AbsolutePath, target: Target)],
-        testPlanTargets: [(path: AbsolutePath, target: Target)],
+        allTargets: [(path: AbsolutePath, target: Target)],
     ) throws {
         for index in schemes.indices {
             var scheme = schemes[index]
@@ -55,10 +55,10 @@ public final class SchemeTargetSelectionResolver {
                     switch testPlan {
                     case .file: continue
                     case var .generated(generatedTestPlan):
-                        let testTargets = try resolveTestTargets(scopes: generatedTestPlan.targetSelection, allTargets: testPlanTargets).map {
+                        let resolvedTestPlanTargets = try resolveTestTargets(scopes: generatedTestPlan.targetSelection, allTargets: allTargets).map {
                             GeneratedTestPlanTestableTarget($0)
                         }
-                        generatedTestPlan.testTargets = (generatedTestPlan.testTargets + testTargets).uniqued(by: \.target.target.name)
+                        generatedTestPlan.testTargets = (generatedTestPlan.testTargets + resolvedTestPlanTargets).uniqued(by: \.target.target.name)
                         testPlans[i] = .generated(generatedTestPlan)
                     }
                 }

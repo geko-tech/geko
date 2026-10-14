@@ -54,15 +54,14 @@ class GraphTraverserExtrasTests: XCTestCase {
         )
         graphTraverserWithoutTestPlans = GraphTraverser(graph: graphWithoutTestPlans)
 
-        testPlan = TestPlan(
-            path: "/path/test.xctestplan",
-            testTargets: [
-                .init(target: tests1, projectPath: projectPath),
-                .init(target: tests3, projectPath: projectPath, skipped: true),
-                .init(target: tests4, projectPath: projectPath),
-            ],
-            isDefault: true
-        )
+        var fileTestPlan = FileTestPlan(path: "/path/test.xctestplan")
+        fileTestPlan.testTargets = [
+            .init(target: tests1, projectPath: projectPath),
+            .init(target: tests3, projectPath: projectPath, skipped: true),
+            .init(target: tests4, projectPath: projectPath),
+        ]
+        fileTestPlan.isDefault = true
+        testPlan = .file(fileTestPlan)
         let testAction = TestAction.test(testPlans: [testPlan])
         let testScheme = Scheme.test(testAction: testAction)
         let projectWithTestPlan = Project.test(

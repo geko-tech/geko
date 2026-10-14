@@ -65,9 +65,6 @@ extension TestAction {
             // not used when using targets
             self.testPlans = nil
 
-            for i in 0 ..< targets.count {
-                try targets[i].resolvePaths(generatorPaths: generatorPaths)
-            }
             for i in 0 ..< options.codeCoverageTargets.count {
                 try options.codeCoverageTargets[i].resolvePaths(generatorPaths: generatorPaths)
             }
