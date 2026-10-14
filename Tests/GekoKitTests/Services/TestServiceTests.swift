@@ -25,7 +25,6 @@ final class TestServiceTests: GekoUnitTestCase {
     private var testsCacheTemporaryDirectory: TemporaryDirectory!
     private var cacheDirectoriesProvider: MockCacheDirectoriesProvider!
     private var logDirectoriesProvider: MockLogDirectoriesProvider!
-    private var testsProgressLogger: MockTestsProgressLogger!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -46,7 +45,6 @@ final class TestServiceTests: GekoUnitTestCase {
         }
 
         try writeGenerateMetadata()
-        testsProgressLogger = MockTestsProgressLogger()
 
         subject = TestService(
             testsCacheTemporaryDirectory: testsCacheTemporaryDirectory,
@@ -57,7 +55,6 @@ final class TestServiceTests: GekoUnitTestCase {
             contentHasher: contentHasher,
             cacheDirectoryProviderFactory: MockCacheDirectoriesProviderFactory(provider: mockCacheDirectoriesProvider),
             logDirectoryProvider: logDirectoriesProvider,
-            testsProgressLogger: testsProgressLogger,
         )
     }
 
@@ -70,7 +67,6 @@ final class TestServiceTests: GekoUnitTestCase {
         generatorFactory = nil
         contentHasher = nil
         logDirectoriesProvider = nil
-        testsProgressLogger = nil
         subject = nil
         super.tearDown()
     }

@@ -98,8 +98,7 @@ var targets: [Target] = [
             zipFoundationDependency,
             .product(name: "SystemPackage", package: "swift-system"),
             .product(name: "Crypto", package: "swift-crypto"),
-            "XcodeProj",
-            .product(name: "XcbeautifyLib", package: "xcbeautify"),
+            "XcodeProj"
         ],
         exclude: ["LICENSE.md"],
         cSettings: [.define("_GNU_SOURCE", .when(platforms: [.linux]))],
