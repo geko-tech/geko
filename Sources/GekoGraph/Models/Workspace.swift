@@ -105,7 +105,7 @@ extension Workspace {
             // try to add code coverage targets only if code coverage is enabled
             guard let testAction = scheme.testAction, testAction.coverage else { return }
 
-            let schemeCoverageTargets = testAction.codeCoverageTargets + testAction.codeCoverableTargets
+            let schemeCoverageTargets = testAction.codeCoverageTargets
 
             // having empty `codeCoverageTargets` means that we should gather code coverage for all build targets
             if schemeCoverageTargets.isEmpty, let buildAction = scheme.buildAction {
