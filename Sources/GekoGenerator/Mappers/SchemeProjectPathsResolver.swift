@@ -6,13 +6,13 @@ import ProjectDescription
 
 public final class SchemeProjectPathsResolver {
 
+    public init() {}
+
     public func resolveSchemes(
         _ schemes: inout [Scheme],
         allTargets: [(path: AbsolutePath, target: Target)],
-        manifestPath: AbsolutePath
+        generatorPaths: GeneratorPaths
     ) throws {
-        let generatorPaths = GeneratorPaths(manifestDirectory: manifestPath)
-
         for index in schemes.indices {
             var scheme = schemes[index]
 

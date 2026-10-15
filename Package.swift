@@ -644,6 +644,7 @@ var targets: [Target] = [
             "GekoLoaderTesting",
             "GekoCoreTesting",
             "GekoSupportTesting",
+            "GekoGenerator"
         ]
     ),
     .testTarget(

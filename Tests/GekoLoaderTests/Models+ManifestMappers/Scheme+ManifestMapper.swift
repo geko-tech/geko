@@ -4,6 +4,7 @@ import struct ProjectDescription.AbsolutePath
 import GekoCore
 import GekoGraph
 import GekoSupport
+import GekoGenerator
 import XCTest
 
 @testable import GekoLoader
@@ -39,6 +40,7 @@ final class SchemeManifestMapperTests: GekoUnitTestCase {
 
         let projectPath = try AbsolutePath(validating: "/somepath")
         let generatorPaths = GeneratorPaths(manifestDirectory: projectPath)
+        let schemesProjectPathResolver = SchemeProjectPathsResolver()
 
         let buildAction = ProjectDescription.BuildAction.manifestTest(targets: ["A", "B"])
         let runActions = ProjectDescription.RunAction.manifestTest(
@@ -63,6 +65,9 @@ final class SchemeManifestMapperTests: GekoUnitTestCase {
         // When
         var model = manifest
         try model.resolvePaths(generatorPaths: generatorPaths)
+        var schemes = [model]
+        try schemesProjectPathResolver.resolveSchemes(&schemes, allTargets: [], generatorPaths: generatorPaths)
+        model = schemes[0]
 
         // Then
         try assert(scheme: model, matches: manifest, path: projectPath, generatorPaths: generatorPaths)

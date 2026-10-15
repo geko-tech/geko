@@ -2,6 +2,7 @@ import Foundation
 import GekoCore
 import GekoGraph
 import GekoSupport
+import GekoLoader
 import ProjectDescription
 
 /// Mapper that fills the `targets` of `BuildAction` and `TestAction` from the given `targetSelection` scopes.
@@ -24,7 +25,8 @@ public final class SchemeScopeResolverWorkspaceMapper: WorkspaceMapping {
             project.targets.map { (path: project.path, target: $0) }
         }
 
-        try schemeProjectPathsResolver.resolveSchemes(&workspace.workspace.schemes, allTargets: allTargets, manifestPath: workspace.workspace.path)
+        let generatorPaths = GeneratorPaths(manifestDirectory: workspace.workspace.path)
+        try schemeProjectPathsResolver.resolveSchemes(&workspace.workspace.schemes, allTargets: allTargets, generatorPaths: generatorPaths)
         try schemeTargetSelectionResolver.resolveWorkspaceSchemes(&workspace.workspace.schemes, allTargets: allTargets)
 
         for (i, project) in workspace.projects.enumerated() {
@@ -32,7 +34,8 @@ public final class SchemeScopeResolverWorkspaceMapper: WorkspaceMapping {
             let projectTargets = project.targets.map { target in
                 (path: project.path, target: target)
             }
-            try schemeProjectPathsResolver.resolveSchemes(&project.schemes, allTargets: allTargets, manifestPath: project.sourceRootPath)
+            let generatorPaths = GeneratorPaths(manifestDirectory: project.sourceRootPath)
+            try schemeProjectPathsResolver.resolveSchemes(&project.schemes, allTargets: allTargets, generatorPaths: generatorPaths)
             try schemeTargetSelectionResolver.resolveProjectSchemes(&project.schemes, allTargets: allTargets, projectTargets: projectTargets)
             workspace.projects[i] = project
         }

@@ -4,6 +4,7 @@ import GekoGraph
 import GekoGraphTesting
 import ProjectDescription
 import XCTest
+import GekoLoader
 
 @testable import GekoGenerator
 @testable import GekoSupportTesting
@@ -16,6 +17,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_buildAction_absoluteProjectPath_leftUnchanged() throws {
         // Given
         let projectPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: projectPath)
         let targetA = Target.test(name: "A")
         let targets = allTargets([targetA], at: projectPath)
 
@@ -23,7 +25,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(buildAction: BuildAction.test(targets: [buildTarget]))]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: projectPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let scheme = try XCTUnwrap(schemes.first)
@@ -33,6 +35,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_buildAction_relativeProjectPath_resolvesRelativeToManifest() throws {
         // Given
         let manifestPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: manifestPath)
         let targetA = Target.test(name: "A")
         let targets = allTargets([targetA], at: manifestPath.appending(component: "AProject"))
 
@@ -40,7 +43,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(buildAction: BuildAction.test(targets: [buildTarget]))]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: manifestPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let scheme = try XCTUnwrap(schemes.first)
@@ -53,6 +56,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_buildAction_nilProjectPath_resolvedFromAllTargets() throws {
         // Given
         let projectPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: projectPath)
         let targetA = Target.test(name: "A")
         let targets = allTargets([targetA], at: projectPath)
 
@@ -60,7 +64,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(buildAction: BuildAction.test(targets: [buildTarget]))]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: projectPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let scheme = try XCTUnwrap(schemes.first)
@@ -70,6 +74,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_buildAction_nilProjectPath_notFound_defaultsToManifest() throws {
         // Given
         let manifestPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: manifestPath)
         let targetA = Target.test(name: "A")
         let targets = allTargets([targetA], at: manifestPath.appending(component: "App"))
 
@@ -77,7 +82,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(buildAction: BuildAction.test(targets: [buildTarget]))]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: manifestPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let scheme = try XCTUnwrap(schemes.first)
@@ -89,6 +94,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_testAction_relativeProjectPath_resolvesRelativeToManifest() throws {
         // Given
         let manifestPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: manifestPath)
         let targetTests = Target.test(name: "ATests", product: .unitTests)
         let targets = allTargets([targetTests], at: manifestPath.appending(component: "Tests"))
 
@@ -96,7 +102,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(testAction: TestAction.test(targets: [testTarget]))]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: manifestPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let scheme = try XCTUnwrap(schemes.first)
@@ -109,6 +115,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_testAction_nilProjectPath_resolvedFromAllTargets() throws {
         // Given
         let projectPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: projectPath)
         let targetTests = Target.test(name: "ATests", product: .unitTests)
         let targets = allTargets([targetTests], at: projectPath)
 
@@ -116,7 +123,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(testAction: TestAction.test(targets: [testTarget]))]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: projectPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let scheme = try XCTUnwrap(schemes.first)
@@ -131,6 +138,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_generatedTestPlan_relativeProjectPath_resolvesRelativeToManifest() throws {
         // Given
         let manifestPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: manifestPath)
         let targetTests = Target.test(name: "ATests", product: .unitTests)
         let targets = allTargets([targetTests], at: manifestPath.appending(component: "Tests"))
 
@@ -146,7 +154,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(testAction: testAction)]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: manifestPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let resolved = try XCTUnwrap(schemes.first)
@@ -167,6 +175,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
     func test_fileTestPlan_leftUnchanged() throws {
         // Given
         let projectPath = try temporaryPath()
+        let generatorPaths = GeneratorPaths(manifestDirectory: projectPath)
         let targetA = Target.test(name: "A")
         let targets = allTargets([targetA], at: projectPath)
 
@@ -180,7 +189,7 @@ final class SchemeProjectPathsResolverTests: GekoUnitTestCase {
         var schemes = [Scheme.test(testAction: testAction)]
 
         // When
-        try subject.resolveSchemes(&schemes, allTargets: targets, manifestPath: projectPath)
+        try subject.resolveSchemes(&schemes, allTargets: targets, generatorPaths: generatorPaths)
 
         // Then
         let resolved = try XCTUnwrap(schemes.first)
