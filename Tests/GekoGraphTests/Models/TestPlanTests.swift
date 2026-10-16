@@ -8,11 +8,9 @@ import XCTest
 final class TestPlanTests: GekoUnitTestCase {
     func test_codable() {
         // Given
-        let subject = TestPlan(
-            path: "/path/to",
-            testTargets: [],
-            isDefault: true
-        )
+        var fileTestPlan = FileTestPlan(path: "/path/to")
+        fileTestPlan.isDefault = true
+        let subject = TestPlan.file(fileTestPlan)
 
         // Then
         XCTAssertCodable(subject)

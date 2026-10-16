@@ -28,13 +28,16 @@ public final class XcodeProjWriter: XcodeProjWriting {
 
     private let config: Config
     private let sideEffectDescriptorExecutor: SideEffectDescriptorExecuting
+    private let logDirectoryProvider: LogDirectoriesProviding
 
     public init(
         sideEffectDescriptorExecutor: SideEffectDescriptorExecuting = SideEffectDescriptorExecutor(),
-        config: Config = .default
+        config: Config = .default,
+        logDirectoryProvider: LogDirectoriesProviding = LogDirectoriesProvider(),
     ) {
         self.sideEffectDescriptorExecutor = sideEffectDescriptorExecutor
         self.config = config
+        self.logDirectoryProvider = logDirectoryProvider
     }
 
     public func write(project: ProjectDescriptor) throws {
@@ -69,6 +72,7 @@ public final class XcodeProjWriter: XcodeProjWriting {
         } else {
             try deleteWorkspaceSettingsIfNeeded(xccontainerPath: workspace.xcworkspacePath)
         }
+        try writeGenerateMetadata(generateMetadata: workspace.generateMetadata)
         // TODO: v.krupenko This is a very old code. In fact, there are no side effects in WorkspaceDescriptor.
         // they all come to a common array with GraphSideEffects, and are executed in the generator, but here it is always empty.
         // We need to check that if they are really empty and are not filled in anywhere in the code, then just delete them.
@@ -198,6 +202,15 @@ public final class XcodeProjWriter: XcodeProjWriting {
             let username = NSUserName()
             return path.appending(try RelativePath(validating: "xcuserdata/\(username).xcuserdatad/xcschemes"))
         }
+    }
+
+    private func writeGenerateMetadata(generateMetadata: GenerateMetadata) throws {
+        let folder = try logDirectoryProvider.logDirectory(for: .generateMetadata)
+        if !FileHandler.shared.exists(folder) {
+            try FileHandler.shared.createFolder(folder)
+        }
+        let path = folder.appending(component: Constants.GekoUserCacheDirectory.generateMetadataName)
+        try JSONRepository(url: path.asURL).save(generateMetadata)
     }
 }
 

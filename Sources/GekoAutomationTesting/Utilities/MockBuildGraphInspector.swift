@@ -66,8 +66,8 @@ public final class MockBuildGraphInspector: BuildGraphInspecting {
         }
     }
 
-    public var testableSchemesStub: ((GraphTraversing) -> [Scheme])?
-    public func testableSchemes(graphTraverser: GraphTraversing) -> [Scheme] {
+    public var testableSchemesStub: ((GraphTraversing) -> [(path: AbsolutePath, scheme: Scheme)])?
+    public func testableSchemes(graphTraverser: GraphTraversing) -> [(path: AbsolutePath, scheme: Scheme)] {
         if let testableSchemesStub {
             return testableSchemesStub(graphTraverser)
         } else {
@@ -90,8 +90,8 @@ public final class MockBuildGraphInspector: BuildGraphInspecting {
         runnableSchemesStub?(graphTraverser) ?? []
     }
 
-    public var workspaceSchemesStub: ((GraphTraversing) -> [Scheme])?
-    public func workspaceSchemes(graphTraverser: GraphTraversing) -> [Scheme] {
+    public var workspaceSchemesStub: ((GraphTraversing) -> [(path: AbsolutePath, scheme: Scheme)])?
+    public func workspaceSchemes(graphTraverser: GraphTraversing) -> [(path: AbsolutePath, scheme: Scheme)] {
         workspaceSchemesStub?(graphTraverser) ?? []
     }
 }

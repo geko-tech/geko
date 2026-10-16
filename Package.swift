@@ -98,6 +98,7 @@ var targets: [Target] = [
             zipFoundationDependency,
             .product(name: "SystemPackage", package: "swift-system"),
             .product(name: "Crypto", package: "swift-crypto"),
+            "XcodeProj"
         ],
         exclude: ["LICENSE.md"],
         cSettings: [.define("_GNU_SOURCE", .when(platforms: [.linux]))],
@@ -643,6 +644,7 @@ var targets: [Target] = [
             "GekoLoaderTesting",
             "GekoCoreTesting",
             "GekoSupportTesting",
+            "GekoGenerator"
         ]
     ),
     .testTarget(
@@ -834,7 +836,7 @@ let package = Package(
         .package(url: "https://github.com/kylef/PathKit.git", .upToNextMinor(from: "1.0.1")),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.4.3"),
         .package(url: "https://github.com/jpsim/Yams", exact: "5.0.6"),
-        .package(url: "https://github.com/geko-tech/project-description.git", branch: "1.2.0-prerelease-1")
+        .package(url: "https://github.com/geko-tech/project-description.git", branch: "release/1.2.0")
     ],
     targets: targets
 )

@@ -57,6 +57,7 @@ public enum GekoAcceptanceFixtures {
     case iosAppWithWatchapp2
     case iosAppWithWeaklyLinkedFramework
     case iosAppWithXcframeworks
+    case iosAppWithGeneratedTestPlan
     case iosWorkspaceWithDependencyCycle
     case iosWorkspaceWithMicrofeatureArchitecture
     case macosAppWithCopyFiles
@@ -148,6 +149,8 @@ public enum GekoAcceptanceFixtures {
             return "ios_app_with_framework_linking_static_framework"
         case .iosAppWithFrameworks:
             return "ios_app_with_frameworks"
+        case .iosAppWithGeneratedTestPlan:
+            return "ios_app_with_generated_test_plan"
         case .iosAppWithHeaders:
             return "ios_app_with_headers"
         case .iosAppWithHelpers:

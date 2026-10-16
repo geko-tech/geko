@@ -154,6 +154,12 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
     )
     var testPlan: String?
 
+    @Flag(
+        name: .long,
+        help: "When passed, it edits the list of test targets in the test plan and adds to this list the test targets passed via the --test-targets argument or adds all of them if the argument was not passed."
+    )
+    var editTestPlan: Bool = false
+
     @Option(
         name: .long,
         parsing: .upToNextOption,
@@ -221,6 +227,10 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
             testTargets: testTargets,
             skipTestTargets: skipTestTargets
         )
+
+        if editTestPlan && testPlan == nil {
+            throw TestServiceError.editTestPlanWithoutTestPlan
+        }
     }
 
     public func run() async throws {
@@ -291,7 +301,8 @@ public struct TestCommand: AsyncParsableCommand, HasTrackableParameters {
             },
             validateTestTargetsParameters: false,
             generateOnly: generateOnly,
-            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+            editTestPlan: editTestPlan
         )
     }
 }
