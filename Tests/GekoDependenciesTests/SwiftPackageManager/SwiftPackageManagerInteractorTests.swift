@@ -95,8 +95,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
 
         // When
         let dependenciesGraph = try subject.install(
+            packagePathAndSettings: PackagePathAndSettings(
+                packagePath: dependenciesFilePath,
+                packageSettings: .test(baseSettings: .default)
+            ),
             dependenciesDirectory: dependenciesDirectory,
-            packageSettings: .test(baseSettings: .default),
             arguments: [],
             shouldUpdate: false,
             swiftToolsVersion: nil
@@ -199,8 +202,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
 
         // When
         let dependenciesGraph = try subject.install(
+            packagePathAndSettings: PackagePathAndSettings(
+                packagePath: dependenciesFilePath,
+                packageSettings: .test(baseSettings: .default)
+            ),
             dependenciesDirectory: dependenciesDirectory,
-            packageSettings: .test(baseSettings: .default),
             arguments: stubbedPassthroughArguments,
             shouldUpdate: false,
             swiftToolsVersion: swiftToolsVersion
@@ -302,8 +308,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
 
         // When
         let dependenciesGraph = try subject.install(
+            packagePathAndSettings: PackagePathAndSettings(
+                packagePath: dependenciesFilePath,
+                packageSettings: .test(baseSettings: .default)
+            ),
             dependenciesDirectory: dependenciesDirectory,
-            packageSettings: .test(baseSettings: .default),
             arguments: stubbedPassthroughArguments,
             shouldUpdate: true,
             swiftToolsVersion: nil
@@ -426,8 +435,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
 
         // When
         let dependenciesGraph = try subject.install(
+            packagePathAndSettings: PackagePathAndSettings(
+                packagePath: dependenciesFilePath,
+                packageSettings: .test(baseSettings: .default)
+            ),
             dependenciesDirectory: dependenciesDirectory,
-            packageSettings: .test(baseSettings: .default),
             arguments: stubbedPassthroughArguments,
             shouldUpdate: false,
             swiftToolsVersion: nil
@@ -517,8 +529,11 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
 
         // When
         let dependenciesGraph = try subject.install(
+            packagePathAndSettings: PackagePathAndSettings(
+                packagePath: dependenciesFilePath,
+                packageSettings: .test(baseSettings: .default)
+            ),
             dependenciesDirectory: dependenciesDirectory,
-            packageSettings: .test(baseSettings: .default),
             arguments: stubbedPassthroughArguments,
             shouldUpdate: false,
             swiftToolsVersion: nil
@@ -610,7 +625,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(workspaceStatePath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertFalse(result)
@@ -698,12 +713,12 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(workspaceStatePath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertTrue(result)
     }
-    
+
     func test_needFetch_when_dependencies_file_not_exists() throws {
         // Given
         let rootPath = try temporaryPath()
@@ -711,24 +726,29 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
             Constants.GekoUserCacheDirectory.name,
             Constants.DependenciesDirectory.packageSandboxName
         ])
-        
+
         let packageResolvedFilePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
             Constants.DependenciesDirectory.packageResolvedName
         ])
-        
+
+        let packagePath = rootPath.appending(components: [
+            Constants.gekoDirectoryName,
+            Constants.DependenciesDirectory.packageSwiftName
+        ])
+
         let workspaceStatePath = rootPath.appending(components: [
             Constants.gekoDirectoryName,
             Constants.DependenciesDirectory.packageBuildDirectoryName,
             Constants.DependenciesDirectory.workspaceStateName
         ])
-        
+
         try fileHandler.touch(sandboxPackageFilePath)
         try fileHandler.touch(packageResolvedFilePath)
         try fileHandler.touch(workspaceStatePath)
-        
+
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertTrue(result)
@@ -779,7 +799,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(workspaceStatePath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertFalse(result)
@@ -808,7 +828,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(packageResolvedFilePath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertTrue(result)
@@ -875,7 +895,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(workspaceStatePath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertTrue(result)
@@ -944,7 +964,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(localPackageBPath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertFalse(result)
@@ -975,7 +995,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         try fileHandler.touch(workspaceStatePath)
         
         // When
-        let result = try subject.needFetch(path: rootPath)
+        let result = try subject.needFetch(path: rootPath, packagePath: packagePath)
         
         // Then
         XCTAssertTrue(result)
@@ -996,7 +1016,7 @@ final class SwiftPackageManagerInteractorTests: GekoUnitTestCase {
         ])
 
         // When
-        try subject.clean(dependenciesDirectory: dependenciesDirectory)
+        try subject.clean(at: rootPath)
 
         // Then
         try XCTAssertDirectoryContentEqual(

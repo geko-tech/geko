@@ -18,6 +18,7 @@ final class FetchServiceTests: GekoUnitTestCase {
     private var dependenciesController: MockDependenciesController!
     private var packageSettingsLoader: MockPackageSettingsLoader!
     private var dependenciesModelLoader: MockDependenciesModelLoader!
+    private var swiftPackageManagerInteractor: MockSwiftPackageManagerInteractor!
 
     private var subject: FetchService!
 
@@ -31,6 +32,7 @@ final class FetchServiceTests: GekoUnitTestCase {
         dependenciesController = MockDependenciesController()
         dependenciesModelLoader = MockDependenciesModelLoader()
         packageSettingsLoader = MockPackageSettingsLoader()
+        swiftPackageManagerInteractor = MockSwiftPackageManagerInteractor()
 
         subject = FetchService(
             pluginsFacade: pluginsFacade,
@@ -38,7 +40,8 @@ final class FetchServiceTests: GekoUnitTestCase {
             manifestLoader: manifestLoader,
             dependenciesController: dependenciesController,
             dependenciesModelLoader: dependenciesModelLoader,
-            packageSettingsLoader: packageSettingsLoader
+            packageSettingsLoader: packageSettingsLoader,
+            swiftPackageManagerInteractor: swiftPackageManagerInteractor
         )
     }
 
@@ -49,6 +52,7 @@ final class FetchServiceTests: GekoUnitTestCase {
         configLoader = nil
         dependenciesController = nil
         dependenciesModelLoader = nil
+        swiftPackageManagerInteractor = nil
 
         super.tearDown()
     }

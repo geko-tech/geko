@@ -16,6 +16,7 @@ public final class MockDependenciesController: DependenciesControlling {
         config: ProjectDescription.Config,
         passthroughArguments: [String],
         cocoapodsDependencies: ProjectDescription.CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: ProjectDescription.PackageSettings?,
         repoUpdate: Bool,
         deployment: Bool
@@ -33,6 +34,7 @@ public final class MockDependenciesController: DependenciesControlling {
         config: ProjectDescription.Config,
         passthroughArguments: [String],
         cocoapodsDependencies: ProjectDescription.CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?
     ) async throws -> ProjectDescription.DependenciesGraph {
         invokedUpdate = true
@@ -45,6 +47,7 @@ public final class MockDependenciesController: DependenciesControlling {
     )?
     public func needFetch(
         cocoapodsDependencies: ProjectDescription.CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: ProjectDescription.PackageSettings?,
         path: ProjectDescription.AbsolutePath,
         cache: Bool
