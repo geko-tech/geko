@@ -1,30 +1,37 @@
 import Foundation
+import GekoSupport
 
 public protocol XcodeBuildOutputParsing {
     func parse(line: String) -> XcodeBuildEvent?
 }
 
 public final class XcodeBuildOutputParser: XcodeBuildOutputParsing {
-    
+
     private static let targetContextRegex = try! NSRegularExpression(
         pattern: #"\(in target '(.+)' from project '.+'\)$"#,
         options: []
     )
-    
+
+    private let testCaseParser = XcodeBuildTestCaseParser()
+
     public init() {}
-    
+
     // MARK: - XcodeBuildOutputParsing
-    
+
     public func parse(line: String) -> XcodeBuildEvent? {
         let line = line.trimmingCharacters(in: .whitespaces)
-        
+
+        if let event = testCaseParser.parse(line: line) {
+            return event
+        }
+
         guard let operation = parseOperation(line: line) else {
             return nil
         }
         guard let targetName = parseTargetName(line: line) else {
             return nil
         }
-        
+
         switch operation {
         case .compileC, .compileSwift:
             return .targetCompilationStarted(targetName: targetName)
@@ -34,16 +41,16 @@ public final class XcodeBuildOutputParser: XcodeBuildOutputParsing {
             return .targetTouched(targetName: targetName)
         }
     }
-    
+
     // MARK: - Private
-    
+
     private func parseOperation(line: String) -> XcodeBuildOperation? {
         guard let operationName = line.split(maxSplits: 1, whereSeparator: \.isWhitespace).first else {
             return nil
         }
         return XcodeBuildOperation(rawValue: String(operationName))
     }
-    
+
     private func parseTargetName(line: String) -> String? {
         let range = NSRange(line.startIndex..<line.endIndex, in: line)
         guard let match = XcodeBuildOutputParser.targetContextRegex.firstMatch(in: line, range: range) else {

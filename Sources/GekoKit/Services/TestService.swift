@@ -92,7 +92,7 @@ public final class TestService { // swiftlint:disable:this type_body_length
         buildGraphInspector: BuildGraphInspecting = BuildGraphInspector(),
         simulatorController: SimulatorControlling = SimulatorController(),
         contentHasher: ContentHashing = ContentHasher(),
-        cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory()
+        cacheDirectoryProviderFactory: CacheDirectoriesProviderFactoring = CacheDirectoriesProviderFactory(),
     ) {
         self.testsCacheTemporaryDirectory = testsCacheTemporaryDirectory
         self.generatorFactory = generatorFactory
@@ -380,6 +380,18 @@ public final class TestService { // swiftlint:disable:this type_body_length
             )
         }
 
+        let logSpinner = LogSpinner()
+        var isSpinnedStoped = false
+        var executedTestsCount = 0
+        var failedTestsCount = 0
+
+        logSpinner.start(message: "Starting tests")
+        defer {
+            if !isSpinnedStoped {
+                logSpinner.stop(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: "tests stopped"))
+            }
+        }
+
         try xcodebuildController.test(
             .workspace(graphTraverser.workspace.xcWorkspacePath),
             scheme: scheme.name,
@@ -399,7 +411,43 @@ public final class TestService { // swiftlint:disable:this type_body_length
             testTargets: testTargets,
             skipTestTargets: skipTestTargets,
             testPlanConfiguration: testPlanConfiguration,
-            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments
+            passthroughXcodeBuildArguments: passthroughXcodeBuildArguments,
+            eventHandler: { event in
+                var additionalText: String?
+
+                switch event {
+                case let .testCaseStarted(suite, testCase):
+                    // TODO: There is a bug in LogSpinner if the text is wider than the terminal. Uncomment the following line after fixing the bug.
+                    // additionalText = "testing '\(suite).\(testCase)'"
+                    break
+                case .testCasePassed, .parallelTestCasePassed:
+                    executedTestsCount += 1
+                case .testCaseFailed, .parallelTestCaseFailed:
+                    executedTestsCount += 1
+                    failedTestsCount += 1
+                case .allTestsCompleted:
+                    logSpinner.stop(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: "tests completed"))
+                    isSpinnedStoped = true
+                    return
+                default:
+                    return
+                }
+
+                logSpinner.update(message: self.progressMessage(executedTestsCount: executedTestsCount, failedTestsCount: failedTestsCount, additionalText: additionalText))
+            }
         )
+    }
+
+    private func progressMessage(
+        executedTestsCount: Int,
+        failedTestsCount: Int,
+        additionalText: String?
+    ) -> String {
+        let baseMessage = "Executed \(executedTestsCount) tests, with \(failedTestsCount) failures"
+        if let additionalText {
+            return "\(baseMessage), \(additionalText)."
+        } else {
+            return "\(baseMessage)."
+        }
     }
 }
