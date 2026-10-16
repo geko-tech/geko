@@ -220,6 +220,12 @@ public final class GraphLoader: GraphLoading {
                 status: status
             )
 
+        case let .macro(macroPath, _):
+            return try loadMacro(
+                path: macroPath,
+                cache: cache
+            )
+
         case let .bundle(path, _):
             return try loadBundle(path: path)
 
@@ -337,6 +343,13 @@ public final class GraphLoader: GraphLoading {
         }
 
         return xcframework
+    }
+
+    private func loadMacro(
+        path: AbsolutePath,
+        cache: Cache
+    ) throws -> GraphDependency {
+        .macro(path: path)
     }
 
     private func loadBundle(

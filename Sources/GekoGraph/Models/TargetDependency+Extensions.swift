@@ -20,6 +20,8 @@ public extension TargetDependency {
             condition
         case .bundle(path: _, condition: let condition):
             condition
+        case .macro(path: _, condition: let condition):
+            condition
         case .external(name: _, condition: let condition):
             condition
         case .xctest: nil
@@ -44,6 +46,8 @@ public extension TargetDependency {
             return .sdk(name: name, type: type, status: status, condition: condition)
         case let .bundle(path, _):
             return .bundle(path: path, condition: condition)
+        case let .macro(path, _):
+            return .macro(path: path, condition: condition)
         case .xctest: return .xctest
         case .external(name: let name, condition: _):
             return .external(name: name, condition: condition)

@@ -338,6 +338,8 @@ extension TargetDependency {
             return "xcframework"
         case .bundle:
             return "bundle"
+        case .macro:
+            return "macro"
         case .xctest:
             return "xctest"
         case .external:
@@ -361,6 +363,8 @@ extension TargetDependency {
             return path.basename
         case let .sdk(name, _, _, _):
             return name
+        case let .macro(path, _):
+            return path.basename
         case let .bundle(path, _):
             return path.basename
         case .xctest:

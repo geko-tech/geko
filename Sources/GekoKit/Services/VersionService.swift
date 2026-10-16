@@ -8,7 +8,7 @@ final class VersionService {
         CommandOutputStore.shared.set(.gekoVersion, value: version)
         logger.notice("\(version)")
     }
-    
+
     func projectDescription() throws {
         let version = Constants.projectDescriptionVersion
         CommandOutputStore.shared.set(.projectDescriptionVersion, value: version)

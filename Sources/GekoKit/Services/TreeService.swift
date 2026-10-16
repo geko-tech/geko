@@ -118,7 +118,7 @@ final class TreeService {
         for (depName, targetDeps) in localGraph.externalDependenciesGraph.externalDependencies {
             for targetDep in targetDeps {
                 switch targetDep {
-                case let .xcframework(path, _, _), let .framework(path, _, _), let .bundle(path, _):
+                case let .xcframework(path, _, _), let .framework(path, _, _), let .bundle(path, _), let .macro(path, _):
                     frameworkToDepName[path] = depName
                 case .library, .local, .project, .sdk, .target, .xctest, .external:
                     continue
@@ -137,15 +137,10 @@ final class TreeService {
                     dependencies.insert(name)
                 case let .project(target, _, _, _):
                     dependencies.insert(target.name)
-                case .framework(path: let path, _, _):
-                    if let depName = frameworkToDepName[path] {
-                        dependencies.insert(depName)
-                    }
-                case .xcframework(path: let path, _, _):
-                    if let depName = frameworkToDepName[path] {
-                        dependencies.insert(depName)
-                    }
-                case .bundle(path: let path, _):
+                case let .framework(path, _, _),
+                     let .xcframework(path, _, _),
+                     let .bundle(path, _),
+                     let .macro(path, _):
                     if let depName = frameworkToDepName[path] {
                         dependencies.insert(depName)
                     }

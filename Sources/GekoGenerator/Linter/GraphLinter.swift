@@ -169,7 +169,7 @@ public class GraphLinter: GraphLinting {
             )
         }
     }
-    
+
     private func lintUnusedDependencies(graphTraverser: GraphTraversing) -> [LintingIssue] {
         return graphTraverser.allUnusedDependencies().compactMap {
             switch $0 {
@@ -177,7 +177,7 @@ public class GraphLinter: GraphLinting {
                 LintingIssue(reason: "Dependency \(path.basenameWithoutExt) is unused. It should be added to at least one target", severity: .warning)
             case let .project(name, _, _, _):
                 LintingIssue(reason: "Dependency \(name) is unused. It should be added to at least one target", severity: .warning)
-            case .local, .sdk, .target, .xctest, .external, .bundle:
+            case .local, .sdk, .target, .xctest, .external, .bundle, .macro:
                 nil
             }
         }

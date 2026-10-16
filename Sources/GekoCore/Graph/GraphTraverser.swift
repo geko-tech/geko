@@ -1089,7 +1089,7 @@ public class GraphTraverser: GraphTraversing {
 
     public func allUnusedDependencies() -> Set<TargetDependency> {
         var unusedDeps: Set<TargetDependency> = []
-        
+
         var usedDependencies: Set<String> = []
         for (key, deps) in graph.dependencies {
             usedDependencies.insert(key.nameWithoutExtension)
@@ -1097,7 +1097,7 @@ public class GraphTraverser: GraphTraversing {
                 usedDependencies.insert(dep.nameWithoutExtension)
             }
         }
-        
+
         for (_, deps) in graph.externalDependenciesGraph.externalDependencies {
             for dep in deps {
                 switch dep {
@@ -1117,7 +1117,7 @@ public class GraphTraverser: GraphTraversing {
                     if !usedDependencies.contains(target) {
                         unusedDeps.insert(dep)
                     }
-                case .local, .sdk, .target, .xctest, .external, .bundle:
+                case .local, .sdk, .target, .xctest, .external, .bundle, .macro:
                     break
                 }
             }

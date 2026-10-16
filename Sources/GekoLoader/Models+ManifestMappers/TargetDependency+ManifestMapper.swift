@@ -29,7 +29,7 @@ extension TargetDependency {
         externalDependencies: [String: [TargetDependency]]
     ) throws {
         switch self {
-        case .target, .local, .project, .framework, .library, .xcframework, .bundle, .xctest:
+        case .target, .local, .project, .framework, .library, .xcframework, .bundle, .macro, .xctest:
             result.append(self)
         case let .sdk(name, type, status, condition):
             result.append(.sdk(
@@ -76,6 +76,11 @@ extension TargetDependency {
             )
         case let .bundle(path, condition):
             self = .bundle(
+                path: try generatorPaths.resolve(path: path),
+                condition: condition
+            )
+        case let .macro(path, condition):
+            self = .macro(
                 path: try generatorPaths.resolve(path: path),
                 condition: condition
             )
