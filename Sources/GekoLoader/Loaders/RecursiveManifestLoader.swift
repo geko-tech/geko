@@ -97,11 +97,11 @@ public class RecursiveManifestLoader: RecursiveManifestLoading {
         var paths = Set(paths)
         while !paths.isEmpty {
             paths.subtract(cache.keys)
-            let projects = try Array(paths).compactMap(context: ExecutionContext.concurrent) {
-                let packageInfo = try manifestLoader.loadPackage(at: $0)
-                return try packageInfoMapper.map(
+            let projects: [(AbsolutePath, Project)] = try Array(paths).compactMap(context: ExecutionContext.concurrent) { path in
+                let packageInfo = try manifestLoader.loadPackage(at: path)
+                guard let project = try packageInfoMapper.map(
                     packageInfo: packageInfo,
-                    path: $0,
+                    path: path,
                     productTypes: packageSettings.productTypes,
                     baseSettings: packageSettings.baseSettings,
                     targetSettings: packageSettings.targetSettings,
@@ -110,10 +110,11 @@ public class RecursiveManifestLoader: RecursiveManifestLoading {
                     packageModuleAliases: [:],
                     enabledTraits: [],
                     isLocal: true
-                )
+                ) else { return nil }
+                return (path, project)
             }
             var newDependenciesPaths = Set<AbsolutePath>()
-            for (path, project) in zip(paths, projects) {
+            for (path, project) in projects {
                 cache[path] = project
                 newDependenciesPaths.formUnion(try dependencyPaths(for: project, path: path))
             }

@@ -26,7 +26,7 @@ public final class PackageSettingsLoader: PackageSettingsLoading {
     }
 
     public func loadPackageSettings(at path: AbsolutePath, with plugins: Plugins) throws -> PackageSettings {
-        let path = manifestFilesLocator.locatePackageManifest(at: path)?.parentDirectory ?? path
+        let path = try manifestFilesLocator.locatePackageManifest(at: path)?.parentDirectory ?? path
         try manifestLoader.register(plugins: plugins)
         var manifest = try manifestLoader.loadPackageSettings(at: path)
         let generatorPaths = GeneratorPaths(manifestDirectory: path)

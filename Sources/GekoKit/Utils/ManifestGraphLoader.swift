@@ -116,7 +116,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
 
     // swiftlint:disable:next large_tuple
     public func load(path: AbsolutePath) async throws -> (Graph, GraphSideTable, [SideEffectDescriptor], [LintingIssue]) {
-        try manifestLoader.validateHasProjectOrWorkspaceManifest(at: path)
+        try manifestLoader.validateHasGeneratableManifest(at: path)
 
         // Load Config
         let config = try configLoader.loadConfig(path: path)
@@ -130,7 +130,7 @@ public final class ManifestGraphLoader: ManifestGraphLoading {
         }
 
         let packageSettings: PackageSettings?
-        if let packagePath = manifestFilesLocator.locatePackageManifest(at: path) {
+        if let packagePath = try manifestFilesLocator.locatePackageManifest(at: path) {
             packageSettings = try packageSettingsLoader.loadPackageSettings(at: packagePath.parentDirectory, with: plugins)
         } else {
             packageSettings = nil

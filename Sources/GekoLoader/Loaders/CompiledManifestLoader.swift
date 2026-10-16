@@ -178,7 +178,7 @@ public class CompiledManifestLoader: ManifestLoading {
         Set(manifestFilesLocator.locateManifests(at: path).map(\.0))
     }
 
-    public func validateHasProjectOrWorkspaceManifest(at path: AbsolutePath) throws {
+    public func validateHasGeneratableManifest(at path: AbsolutePath) throws {
         let manifests = manifests(at: path)
         guard manifests.contains(.workspace) || manifests.contains(.project) || manifests.contains(.package)  else {
             throw ManifestLoaderError.manifestNotFound(path)

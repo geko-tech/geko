@@ -101,7 +101,7 @@ final class FetchService {
             Manifest.dependencies.fileName(path)
         )
         
-        let packageManifestPath = manifestFilesLocator.locatePackageManifest(at: path)
+        let packageManifestPath = try manifestFilesLocator.locatePackageManifest(at: path)
 
         var cocoapodsDependencies: CocoapodsDependencies? = nil
         var packageSettings: PackageSettings? = nil
@@ -183,13 +183,13 @@ final class FetchService {
         with plugins: GekoGraph.Plugins,
         passthroughArguments: [String]
     ) async throws {
-        try manifestLoader.validateHasProjectOrWorkspaceManifest(at: path)
+        try manifestLoader.validateHasGeneratableManifest(at: path)
 
         let dependenciesManifestPath = path.appending(
             components: Constants.gekoDirectoryName,
             Manifest.dependencies.fileName(path)
         )
-        let packageManifestPath = manifestFilesLocator.locatePackageManifest(at: path)
+        let packageManifestPath = try manifestFilesLocator.locatePackageManifest(at: path)
         guard fileHandler.exists(dependenciesManifestPath) || packageManifestPath != nil else {
             return
         }

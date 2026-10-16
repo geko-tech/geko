@@ -4,6 +4,24 @@ import struct ProjectDescription.RelativePath
 import GekoCore
 import GekoSupport
 
+public enum ManifestFilesLocatorError: FatalError {
+    case twoSwiftPackageManifests
+
+    public var description: String {
+        switch self {
+        case .twoSwiftPackageManifests:
+            "There should be a single Package.swift manifest, but currently there are two — one at the project root and another in the Geko/ folder."
+        }
+    }
+
+    public var type: ErrorType {
+        switch self {
+        case .twoSwiftPackageManifests:
+            .abort
+        }
+    }
+}
+
 public protocol ManifestFilesLocating: AnyObject {
     /// It locates the manifest files in the locating directory.
     /// - Parameter locatingPath: Directory for which the manifest files will be obtained.
@@ -51,7 +69,7 @@ public protocol ManifestFilesLocating: AnyObject {
     /// - Parameter locatingPath: Path from where to do the lookup
     func locatePackageManifest(
         at locatingPath: AbsolutePath
-    ) -> AbsolutePath?
+    ) throws -> AbsolutePath?
 }
 
 public final class ManifestFilesLocator: ManifestFilesLocating {
@@ -240,21 +258,27 @@ public final class ManifestFilesLocator: ManifestFilesLocating {
         return traverseAndLocate(at: locatingPath, appending: subPath)
     }
 
-    public func locatePackageManifest(at locatingPath: AbsolutePath) -> AbsolutePath? {
-        let rootDirectory = locatingPath
-        let defaultPackageSwiftPath = rootDirectory.appending(
+    public func locatePackageManifest(at locatingPath: AbsolutePath) throws -> AbsolutePath? {
+        guard let rootDirectory = rootDirectoryLocator.locate(from: locatingPath) else { return nil }
+
+        let gekoDirectoryPackageSwiftPath = rootDirectory.appending(
             components: [
                 Constants.gekoDirectoryName,
                 Constants.DependenciesDirectory.packageSwiftName,
             ]
         )
-        let rootPackageSwiftPath = rootDirectory
-            .appending(component: Constants.DependenciesDirectory.packageSwiftName)
-        if FileHandler.shared.exists(defaultPackageSwiftPath) {
-            return defaultPackageSwiftPath
-        } else if FileHandler.shared.exists(rootPackageSwiftPath) {
+        let rootPackageSwiftPath = rootDirectory.appending(
+            component: Constants.DependenciesDirectory.packageSwiftName
+        )
+
+        switch (FileHandler.shared.exists(gekoDirectoryPackageSwiftPath), FileHandler.shared.exists(rootPackageSwiftPath)) {
+        case (true, true):
+            throw ManifestFilesLocatorError.twoSwiftPackageManifests
+        case (true, false):
+            return gekoDirectoryPackageSwiftPath
+        case (false, true):
             return rootPackageSwiftPath
-        } else {
+        case (false, false):
             return nil
         }
     }
