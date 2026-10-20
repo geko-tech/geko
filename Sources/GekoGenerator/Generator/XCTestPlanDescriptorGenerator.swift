@@ -45,11 +45,11 @@ private enum TestPlanSkip: Error {
 }
 
 private final class GeneratedTestPlanDescriptorContext {
-    let allTargets: Set<GraphTarget>
+    let allTargets: [String: GraphTarget]
     let rootPath: AbsolutePath
     let generatedProjects: [AbsolutePath: GeneratedProject]
 
-    init(allTargets: Set<GraphTarget>, rootPath: AbsolutePath, generatedProjects: [AbsolutePath : GeneratedProject]) {
+    init(allTargets: [String: GraphTarget], rootPath: AbsolutePath, generatedProjects: [AbsolutePath: GeneratedProject]) {
         self.allTargets = allTargets
         self.rootPath = rootPath
         self.generatedProjects = generatedProjects
@@ -66,7 +66,10 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         sideTable: GraphSideTable
     ) throws -> ([XCTestPlanDescriptor], GenerateMetadata) {
 
-        let allTargets = graphTraverser.allInternalTargets()
+        let allTargets = Dictionary(
+            graphTraverser.allInternalTargets().map { ($0.target.name, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
         let rootPath = graphTraverser.workspace.xcWorkspacePath.parentDirectory
         let context = GeneratedTestPlanDescriptorContext(allTargets: allTargets, rootPath: rootPath, generatedProjects: generatedProjects)
 
@@ -223,10 +226,10 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         testPlan: GeneratedTestPlan,
         context: GeneratedTestPlanDescriptorContext
     ) throws -> [(GeneratedTestPlanTestableTarget, GraphTarget)]? {
-        var graphTargets: [(GeneratedTestPlanTestableTarget, GraphTarget)] = []
+        var graphTargets: [(testTarget: GeneratedTestPlanTestableTarget, graphTarget: GraphTarget)] = []
 
         for testTarget in testPlan.testTargets {
-            guard let graphTarget = context.allTargets.first(where: { $0.target.name == testTarget.target.target.targetName }) else {
+            guard let graphTarget = context.allTargets[testTarget.target.target.targetName] else {
                 switch testPlan.missingTargetPolicy {
                 case let .skipTestPlan(notification):
                     warnIfNeeded(
@@ -281,7 +284,7 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
     ) throws -> XCTestPlan.TestTargetReference? {
         guard let target else { return nil }
 
-        guard let graphTarget = context.allTargets.first(where: { $0.target.name == target }) else {
+        guard let graphTarget = context.allTargets[target] else {
             switch testPlan.missingTargetPolicy {
             case let .skipTestPlan(notification):
                 warnIfNeeded(
@@ -313,7 +316,7 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
     // MARK: - Test targets
 
     private func mapAllTargetsToTestTargets(context: GeneratedTestPlanDescriptorContext) throws -> [XCTestPlan.TestTarget] {
-        let targets = context.allTargets
+        let targets = context.allTargets.values
             .filter(\.target.product.testsBundle)
             .map { graphTarget in
                 (GeneratedTestPlanTestableTarget(stringLiteral: graphTarget.target.name), graphTarget)

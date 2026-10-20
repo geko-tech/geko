@@ -86,12 +86,12 @@ public final class SchemeProjectPathsResolver {
             return
         }
         guard
-            let foundedTarget = allTargets.first(where: { $0.target.name == target.name })
+            let foundTarget = allTargets.first(where: { $0.target.name == target.name })
         else {
             logger.warning("Target not found '\(target.name)' at scheme '\(scheme)'")
             target.projectPath = generatorPaths.manifestDirectory
             return
         }
-        target.projectPath = foundedTarget.path
+        target.projectPath = foundTarget.path
     }
 }
