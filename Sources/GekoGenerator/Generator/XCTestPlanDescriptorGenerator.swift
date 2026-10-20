@@ -7,23 +7,17 @@ import GekoLoader
 import Crypto
 
 enum XCTestPlanDescriptorGeneratorError: FatalError {
-    case targetReferenceNotFound(target: String)
-    case specificTestableTargetNotFound(testPlan: String, target: String)
     case generatedProjectNotFound(targetName: String, path: String)
 
     var type: ErrorType {
         switch self {
-        case .targetReferenceNotFound, .specificTestableTargetNotFound, .generatedProjectNotFound:
+        case .generatedProjectNotFound:
             return .abort
         }
     }
 
     var description: String {
         switch self {
-        case let .targetReferenceNotFound(target):
-            return "Target '\(target)' specified as a test plan reference (variable expansion or code coverage) was not found. Verify that the target exists and is spelled correctly, or change the missing target policy to '.excludeTarget' or '.skipTestPlan'."
-        case let .specificTestableTargetNotFound(testPlan, target):
-            return "Test plan '\(testPlan)'. Target '\(target)' specified for testing was not found. Verify that the target exists and is spelled correctly, or change the missing target policy to '.excludeTarget' or '.skipTestPlan'."
         case let .generatedProjectNotFound(targetName, path):
             return "Could not find the generated project for target '\(targetName)' at path '\(path)'. This is likely an internal error. Please report this issue."
         }
@@ -36,12 +30,6 @@ protocol XCTestPlanDescriptorGenerating: AnyObject {
         generatedProjects: [AbsolutePath: GeneratedProject],
         sideTable: GraphSideTable
     ) throws -> ([XCTestPlanDescriptor], GenerateMetadata)
-}
-
-/// Internal control-flow signal: a referenced target is missing and the policy is `.skipTestPlan`,
-/// so the whole test plan should be skipped.
-private enum TestPlanSkip: Error {
-    case skip
 }
 
 private final class GeneratedTestPlanDescriptorContext {
@@ -119,78 +107,56 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         }
     }
 
-    /// Builds the descriptor for a single test plan, or `nil` when the plan should be skipped
-    /// (e.g. a requested target is missing and the policy is `.skipTestPlan`).
     private func descriptor(
         for testPlan: GeneratedTestPlan,
         context: GeneratedTestPlanDescriptorContext
     ) throws -> XCTestPlanDescriptor {
-        do {
-            let configurations: [XCTestPlan.Configuration] = try testPlan.configurations.map { configuration in
-                XCTestPlan.Configuration(
-                    id: configurationID(path: testPlan.path, name: configuration.name),
-                    name: configuration.name,
-                    options: try resolveOptions(
-                        configuration.options,
-                        testPlan: testPlan,
-                        context: context
-                    )
+
+        let configurations: [XCTestPlan.Configuration] = try testPlan.configurations.map { configuration in
+            XCTestPlan.Configuration(
+                id: configurationID(path: testPlan.path, name: configuration.name),
+                name: configuration.name,
+                options: try resolveOptions(
+                    configuration.options,
+                    context: context
                 )
-            }
-
-            let defaultOptions = try resolveOptions(
-                testPlan.defaultOptions,
-                testPlan: testPlan,
-                context: context
-            )
-
-            guard let testGraphTargets = try resolveTestTargets(testPlan: testPlan, context: context) else {
-                return XCTestPlanDescriptor(
-                    path: testPlan.path,
-                    plan: nil
-                )
-            }
-            let testTargets = try mapTargetsToTestTargets(targets: testGraphTargets, context: context)
-
-            let plan = XCTestPlan(
-                testTargets: testTargets,
-                configurations: configurations,
-                defaultOptions: defaultOptions ?? .empty,
-                version: 1
-            )
-
-            return XCTestPlanDescriptor(
-                path: testPlan.path,
-                plan: plan
-            )
-        } catch TestPlanSkip.skip {
-            return XCTestPlanDescriptor(
-                path: testPlan.path,
-                plan: nil
             )
         }
+
+        let defaultOptions = try resolveOptions(
+            testPlan.defaultOptions,
+            context: context
+        )
+
+        let testGraphTargets = try resolveTestTargets(testPlan: testPlan, context: context)
+        let testTargets = try mapTargetsToTestTargets(targets: testGraphTargets, context: context)
+
+        let plan = XCTestPlan(
+            testTargets: testTargets,
+            configurations: configurations,
+            defaultOptions: defaultOptions ?? .empty,
+            version: 1
+        )
+
+        return XCTestPlanDescriptor(
+            path: testPlan.path,
+            plan: plan
+        )
     }
 
-    /// Resolves a `GeneratedTestPlan.Options` into the corresponding plan options, expanding its target references.
-    ///
-    /// Returns `nil` when no options are configured. Throws `TestPlanSkip` when a referenced target is missing
-    /// and the policy is `.skipTestPlan`, meaning the whole test plan should be skipped.
     private func resolveOptions(
         _ options: GeneratedTestPlan.Options?,
-        testPlan: GeneratedTestPlan,
         context: GeneratedTestPlanDescriptorContext
     ) throws -> XCTestPlan.Options? {
         guard let options else { return nil }
 
         let targetForVariableExpansion = try resolveTestTargetReference(
             target: options.targetForVariableExpansion?.name,
-            testPlan: testPlan,
             context: context
         )
 
         let codeCoverageTargets = try resolveCodeCoverageTargets(
             codeCoverage: options.codeCoverage,
-            testPlan: testPlan,
             context: context
         )
 
@@ -200,12 +166,8 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         )
     }
 
-    /// Resolves the code-coverage target references for an options set.
-    ///
-    /// Throws `TestPlanSkip` when a requested coverage target is missing and the policy is `.skipTestPlan`.
     private func resolveCodeCoverageTargets(
         codeCoverage: GeneratedTestPlan.Options.Coverage?,
-        testPlan: GeneratedTestPlan,
         context: GeneratedTestPlanDescriptorContext
     ) throws -> [XCTestPlan.TestTargetReference] {
         guard case let .selected(targets) = codeCoverage else { return [] }
@@ -213,46 +175,20 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         return try targets.compactMap { target in
             try resolveTestTargetReference(
                 target: target.name,
-                testPlan: testPlan,
                 context: context
             )
         }
     }
 
-    /// Resolves the explicitly listed targets, honoring the missing-target policy.
-    ///
-    /// Returns `nil` when the whole test plan should be skipped (`.skipTestPlan` policy).
     private func resolveTestTargets(
         testPlan: GeneratedTestPlan,
         context: GeneratedTestPlanDescriptorContext
-    ) throws -> [(GeneratedTestPlanTestableTarget, GraphTarget)]? {
+    ) throws -> [(GeneratedTestPlanTestableTarget, GraphTarget)] {
         var graphTargets: [(testTarget: GeneratedTestPlanTestableTarget, graphTarget: GraphTarget)] = []
 
         for testTarget in testPlan.testTargets {
             guard let graphTarget = context.allTargets[testTarget.target.target.targetName] else {
-                switch testPlan.missingTargetPolicy {
-                case let .skipTestPlan(notification):
-                    warnIfNeeded(
-                        notification,
-                        testPlan: testPlan.name,
-                        target: testTarget.target.target.name,
-                        action: "The test plan will be skipped."
-                    )
-                    return nil
-                case let .skipTarget(notification):
-                    warnIfNeeded(
-                        notification,
-                        testPlan: testPlan.name,
-                        target: testTarget.target.target.name,
-                        action: "The target will be excluded from the test plan."
-                    )
-                    continue
-                case .fail:
-                    throw XCTestPlanDescriptorGeneratorError.specificTestableTargetNotFound(
-                        testPlan: testPlan.name,
-                        target: testTarget.target.target.name
-                    )
-                }
+                continue
             }
 
             graphTargets.append((testTarget, graphTarget))
@@ -261,51 +197,14 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
         return graphTargets
     }
 
-    private func warnIfNeeded(
-        _ notification: GeneratedTestPlan.MissingTargetPolicy.Notification,
-        testPlan: String,
-        target: String,
-        action: String,
-    ) {
-        guard case .warning = notification else { return }
-        logger.warning(
-            "Test plan '\(testPlan)'. Target '\(target)' specified for testing was not found. Verify that the target exists and is spelled correctly. \(action)"
-        )
-    }
-
-    /// Resolves an optional target reference, honoring the missing-target policy.
-    ///
-    /// Returns `nil` when no target is configured or a missing one was excluded (`.skipTarget` policy).
-    /// Throws `TestPlanSkip` when the whole test plan should be skipped (`.skipTestPlan` policy).
     private func resolveTestTargetReference(
         target: String?,
-        testPlan: GeneratedTestPlan,
         context: GeneratedTestPlanDescriptorContext
     ) throws -> XCTestPlan.TestTargetReference? {
-        guard let target else { return nil }
-
-        guard let graphTarget = context.allTargets[target] else {
-            switch testPlan.missingTargetPolicy {
-            case let .skipTestPlan(notification):
-                warnIfNeeded(
-                    notification,
-                    testPlan: testPlan.name,
-                    target: target,
-                    action: "The test plan will be skipped."
-                )
-                throw TestPlanSkip.skip
-            case let .skipTarget(notification):
-                warnIfNeeded(
-                    notification,
-                    testPlan: testPlan.name,
-                    target: target,
-                    action: "The target will be ignored."
-                )
-                return nil
-            case .fail:
-                throw XCTestPlanDescriptorGeneratorError.targetReferenceNotFound(target: target)
-            }
-        }
+        guard
+            let target,
+            let graphTarget = context.allTargets[target]
+        else { return nil }
 
         return try testTargetReference(
             graphTarget: graphTarget,

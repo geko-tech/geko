@@ -88,7 +88,6 @@ public final class SchemeProjectPathsResolver {
         guard
             let foundTarget = allTargets.first(where: { $0.target.name == target.name })
         else {
-            logger.warning("Target not found '\(target.name)' at scheme '\(scheme)'")
             target.projectPath = generatorPaths.manifestDirectory
             return
         }

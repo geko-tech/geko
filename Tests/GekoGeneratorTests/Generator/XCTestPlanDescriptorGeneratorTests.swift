@@ -62,58 +62,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         XCTAssertEqual(descriptor.plan?.testTargets.map(\.parallelizable), [nil, true])
     }
 
-    func test_whenTestTargetMissing_andPolicyFail_throws() throws {
-        // Given
-        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
-            generatedTestPlans: [
-                .testPlan(
-                    name: "Plan.xctestplan",
-                    testTargets: ["MissingTarget"],
-                    missingTargetPolicy: .fail
-                ),
-            ]
-        )
-
-        // When / Then
-        XCTAssertThrowsError(
-            try subject.xcTestPlanDescriptorsAndGenerateMetadata(
-                graphTraverser: graphTraverser,
-                generatedProjects: generatedProjects,
-                sideTable: .init()
-            )
-        ) { error in
-            guard case XCTestPlanDescriptorGeneratorError.specificTestableTargetNotFound(let testPlan, let target) = error else {
-                return XCTFail("Expected TestableTargetNotFound, got \(error)")
-            }
-            XCTAssertEqual(testPlan, "Plan")
-            XCTAssertEqual(target, "MissingTarget")
-        }
-    }
-
-    func test_whenTestTargetMissing_andPolicySkipTestPlan_skipsWholePlan() throws {
-        // Given
-        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
-            generatedTestPlans: [
-                .testPlan(
-                    name: "Plan.xctestplan",
-                    testTargets: ["MissingTarget"],
-                    missingTargetPolicy: .skipTestPlan()
-                ),
-            ]
-        )
-
-        // When
-        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
-            graphTraverser: graphTraverser,
-            generatedProjects: generatedProjects,
-            sideTable: .init()
-        )
-
-        // Then
-        XCTAssertEmpty(descriptors.compactMap { $0.plan })
-    }
-
-    func test_whenTestTargetMissing_andPolicyExcludeTarget_excludesOnlyMissingTarget() throws {
+    func test_whenTestTargetMissing_excludesMissingTarget() throws {
         // Given
         let (graphTraverser, generatedProjects) = try makeSubjectInputs(
             generatedTestPlans: [
@@ -122,8 +71,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
                     testTargets: [
                         "AppTests",
                         "MissingTarget",
-                    ],
-                    missingTargetPolicy: .skipTarget()
+                    ]
                 ),
             ]
         )
@@ -190,7 +138,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
     }
 
-    func test_whenVariableExpansionTargetNotFound_andPolicyFail_throws() throws {
+    func test_whenVariableExpansionTargetNotFound_ignoresExpansionTarget() throws {
         // Given
         let (graphTraverser, generatedProjects) = try makeSubjectInputs(
             generatedTestPlans: [
@@ -202,70 +150,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
                             options: .options(targetForVariableExpansion: "MissingTarget")
                         )
                     ],
-                    testTargets: ["AppTests", "FrameworkTests"],
-                    missingTargetPolicy: .fail
-                ),
-            ]
-        )
-
-        // When / Then
-        XCTAssertThrowsError(
-            try subject.xcTestPlanDescriptorsAndGenerateMetadata(
-                graphTraverser: graphTraverser,
-                generatedProjects: generatedProjects,
-                sideTable: .init()
-            )
-        ) { error in
-            guard case XCTestPlanDescriptorGeneratorError.targetReferenceNotFound(let target) = error else {
-                return XCTFail("Expected targetReferenceNotFound, got \(error)")
-            }
-            XCTAssertEqual(target, "MissingTarget")
-        }
-    }
-
-    func test_whenVariableExpansionTargetNotFound_andPolicySkipTestPlan_skipsPlan() throws {
-        // Given
-        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
-            generatedTestPlans: [
-                .testPlan(
-                    name: "Plan.xctestplan",
-                    configurations: [
-                        .configuration(
-                            name: "ConfigurationName1",
-                            options: .options(targetForVariableExpansion: "MissingTarget")
-                        )
-                    ],
-                    testTargets: ["AppTests", "FrameworkTests"],
-                    missingTargetPolicy: .skipTestPlan()
-                ),
-            ]
-        )
-
-        // When
-        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
-            graphTraverser: graphTraverser,
-            generatedProjects: generatedProjects,
-            sideTable: .init()
-        )
-
-        // Then
-        XCTAssertEmpty(descriptors.compactMap { $0.plan })
-    }
-
-    func test_whenVariableExpansionTargetNotFound_andPolicyExcludeTarget_ignoresExpansionTarget() throws {
-        // Given
-        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
-            generatedTestPlans: [
-                .testPlan(
-                    name: "Plan.xctestplan",
-                    configurations: [
-                        .configuration(
-                            name: "ConfigurationName1",
-                            options: .options(targetForVariableExpansion: "MissingTarget")
-                        )
-                    ],
-                    testTargets: ["AppTests", "FrameworkTests"],
-                    missingTargetPolicy: .skipTarget()
+                    testTargets: ["AppTests", "FrameworkTests"]
                 ),
             ]
         )
@@ -317,67 +202,14 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
     }
 
-    func test_whenCodeCoverageTargetMissing_andPolicyFail_throws() throws {
-        // Given
-        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
-            generatedTestPlans: [
-                .testPlan(
-                    name: "Plan.xctestplan",
-                    defaultOptions: .options(codeCoverage: .selected(["MissingTarget"])),
-                    testTargets: ["AppTests", "FrameworkTests"],
-                    missingTargetPolicy: .fail
-                ),
-            ]
-        )
-
-        // When / Then
-        XCTAssertThrowsError(
-            try subject.xcTestPlanDescriptorsAndGenerateMetadata(
-                graphTraverser: graphTraverser,
-                generatedProjects: generatedProjects,
-                sideTable: .init()
-            )
-        ) { error in
-            guard case XCTestPlanDescriptorGeneratorError.targetReferenceNotFound(let target) = error else {
-                return XCTFail("Expected targetReferenceNotFound, got \(error)")
-            }
-            XCTAssertEqual(target, "MissingTarget")
-        }
-    }
-
-    func test_whenCodeCoverageTargetMissing_andPolicySkipTestPlan_skipsPlan() throws {
-        // Given
-        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
-            generatedTestPlans: [
-                .testPlan(
-                    name: "Plan.xctestplan",
-                    defaultOptions: .options(codeCoverage: .selected(["MissingTarget"])),
-                    testTargets: ["AppTests", "FrameworkTests"],
-                    missingTargetPolicy: .skipTestPlan()
-                ),
-            ]
-        )
-
-        // When
-        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
-            graphTraverser: graphTraverser,
-            generatedProjects: generatedProjects,
-            sideTable: .init()
-        )
-
-        // Then
-        XCTAssertEmpty(descriptors.compactMap { $0.plan })
-    }
-
-    func test_whenCodeCoverageTargetMissing_andPolicyExcludeTarget_excludesOnlyMissingTarget() throws {
+    func test_whenCodeCoverageTargetMissing_excludesMissingTarget() throws {
         // Given
         let (graphTraverser, generatedProjects) = try makeSubjectInputs(
             generatedTestPlans: [
                 .testPlan(
                     name: "Plan.xctestplan",
                     defaultOptions: .options(codeCoverage: .selected(["AppTests", "MissingTarget"])),
-                    testTargets: ["AppTests", "FrameworkTests"],
-                    missingTargetPolicy: .skipTarget()
+                    testTargets: ["AppTests", "FrameworkTests"]
                 ),
             ]
         )
@@ -663,8 +495,7 @@ private extension GeneratedTestPlan {
         directory: AbsolutePath? = nil,
         configurations: [Configuration] = [],
         defaultOptions: Options? = nil,
-        testTargets: [GeneratedTestPlanTestableTarget] = [],
-        missingTargetPolicy: MissingTargetPolicy = .skipTestPlan()
+        testTargets: [GeneratedTestPlanTestableTarget] = []
     ) -> GeneratedTestPlan {
         let baseName = name.split(separator: ".").first.map(String.init) ?? name
         let resolvedPath: AbsolutePath
@@ -680,8 +511,7 @@ private extension GeneratedTestPlan {
             configurations: configurations,
             defaultOptions: defaultOptions,
             testTargets: testTargets,
-            targetSelection: [],
-            missingTargetPolicy: missingTargetPolicy
+            targetSelection: []
         )
         plan.path = FilePath(resolvedPath.pathString)
         return plan

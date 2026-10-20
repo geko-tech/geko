@@ -95,6 +95,15 @@ public final class TreeShakePrunedTargetsGraphMapper: GraphMapping {
             if let testAction = scheme.testAction {
                 scheme.testAction?.targets = testAction.targets.filter { sourceTargets.contains($0.target) }
                 scheme.testAction?.codeCoverageTargets = testAction.codeCoverageTargets.filter(sourceTargets.contains)
+
+                if var testPlans = scheme.testAction?.testPlans {
+                    for i in 0 ..< testPlans.count {
+                        guard case var .generated(generatedTestPlan) = testPlans[i] else { continue }
+                        generatedTestPlan.testTargets = generatedTestPlan.testTargets.filter { sourceTargets.contains($0.target.target) }
+                        testPlans[i] = .generated(generatedTestPlan)
+                    }
+                    scheme.testAction?.testPlans = testPlans
+                }
             }
 
             let hasBuildTargets = !(scheme.buildAction?.targets ?? []).isEmpty
