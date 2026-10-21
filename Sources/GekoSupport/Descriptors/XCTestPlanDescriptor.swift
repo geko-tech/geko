@@ -39,7 +39,7 @@ public struct XCTestPlanDescriptor: Equatable {
 
     private func encode(plan: XCTestPlan) throws -> Data {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try encoder.encode(plan)
     }
 }
