@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/geko-tech/project-description.git",
       "state" : {
-        "branch" : "remove-missingTargetPolicy-from-generatedTestPlan",
-        "revision" : "3fb5fca5a6b4dbe87aeb43cf8a5364ad7fc8c601"
+        "branch" : "release/1.2.0",
+        "revision" : "897f9d928f336098a765069cb97632c262c28184"
       }
     },
     {
