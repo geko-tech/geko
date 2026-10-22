@@ -80,6 +80,18 @@ export default defineConfig(async () => {
                 ),
                 wrapSidebarSection(
                   await generateSidebarOrdered({
+                    scanDir: "docs/guides/features/build_and_test",
+                    baseUrl: "/guides/features/build_and_test/",
+                    useTitleFromFileHeading: true
+                  }),
+                  {
+                    sectionText: "Build and Test",
+                    collapsed: true,
+                    link: "/guides/features/build_and_test/"
+                  }
+                ),
+                wrapSidebarSection(
+                  await generateSidebarOrdered({
                     scanDir: "docs/guides/features/plugins",
                     baseUrl: "/guides/features/plugins/",
                     useTitleFromFileHeading: true

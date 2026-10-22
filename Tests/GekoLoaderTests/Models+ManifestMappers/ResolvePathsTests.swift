@@ -5,6 +5,7 @@ import GekoLoaderTesting
 import Glob
 import GekoGraph
 import XCTest
+import GekoGenerator
 
 @testable import GekoGraph
 @testable import GekoLoader
@@ -245,7 +246,7 @@ final class ResolvePathsTests: GekoUnitTestCase {
                         buildImplicitDependencies: true,
                         runPostActionsOnFailure: false
                     ),
-                    testAction: .testPlans([
+                    testAction: .testPlans(list: [
                         "testplan.xctestplan",
                         "@/testplan2.xctestplan",
                         "/testplan3.xctestplan",
@@ -362,7 +363,9 @@ final class ResolvePathsTests: GekoUnitTestCase {
         fileHandler.stubGlob = { _, _ in [] }
 
         let generatorPaths = GeneratorPaths(manifestDirectory: "/", rootDirectoryLocator: rootDirectoryLocator)
+        let schemesProjectPathResolver = SchemeProjectPathsResolver()
         try project.resolvePaths(generatorPaths: generatorPaths)
+        try schemesProjectPathResolver.resolveSchemes(&project.schemes, allTargets: [], generatorPaths: generatorPaths)
 
         var pathStack: [String] = ["Project"]
         try validateAllPathsAreAbsolute(for: project, pathStack: &pathStack)
