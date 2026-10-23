@@ -377,3 +377,23 @@ private func inShellAllowlist(_ codeUnit: UInt8) -> Bool {
         return false
     }
 }
+
+extension String {
+    public func substring(with nsrange: NSRange) -> String? {
+        guard let range = Range(nsrange, in: self) else { return nil }
+        return String(self[range])
+    }
+
+    public func allMatches(with regex: NSRegularExpression) -> [String]? {
+        let matches = regex.matches(in: self, range: NSRange(location: 0, length: utf16.count))
+        guard let match = matches.first else { return nil }
+
+        let lastRangeIndex = match.numberOfRanges - 1
+        guard lastRangeIndex >= 1 else { return nil }
+
+        return (1...lastRangeIndex).compactMap { index in
+            let capturedGroupIndex = match.range(at: index)
+            return substring(with: capturedGroupIndex)
+        }
+    }
+}

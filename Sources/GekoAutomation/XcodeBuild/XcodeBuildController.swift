@@ -123,7 +123,8 @@ public final class XcodeBuildController: XcodeBuildControlling {
         testTargets: [TestIdentifier],
         skipTestTargets: [TestIdentifier],
         testPlanConfiguration: TestPlanConfiguration?,
-        passthroughXcodeBuildArguments: [String]
+        passthroughXcodeBuildArguments: [String],
+        eventHandler: XcodeBuildEventHandler?,
     ) throws {
         var command = ["/usr/bin/xcrun", "xcodebuild"]
 
@@ -195,7 +196,7 @@ public final class XcodeBuildController: XcodeBuildControlling {
         }
 
         do {
-            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme)
+            try runBuild(command: command, action: xcodeBuildAction, scheme: scheme, eventHandler: eventHandler)
         } catch let error as XcodeBuildError {
             switch error {
             case let .buildFailed(errors, buildLogPath, rawBuildLogPath):
@@ -343,17 +344,17 @@ public final class XcodeBuildController: XcodeBuildControlling {
         command: [String],
         action: XcodeBuildAction,
         scheme: String?,
-        eventHandler: XcodeBuildEventHandler? = nil
+        eventHandler: XcodeBuildEventHandler? = nil,
     ) throws {
         logger.debug("Running xcodebuild command: \(command.joined(separator: " "))")
 
         let logDate = Date()
         let rawBuildLogPath = try logFileStoreHandler.createPath(logFile: .rawBuildLog, date: logDate)
         let formattedBuildLogPath = try logFileStoreHandler.createPath(logFile: .buildLog, date: logDate)
-        
+
         var environment = ProcessInfo.processInfo.environment
         environment["NSUnbufferedIO"] = "YES"
-        
+
         // Collect and show only errors when build
         var errors: [String] = []
         var structuredParser = isStructuredOutputEnabled
