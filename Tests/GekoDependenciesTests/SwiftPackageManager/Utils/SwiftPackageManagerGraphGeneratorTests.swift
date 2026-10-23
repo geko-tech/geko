@@ -653,7 +653,8 @@ private final class RecordingPackageInfoMapper: PackageInfoMapping {
         projectOptions _: ProjectDescription.Project.Options?,
         targetsToArtifactPaths _: [String: AbsolutePath],
         packageModuleAliases _: [String: [String: String]],
-        enabledTraits: Set<String>
+        enabledTraits: Set<String>,
+        isLocal _: Bool
     ) throws -> ProjectDescription.Project? {
         self.enabledTraits[packageInfo.name] = enabledTraits
         return nil

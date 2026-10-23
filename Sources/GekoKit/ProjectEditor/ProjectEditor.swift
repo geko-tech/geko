@@ -123,7 +123,7 @@ final class ProjectEditor: ProjectEditing {
         )
         let configPath = manifestFilesLocator.locateConfig(at: editingPath)
         let dependenciesPath = manifestFilesLocator.locateDependencies(at: editingPath)
-        let packageManifestPath = manifestFilesLocator.locatePackageManifest(at: editingPath)
+        let packageManifestPath = try manifestFilesLocator.locatePackageManifest(at: editingPath)
 
         let helpers =
             helpersDirectoryLocator.locate(at: editingPath).map {

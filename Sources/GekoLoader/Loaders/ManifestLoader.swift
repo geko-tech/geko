@@ -87,12 +87,16 @@ public protocol ManifestLoading {
     /// - Parameter path: Path to the directory that contains Plugin.swift
     func loadPlugin(at path: AbsolutePath) throws -> ProjectDescription.Plugin
 
+    /// Loads `Package.swift`
+    /// - path: Path to the directory that contains Package.swift
+    func loadPackage(at path: AbsolutePath) throws -> PackageInfo
+
     /// List all the manifests in the given directory.
     /// - Parameter path: Path to the directory whose manifest files will be returned.
     func manifests(at path: AbsolutePath) -> Set<Manifest>
 
-    /// Verifies that there is a project or workspace manifest at the given path, or throws an error otherwise.
-    func validateHasProjectOrWorkspaceManifest(at path: AbsolutePath) throws
+    /// Verifies that there is generatable manifest at the given path, or throws an error otherwise.
+    func validateHasGeneratableManifest(at path: AbsolutePath) throws
 
     /// Registers plugins that will be used within the manifest loading process.
     /// - Parameter plugins: The plugins to register.

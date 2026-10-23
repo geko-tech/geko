@@ -97,6 +97,9 @@ public final class DependenciesGraphController: DependenciesGraphControlling {
                         Constants.DependenciesDirectory.packageSwiftName,
                     ])
                 )
+                || FileHandler.shared.exists(
+                    rootDirectory.appending(component: Manifest.package.fileName(rootDirectory))
+                )
         else {
             return .none
         }
