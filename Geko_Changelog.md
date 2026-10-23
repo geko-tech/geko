@@ -1,3 +1,9 @@
+## Geko 1.3.0
+Geko [patch] `• test` now shows live test execution progress (#132)
+Geko [minor] Added declarative target selection and generated test plans (#123)
+• [minor] precompiled macro support (#135)
+* • [minor] precompiled macro support
+
 ## Geko 1.2.0
 • [patch] misc: prettify manifest compilation output log (#131)
 Geko [minor] --handoff option for generate (#129)
