@@ -201,7 +201,8 @@ public final class SwiftPackageManagerGraphGenerator: SwiftPackageManagerGraphGe
                     projectOptions: projectOptions[packageInfo.name],
                     targetsToArtifactPaths: packageToTargetsToArtifactPaths[packageInfo.name] ?? [:],
                     packageModuleAliases: packageModuleAliases,
-                    enabledTraits: enabledTraits[packageInfo.id] ?? []
+                    enabledTraits: enabledTraits[packageInfo.id] ?? [],
+                    isLocal: false
                 )
             )
         }

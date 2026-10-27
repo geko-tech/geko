@@ -503,7 +503,7 @@ final class ManifestFilesLocatorTests: GekoUnitTestCase {
         ])
 
         // When
-        let packageManifestPath = subject.locatePackageManifest(at: try temporaryPath())
+        let packageManifestPath = try subject.locatePackageManifest(at: try temporaryPath())
 
         // Then
         XCTAssertNotNil(packageManifestPath)

@@ -62,6 +62,7 @@ public protocol DependenciesControlling {
     ///   - config: Project manifest config
     ///   - passthroughArguments: Additional arguments to resolve spm
     ///   - cococapodsDependencies: List of cocoapods dependencies to update
+    ///   - packagePath: path to `Package.swift`
     ///   - packageSettings: Custom Swift Package Manager settings
     ///   - repoUpdate: If passed then cocoapods try to update repo
     ///   - deployment: If passed then cocoapods checks that the lock file was not modified during installation.
@@ -70,6 +71,7 @@ public protocol DependenciesControlling {
         config: Config,
         passthroughArguments: [String],
         cocoapodsDependencies: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?,
         repoUpdate: Bool,
         deployment: Bool
@@ -81,12 +83,14 @@ public protocol DependenciesControlling {
     ///   - config: Project manifest config
     ///   - passthroughArguments: Additional arguments to resolve spm
     ///   - cocoapodsDependencies: List of cocoapods dependencies to update
+    ///   - packagePath: path to `Package.swift`
     ///   - packageSettings: Custom Swift Package Manager settings
     func update(
         at path: AbsolutePath,
         config: Config,
         passthroughArguments: [String],
         cocoapodsDependencies: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?
     ) async throws -> DependenciesGraph
 
@@ -107,6 +111,7 @@ public protocol DependenciesControlling {
     ///    - cache: Is cache used
     func needFetch(
         cocoapodsDependencies: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?,
         path: AbsolutePath,
         cache: Bool
@@ -133,6 +138,7 @@ public final class DependenciesController: DependenciesControlling {
         config: Config,
         passthroughArguments: [String],
         cocoapodsDependencies: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?,
         repoUpdate: Bool,
         deployment: Bool
@@ -141,6 +147,7 @@ public final class DependenciesController: DependenciesControlling {
             at: path,
             config: config,
             cocoapods: cocoapodsDependencies,
+            packagePath: packagePath,
             packageSettings: packageSettings,
             passthroughArguments: passthroughArguments,
             shouldUpdate: false,
@@ -154,12 +161,14 @@ public final class DependenciesController: DependenciesControlling {
         config: Config,
         passthroughArguments: [String],
         cocoapodsDependencies: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?
     ) async throws -> DependenciesGraph {
         try await install(
             at: path,
             config: config,
             cocoapods: cocoapodsDependencies,
+            packagePath: packagePath,
             packageSettings: packageSettings,
             passthroughArguments: passthroughArguments,
             shouldUpdate: true,
@@ -177,6 +186,7 @@ public final class DependenciesController: DependenciesControlling {
 
     public func needFetch(
         cocoapodsDependencies: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?,
         path: AbsolutePath,
         cache: Bool
@@ -186,8 +196,8 @@ public final class DependenciesController: DependenciesControlling {
             let result = try cocoapodsInteractor.needFetch(dependencies: cocoapodsDependencies, path: path)
             needFetch = needFetch || result
         }
-        if packageSettings != nil {
-            let result = try swiftPackageManagerInteractor.needFetch(path: path)
+        if packageSettings != nil, let packagePath {
+            let result = try swiftPackageManagerInteractor.needFetch(path: path, packagePath: packagePath)
             needFetch = needFetch || result
         }
 
@@ -209,6 +219,7 @@ public final class DependenciesController: DependenciesControlling {
         at path: AbsolutePath,
         config: Config,
         cocoapods: CocoapodsDependencies?,
+        packagePath: AbsolutePath?,
         packageSettings: PackageSettings?,
         passthroughArguments: [String],
         shouldUpdate: Bool,
@@ -224,13 +235,13 @@ public final class DependenciesController: DependenciesControlling {
 
         var dependenciesGraph = GekoCore.DependenciesGraph.none
 
-        if let packageSettings = packageSettings {
+        if let packagePath, let packageSettings {
             // Passthrough arguments come last so they override config arguments (last flag wins)
             let mergedArguments = config.installOptions.passthroughSwiftPackageManagerArguments + passthroughArguments
-            
+
             let swiftPackageManagerDependenciesGraph = try swiftPackageManagerInteractor.install(
+                packagePathAndSettings: PackagePathAndSettings(packagePath: packagePath, packageSettings: packageSettings),
                 dependenciesDirectory: dependenciesDirectory,
-                packageSettings: packageSettings,
                 arguments: mergedArguments,
                 shouldUpdate: shouldUpdate,
                 swiftToolsVersion: config.swiftVersion
@@ -238,7 +249,7 @@ public final class DependenciesController: DependenciesControlling {
 
             dependenciesGraph = try dependenciesGraph.merging(with: swiftPackageManagerDependenciesGraph)
         } else {
-            try swiftPackageManagerInteractor.clean(dependenciesDirectory: dependenciesDirectory)
+            try swiftPackageManagerInteractor.clean(at: path)
         }
 
         if let cocoapodsDependencies = cocoapods {

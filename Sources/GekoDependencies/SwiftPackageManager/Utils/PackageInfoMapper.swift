@@ -81,48 +81,6 @@ enum PackageInfoMapperError: FatalError, Equatable {
 
 // MARK: - PackageInfo Mapper
 
-/// Protocol that allows to map a `PackageInfo` to a `ProjectDescription.Project`.
-public protocol PackageInfoMapping {
-    
-    /// Resolves external SwiftPackageManager dependencies.
-    /// - Parameters:
-    ///   - path: The path to the directory that contains the `checkouts` directory where `SwiftPackageManager` installed
-    ///   - packageInfos: All available `PackageInfo`s
-    ///   - packageToFolder: Mapping from a package name to its local folder
-    ///   - packageToTargetsToArtifactPaths: Mapping from a package name its targets' names to artifacts' paths
-    ///   - packageModuleAliases: Package module aliases
-    /// - Returns: Mapped project
-    func resolveExternalDependencies(
-        path: AbsolutePath,
-        packageInfos: [String: PackageInfo],
-        packageToFolder: [String: AbsolutePath],
-        packageToTargetsToArtifactPaths: [String: [String: AbsolutePath]],
-        packageModuleAliases: [String: [String: String]]
-    ) throws -> [String: [ProjectDescription.TargetDependency]]
-    
-    /// Maps a `PackageInfo` to a `ProjectDescription.Project`.
-    /// - Parameters:
-    ///   - packageInfo: `PackageInfo` to be mapped
-    ///   - path: Path of the package
-    ///   - productTypes: Product type mapping
-    ///   - baseSettings: Base settings
-    ///   - targetSettings: Settings to apply to denoted targets
-    ///   - projectOptions: Additional options related to the `Project`
-    ///   - targetsToArtifactPaths: Mapping from a package name its targets' names to artifacts' paths
-    ///   - packageModuleAliases: Package module aliases
-    /// - Returns: Mapped project
-    func map(
-        packageInfo: PackageInfo,
-        path: AbsolutePath,
-        productTypes: [String: Product],
-        baseSettings: Settings,
-        targetSettings: [String: Settings],
-        projectOptions: ProjectDescription.Project.Options?,
-        targetsToArtifactPaths: [String: AbsolutePath],
-        packageModuleAliases: [String: [String: String]],
-        enabledTraits: Set<String>
-    ) throws -> ProjectDescription.Project?
-}
 
 // swiftlint:disable:next type_body_length
 public final class PackageInfoMapper: PackageInfoMapping {
@@ -287,7 +245,8 @@ public final class PackageInfoMapper: PackageInfoMapping {
         projectOptions: ProjectDescription.Project.Options?,
         targetsToArtifactPaths: [String: AbsolutePath],
         packageModuleAliases: [String: [String: String]],
-        enabledTraits: Set<String> = []
+        enabledTraits: Set<String> = [],
+        isLocal: Bool
     ) throws -> ProjectDescription.Project? {
         // Hardcoded mapping for some well known libraries, until the logic can handle those properly
         let productTypes = productTypes.merging(
@@ -339,17 +298,17 @@ public final class PackageInfoMapper: PackageInfoMapping {
                 artifactPaths: targetsToArtifactPaths,
                 targetSettings: targetSettings,
                 packageModuleAliases: packageModuleAliases,
-                enabledTraits: enabledTraits
+                enabledTraits: enabledTraits,
+                isLocal: isLocal
             )
         }
-        
+
         guard !targets.isEmpty else { return nil }
-        
+
         let options = projectOptions ?? .options(
-            automaticSchemesOptions: .disabled,
+            automaticSchemesOptions: isLocal ? .enabled() : .disabled,
             disableBundleAccessors: false
-        )
-        
+        )        
         var project = Project(
             name: packageInfo.name,
             options: options,
@@ -376,9 +335,10 @@ public final class PackageInfoMapper: PackageInfoMapping {
         artifactPaths: [String: AbsolutePath],
         targetSettings: [String: Settings],
         packageModuleAliases: [String: [String: String]],
-        enabledTraits: Set<String>
+        enabledTraits: Set<String>,
+        isLocal: Bool
     ) throws -> ProjectDescription.Target? {
-        guard target.type.isSupported else {
+        guard target.type.isSupported(isLocal: isLocal) else {
             logger.debug("Target \(target.name) of type \(target.type) ignored")
             return nil
         }
