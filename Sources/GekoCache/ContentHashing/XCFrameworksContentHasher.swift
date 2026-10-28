@@ -87,6 +87,10 @@ public final class XCFrameworksContentHasher: XCFrameworksContentHashing {
         let topologicalSortedDeps = Array(try topologicalSort(xcframeworks.map { $0.1 }) {
             Array(graph.dependencies[$0] ?? [])
         }.reversed())
+        let dependenciesDependingOnSources = dependenciesDependingOnSourceTarget(
+            graph: graph,
+            sortedDependencies: topologicalSortedDeps
+        )
 
         let additionalString = try additionalCacheStringsHasher.contentHash(
             cacheProfile: cacheProfile,
@@ -96,6 +100,8 @@ public final class XCFrameworksContentHasher: XCFrameworksContentHashing {
         )
         
         try topologicalSortedDeps.forEach(context: .concurrent) { dependency in
+            guard !dependenciesDependingOnSources.contains(dependency) else { return }
+            
             let stringsToHash = [
                 try hash(
                     graph: graph,
@@ -112,6 +118,7 @@ public final class XCFrameworksContentHasher: XCFrameworksContentHashing {
         
         var hashedFrameworks: [AbsolutePath: String] = [:]
         for dependency in topologicalSortedDeps {
+            guard !dependenciesDependingOnSources.contains(dependency) else { continue }
             guard isHashable(path: dependency.path, graphDependency: dependency) else { continue }
             guard let hashableXcframeworkHash = hashedDependencies.wrappedValue[dependency.path] else {
                 throw XCFrameworksContentHasherError.missingDependencyHash(dependency)
@@ -122,6 +129,21 @@ public final class XCFrameworksContentHasher: XCFrameworksContentHashing {
                 hashedDependencies: hashedFrameworks
             )
             hashedFrameworks[dependency.path] = try contentHasher.hash([dependenciesHash, hashableXcframeworkHash])
+        }
+        
+        let sourceTargets = dependenciesDependingOnSources.compactMap { dependency -> String? in
+            guard case let .target(name, _, _) = dependency else { return nil }
+            return name
+        }.sorted()
+
+        if !sourceTargets.isEmpty {
+            logger.warning(
+                """
+                SwiftModuleCache is partially unavailable because \
+                some dependencies rely on source targets: \
+                \(sourceTargets.joined(separator: ", "))
+                """
+            )
         }
 
         return hashedFrameworks
@@ -193,5 +215,29 @@ public final class XCFrameworksContentHasher: XCFrameworksContentHashing {
         default:
             return false
         }
+    }
+    
+    /// Returns source targets and all dependencies that transitively depend on them.
+    /// Dependencies must be sorted topologically, with dependencies preceding dependents.
+    private func dependenciesDependingOnSourceTarget(
+        graph: Graph,
+        sortedDependencies: [GraphDependency]
+    ) -> Set<GraphDependency> {
+        var result = Set<GraphDependency>()
+        
+        for dependency in sortedDependencies {
+            if case .target = dependency {
+                result.insert(dependency)
+                continue
+            }
+            
+            let dependencies = graph.dependencies[dependency] ?? []
+            
+            if dependencies.contains(where: result.contains) {
+                result.insert(dependency)
+            }
+        }
+        
+        return result
     }
 }

@@ -304,6 +304,167 @@ final class XCFrameworksContentHasherTests: GekoUnitTestCase {
         XCTAssertNotEqual(hashesBefore, hashesAfter)
     }
     
+    func test_contentHashes_skipsXCFrameworkDependingOnSourceTarget() throws {
+        // Given
+        let profile = Cache.Profile.test(options: .options(swiftModuleCacheEnabled: true))
+        system.swiftlangVersionStub = { "6.0.0" }
+        xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
+        let xcframework = GraphDependency.testXCFramework(path: filePath1)
+        let sourceTarget = GraphDependency.testTarget(name: "SourceModule")
+        
+        let graph = Graph.test(
+            dependencies: [
+                xcframework: [sourceTarget]
+            ],
+            xcframeworks: [
+                filePath1: xcframework
+            ]
+        )
+        
+        // When
+        let hashes = try subject.contentHashes(
+            for: graph,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+
+        // Then
+        XCTAssertTrue(hashes.isEmpty)
+    }
+    
+    func test_contentHashes_skipsTransitivelyDependentXCFrameworks() throws {
+        // Given
+        let profile = Cache.Profile.test(options: .options(swiftModuleCacheEnabled: true))
+        system.swiftlangVersionStub = { "6.0.0" }
+        xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
+        
+        let xcframeworkA = GraphDependency.testXCFramework(path: filePath1)
+        let xcframeworkB = GraphDependency.testXCFramework(path: filePath2)
+        let sourceTarget = GraphDependency.testTarget(name: "SourceModule")
+        
+        let graph = Graph.test(
+            dependencies: [
+                xcframeworkA: [xcframeworkB],
+                xcframeworkB: [sourceTarget]
+            ],
+            xcframeworks: [
+                filePath1: xcframeworkA,
+                filePath2: xcframeworkB
+            ]
+        )
+        
+        // When
+        let hashes = try subject.contentHashes(
+            for: graph,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+
+        // Then
+        XCTAssertTrue(hashes.isEmpty)
+    }
+    
+    func test_contentHashes_keepsIndependentXCFrameworks() throws {
+        // Given
+        let profile = Cache.Profile.test(options: .options(swiftModuleCacheEnabled: true))
+        system.swiftlangVersionStub = { "6.0.0" }
+        xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
+        
+        let blockedFramework = GraphDependency.testXCFramework(path: filePath1)
+        let independentFramework = GraphDependency.testXCFramework(path: filePath2)
+        let sourceTarget = GraphDependency.testTarget(name: "SourceModule")
+        
+        let graph = Graph.test(
+            dependencies: [
+                blockedFramework: [sourceTarget]
+            ],
+            xcframeworks: [
+                filePath1: blockedFramework,
+                filePath2: independentFramework
+            ],
+            externalDependenciesGraph: DependenciesGraph(
+                externalDependencies: [:],
+                externalProjects: [:],
+                externalFrameworkDependencies: [:],
+                tree: [
+                    "BarFramework": .init(
+                        version: "1.0.0",
+                        dependencies: []
+                    )
+                ]
+            )
+        )
+        
+        // When
+        let hashes = try subject.contentHashes(
+            for: graph,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+
+        // Then
+        XCTAssertNil(hashes[filePath1])
+        XCTAssertNotNil(hashes[filePath2])
+        XCTAssertEqual(hashes.count, 1)
+    }
+    
+    func test_contentHashes_keepsXCFrameworkDependencyOfSourceTarget() throws {
+        // Given
+        let profile = Cache.Profile.test(options: .options(swiftModuleCacheEnabled: true))
+        system.swiftlangVersionStub = { "6.0.0" }
+        xcframeworkMetadataProvider.swiftModuleFolderPathStub = try temporaryPath()
+        
+        let xcframeworkA = GraphDependency.testXCFramework(path: filePath1)
+        let xcframeworkD = GraphDependency.testXCFramework(path: filePath2)
+        let sourceTarget = GraphDependency.testTarget(name: "SourceModule")
+        
+        let graph = Graph.test(
+            dependencies: [
+                xcframeworkA: [sourceTarget],
+                sourceTarget: [xcframeworkD]
+            ],
+            xcframeworks: [
+                filePath1: xcframeworkA,
+                filePath2: xcframeworkD
+            ],
+            externalDependenciesGraph: DependenciesGraph(
+                externalDependencies: [:],
+                externalProjects: [:],
+                externalFrameworkDependencies: [:],
+                tree: [
+                    "FooFramework": .init(
+                        version: "1.0.0",
+                        dependencies: []
+                    ),
+                    "BarFramework": .init(
+                        version: "1.0.0",
+                        dependencies: []
+                    )
+                ]
+            )
+        )
+        
+        // When
+        let hashes = try subject.contentHashes(
+            for: graph,
+            cacheProfile: profile,
+            cacheUserVersion: nil,
+            cacheOutputType: .framework,
+            cacheDestination: .simulator
+        )
+
+        // Then
+        XCTAssertNil(hashes[filePath1])
+        XCTAssertNotNil(hashes[filePath2])
+        XCTAssertEqual(hashes.count, 1)
+    }
+    
     // MARK: - Help
     
     private func makeFramework(
