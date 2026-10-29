@@ -71,6 +71,7 @@ public struct GekoCommand: AsyncParsableCommand {
                     $0.configuration.commandName == subcommand
                 })
             {
+                
                 executeCommand = {
                     try executeTask(with: subcommandArguments)
                 }
