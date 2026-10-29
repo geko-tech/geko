@@ -11,6 +11,8 @@ jobs:
     env:
       BUILD_DIR: "GekoDesktop/build_output"
       VERSION_FILE: GekoDesktop/GekoDesktop/Sources/Support/Constants/Constants.swift
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 30
+      FASTLANE_XCODEBUILD_SETTINGS_RETRIES: 3
     steps:
       - uses: actions/create-github-app-token@v2
         id: app-token
