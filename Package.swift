@@ -239,9 +239,14 @@ var targets: [Target] = [
             "GekoCloud",
             "GekoAnalytics",
             "GekoInspect",
+            "GekoPubParser",
             swiftParserDependency,
             swiftSyntaxDependency,
         ]
+    ),
+    .target(
+        name: "GekoPubParser",
+        publicHeadersPath: "include"
     ),
     .target(
         name: "GekoCacheTesting",
