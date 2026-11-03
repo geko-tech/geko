@@ -34,9 +34,13 @@ typedef enum {
 	SP_TOK_KIND_PRIVATE,
 	SP_TOK_KIND_OPEN,
 	SP_TOK_KIND_INTERNAL,
+    SP_TOK_KIND_IMPORT,
+    SP_TOK_KIND_LET,
+    SP_TOK_KIND_VAR,
 	SP_TOK_KIND_INIT,
 	SP_TOK_KIND_CLASS,
 	SP_TOK_KIND_STRUCT,
+    SP_TOK_KIND_ENUM,
 	SP_TOK_KIND_ACTOR,
 
 	SP_TOK_KIND_KEY_END,
@@ -50,6 +54,10 @@ typedef enum {
 	SP_TOK_KIND_CLOSING_SBR, // ']'
 	SP_TOK_KIND_LESS_THAN, // '<'
 	SP_TOK_KIND_MORE_THAN, // '>'
+    SP_TOK_KIND_COMMA, // ','
+    SP_TOK_KIND_COLON, // ':'
+    SP_TOK_KIND_EQUAL, // '='
+    SP_TOK_KIND_NEWLINE, // '\n'
 
 	SP_TOK_KIND_UNKNOWN,
 } SpTokenKind;
@@ -66,27 +74,35 @@ typedef struct {
 
 char *keywords[SP_KEYWORD_COUNT] = {
 	// must be the same order as in SpTokenKind enum
-	"func",
-	"public",
-	"private",
-	"open",
-	"internal",
-	"init",
-	"class",
-	"struct",
-	"actor",
+    "func",
+    "public",
+    "private",
+    "open",
+    "internal",
+    "import",
+    "let",
+    "var",
+    "init",
+    "class",
+    "struct",
+    "enum",
+    "actor",
 };
 
 char single_char_tokens[SP_SINGLE_CHAR_TOKEN_COUNT] = {
 	// must be the same order as in SpTokenKind enum
-	'(',
-	')',
-	'{',
-	'}',
-	'[',
-	']',
-	'<',
-	'>',
+    '(',
+    ')',
+    '{',
+    '}',
+    '[',
+    ']',
+    '<',
+    '>',
+    ',',
+    ':',
+    '=',
+    '\n',
 };
 
 typedef struct {
@@ -301,7 +317,6 @@ int sp_lex_skip_whitespace(SpInputBuf *buf)
 
 	while (
 		ch == ' ' ||
-		ch == '\n' ||
 		ch == '\t' ||
 		ch == '\r'
 	) {
@@ -391,6 +406,7 @@ int sp_lex_next_token(SpInputBuf *buf, SpLexToken *tok)
 		ch < 0 || // utf8, probably identifier
 		(ch >= 'a' && ch <= 'z') ||
 		(ch >= 'A' && ch <= 'Z') ||
+        (ch >= '0' && ch <= '9') ||
 		ch == '_' ||
 		ch == '`'
 	) {
@@ -612,6 +628,28 @@ typedef enum {
 	SP_INTERFACE_VISIBILITY_OPEN,
 } SpInterfaceVisibility;
 
+int sp_interface_finish_property(
+    SpInterfaceOutput *output,
+    SpInterfaceOutput *interface_chunk,
+    SpInterfaceVisibility visibility,
+    int nested_level,
+    int has_explicit_type
+) {
+    if (visibility < SP_INTERFACE_VISIBILITY_PUBLIC) {
+        return 0;
+    }
+    
+    if (!has_explicit_type) {
+        return 1; // unsafe: inferred or missing type
+    }
+
+    return sp_interface_output_append(
+        output,
+        interface_chunk,
+        nested_level
+    );
+}
+
 int sp_interface_calculate_public(
     SpInputBuf *buf,
     SpInterfaceOutput *output
@@ -623,14 +661,21 @@ int sp_interface_calculate_public(
     SpInterfaceKind kind = SP_INTERFACE_KIND_UNKNOWN;
     SpInterfaceVisibility visibility = SP_INTERFACE_VISIBILITY_INTERNAL;
     int nested_level = 0;
+    int is_property = 0;
+    int property_has_type = 0;
 
     while ((res = sp_lex_next_token(buf, &tok)) == 0) {
         switch (tok.kind) {
         case SP_TOK_KIND_EOF:
             goto finalize;
 
+        case SP_TOK_KIND_IMPORT:
+            sp_lex_skip_line(buf);
+            continue;
+            
         case SP_TOK_KIND_CLASS:
         case SP_TOK_KIND_STRUCT:
+        case SP_TOK_KIND_ENUM:
         case SP_TOK_KIND_ACTOR:
             kind = SP_INTERFACE_KIND_OBJECT;
             break;
@@ -639,6 +684,48 @@ int sp_interface_calculate_public(
         case SP_TOK_KIND_FUNC:
             kind = SP_INTERFACE_KIND_METHOD;
             break;
+
+        case SP_TOK_KIND_LET:
+        case SP_TOK_KIND_VAR:
+            is_property = 1;
+            property_has_type = 0;
+            break;
+        case SP_TOK_KIND_COLON:
+            if (is_property) {
+                property_has_type = 1;
+            }
+            break;
+        case SP_TOK_KIND_EQUAL:
+            if (is_property) {
+                if (
+                    visibility < SP_INTERFACE_VISIBILITY_PUBLIC ||
+                    property_has_type
+                ) {
+                    sp_lex_skip_line(buf);
+                    continue;
+                }
+
+                res = 1;
+                goto cleanup;
+            }
+            break;
+            
+        case SP_TOK_KIND_NEWLINE:
+            if (is_property) {
+                res = sp_interface_finish_property(output, &interface_chunk, visibility, nested_level, property_has_type);
+                
+                if (res != 0) {
+                    goto cleanup;
+                }
+                
+                sp_interface_output_reset(&interface_chunk);
+                visibility = SP_INTERFACE_VISIBILITY_INTERNAL;
+                kind = SP_INTERFACE_KIND_UNKNOWN;
+                is_property = 0;
+                property_has_type = 0;
+            }
+            
+            continue;
 
         case SP_TOK_KIND_PRIVATE:
             visibility = SP_INTERFACE_VISIBILITY_PRIVATE;
@@ -706,6 +793,24 @@ int sp_interface_calculate_public(
             continue;
 
         case SP_TOK_KIND_CLOSING_CBR:
+            if (is_property) {
+                res = sp_interface_finish_property(
+                    output,
+                    &interface_chunk,
+                    visibility,
+                    nested_level,
+                    property_has_type
+                );
+
+                if (res != 0) {
+                    goto cleanup;
+                }
+
+                sp_interface_output_reset(&interface_chunk);
+                is_property = 0;
+                property_has_type = 0;
+            }
+            
             res = sp_interface_output_append(
                 output,
                 &interface_chunk,
@@ -753,6 +858,22 @@ int sp_interface_calculate_public(
     }
 
 finalize:
+    if (is_property) {
+        res = sp_interface_finish_property(
+            output,
+            &interface_chunk,
+            visibility,
+            nested_level,
+            property_has_type
+        );
+
+        if (res != 0) {
+            goto cleanup;
+        }
+
+        sp_interface_output_reset(&interface_chunk);
+    }
+    
     res = sp_interface_output_append(
         output,
         &interface_chunk,
