@@ -500,6 +500,101 @@ final class PublicAPIParserTests: GekoUnitTestCase {
         XCTAssertEqual(result, expected)
     }
     
+    func test_public_computed_property_getter_only() throws {
+        // Given
+        let source = """
+        public struct Foo {
+            public var value: Int { 9 }
+        }
+        """
+
+        let expected = """
+        public struct Foo {
+            public var value : Int {
+                get
+            }
+        }
+        """
+
+        // When
+        let result = try parse(source)
+
+        // Then
+        XCTAssertEqual(result, expected)
+    }
+    
+    func test_public_computed_property_getter_setter() throws {
+        // Given
+        let source = """
+        public struct Foo {
+            private var storage: Int = 0
+
+            public var value: Int {
+                get { storage }
+                set { storage = newValue }
+            }
+        }
+        """
+
+        let expected = """
+        public struct Foo {
+            public var value : Int {
+                get
+                set
+            }
+        }
+        """
+
+        // When
+        let result = try parse(source)
+
+        // Then
+        XCTAssertEqual(result, expected)
+    }
+    
+    func test_computed_property_getter_body_does_not_affect_public_api() throws {
+        // Given
+        let original = """
+        public struct Foo {
+            public var value: Int { 9 }
+        }
+        """
+
+        let modified = """
+        public struct Foo {
+            public var value: Int { 42 }
+        }
+        """
+
+        // When
+        let originalAPI = try parse(original)
+        let modifiedAPI = try parse(modified)
+
+        // Then
+        XCTAssertEqual(originalAPI, modifiedAPI)
+    }
+    
+    func test_public_computed_property_setter_affects_public_api() throws {
+        let getterOnly = """
+        public struct Foo {
+            public var value: Int { 9 }
+        }
+        """
+
+        let getterSetter = """
+        public struct Foo {
+            private var storage: Int = 0
+
+            public var value: Int {
+                get { storage }
+                set { storage = newValue }
+            }
+        }
+        """
+
+        XCTAssertNotEqual(try parse(getterOnly), try parse(getterSetter))
+    }
+    
     private func parse(_ source: String) throws -> String {
         let path = try createFiles(
             ["Example.swift"],
