@@ -45,13 +45,14 @@ public final class BuildableFoldersContentHasher: BuildableFoldersContentHashing
             sourceHashes.removeAll(keepingCapacity: true)
 
             for file in try fileHandler.filesAndDirectoriesContained(in: folder.path) ?? [] {
-                guard folder.exceptions.contains(where: { $0.isAncestorOfOrEqual(to: file) }) else { continue }
-
+                guard !folder.exceptions.contains(where: { $0.isAncestorOfOrEqual(to: file) }) else { continue }
                 let sourceHash = try contentHasher.hash(path: file)
                 sourceHashes[relativePathConverter.convert(file).pathString] = sourceHash
             }
 
-            let folderHash = try contentHasher.hash(sourceHashes.values.sorted())
+            let folderHash = try contentHasher.hash(path: folder.path, exclude: [
+                { file in folder.exceptions.contains { $0.isAncestorOfOrEqual(to: file) } }
+            ])
             folderHashes[folder.path.pathString] = folderHash
         }
 
