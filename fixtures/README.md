@@ -23,18 +23,6 @@ Contains a single file `Workspac.swift`, incorrectly named workspace manifest fi
 
 An iOS app with a Xcode build variables defined in pre action.
 
-## ios_app_with_buildable_folders
-
-An iOS app that uses `buildableFolders` for part of its targets and classic `sources` for others.
-
-The `Framework` target uses `buildableFolders` and covers the following cases:
-
-- a folder with a directory exception: the `Framework/Sources/Generated` subtree is excluded
-- a folder with a file exception: `Framework/Sources/Excluded.swift` is excluded
-- a folder without exceptions: `Framework/Feature`
-
-The `App` target uses `sources` to verify mixed usage.
-
 ## ios_app_with_coredata
 
 A simple iOS app with a Core Data model and Mapping Model (.xcmappingmodel).

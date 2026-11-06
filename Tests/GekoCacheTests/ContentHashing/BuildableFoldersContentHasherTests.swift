@@ -136,4 +136,42 @@ final class BuildableFoldersContentHasherTests: GekoUnitTestCase {
         XCTAssertTrue(result.buildableFolderHashes.isEmpty)
         XCTAssertTrue(result.sourceHashes.isEmpty)
     }
+
+    func test_hash_withRealContentHasher_exceptionChangesDoNotAffectHash() throws {
+        // Given
+        let folderPath = try temporaryPath().appending(try RelativePath(validating: "Framework/Sources"))
+        let frameworkFile = folderPath.appending(try RelativePath(validating: "Framework.swift"))
+        let generatedFile = folderPath.appending(try RelativePath(validating: "Generated/GeneratedFile.swift"))
+        let excludedFile = folderPath.appending(try RelativePath(validating: "Excluded.swift"))
+
+        try createFiles([
+            "Framework/Sources/Framework.swift",
+            "Framework/Sources/Generated/GeneratedFile.swift",
+            "Framework/Sources/Excluded.swift",
+        ], content: "initial")
+
+        subject = BuildableFoldersContentHasher(contentHasher: ContentHasher())
+
+        let folder = BuildableFolder(
+            folderPath,
+            exceptions: [
+                folderPath.appending(try RelativePath(validating: "Generated")),
+                excludedFile,
+            ]
+        )
+
+        // When
+        let baseline = try subject.hash(buildableFolders: [folder])
+        try FileHandler.shared.write("changed", path: generatedFile, atomically: true)
+        let afterGeneratedEdit = try subject.hash(buildableFolders: [folder])
+        try FileHandler.shared.write("changed", path: excludedFile, atomically: true)
+        let afterExcludedEdit = try subject.hash(buildableFolders: [folder])
+        try FileHandler.shared.write("changed", path: frameworkFile, atomically: true)
+        let afterSourceEdit = try subject.hash(buildableFolders: [folder])
+
+        // Then
+        XCTAssertEqual(afterGeneratedEdit.hash, baseline.hash)
+        XCTAssertEqual(afterExcludedEdit.hash, baseline.hash)
+        XCTAssertNotEqual(afterSourceEdit.hash, baseline.hash)
+    }
 }
