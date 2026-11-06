@@ -23,6 +23,9 @@ public protocol Environmenting: AnyObject {
 
     /// Returns true if the output of Geko should be coloured.
     var shouldOutputBeColoured: Bool { get }
+    
+    /// Returns true if the standard output is interactive.
+    var isStandardOutputInteractive: Bool { get }
 
     /// Returns all the environment variables that are specific to Geko (prefixed with GEKO_)
     var gekoVariables: [String: String] { get }
