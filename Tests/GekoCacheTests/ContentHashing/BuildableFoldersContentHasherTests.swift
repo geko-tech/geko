@@ -124,7 +124,7 @@ final class BuildableFoldersContentHasherTests: GekoUnitTestCase {
         XCTAssertEqual(result.buildableFolderHashes["/repo/App"], "app-folder-hash")
         XCTAssertEqual(result.buildableFolderHashes["/repo/Modules/FeatureA"], "feature-folder-hash")
         XCTAssertEqual(result.hash, "app-folder-hash;feature-folder-hash")
-        XCTAssertEqual(Set(result.sourceHashes.values), ["feature-hash"])
+        XCTAssertEqual(Set(result.sourceHashes.values), ["app-hash", "feature-hash"])
     }
 
     func test_hash_emptyFolders_returnsEmptyHash() throws {

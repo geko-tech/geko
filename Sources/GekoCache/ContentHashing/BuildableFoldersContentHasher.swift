@@ -42,8 +42,6 @@ public final class BuildableFoldersContentHasher: BuildableFoldersContentHashing
         var folderHashes: [String: String] = [:]
 
         for folder in buildableFolders.sorted(by: { $0.path < $1.path }) {
-            sourceHashes.removeAll(keepingCapacity: true)
-
             for file in try fileHandler.filesAndDirectoriesContained(in: folder.path) ?? [] {
                 guard !folder.exceptions.contains(where: { $0.isAncestorOfOrEqual(to: file) }) else { continue }
                 let sourceHash = try contentHasher.hash(path: file)
