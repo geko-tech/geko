@@ -1,3 +1,9 @@
+## Geko 1.4.0
+• [patch] fix BuildableFoldersContentHasher (#138)
+Geko [patch] Handle tty for spinners (#137)
+Geko [patch] Skip SwiftModuleCache for precompiled modules depending on source targets (#136)
+Geko [minor] Added support for SPM-only projects (#133)
+
 ## Geko 1.3.0
 Geko [patch] `• test` now shows live test execution progress (#132)
 Geko [minor] Added declarative target selection and generated test plans (#123)
