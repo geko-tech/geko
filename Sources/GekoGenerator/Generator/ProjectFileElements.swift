@@ -82,16 +82,7 @@ class ProjectFileElements {
         groups: ProjectGroups,
         pbxproj: PBXProj
     ) throws {
-        let allBuildableFolders = project.targets.reduce(into: []) { acc, target in
-            acc.append(
-                contentsOf: target.buildableFolders.map {
-                    GroupFileElement(
-                        path: $0.path,
-                        group: project.filesGroup
-                    )
-                }
-            )
-        }
+        let allBuildableFolders = project.targets.flatMap(\.buildableFolders)
         let buildableFolderPaths = allBuildableFolders.map(\.path)
         var files = Set<GroupFileElement>()
 
@@ -145,7 +136,7 @@ class ProjectFileElements {
         )
 
         try generateBuildableFolders(
-            folders: allBuildableFolders,
+            folders: allBuildableFolders.map { GroupFileElement(path: $0.path, group: project.filesGroup) },
             groups: groups,
             pbxproj: pbxproj,
             sourceRootPath: project.sourceRootPath
