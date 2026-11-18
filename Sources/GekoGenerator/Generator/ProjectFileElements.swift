@@ -110,6 +110,8 @@ class ProjectFileElements {
             guard let conflictedFolder = allBuildableFolders.first(where: { $0.path.isAncestor(of: file.path) }) else {
                 continue
             }
+            let isException = conflictedFolder.exceptions.contains { $0.isAncestorOfOrEqual(to: file.path) }
+            if isException { continue }
 
             buildableFolderConflict = true
             logger.error(" · Cannot add file element \(file.path) to project because it conflicts with buildable folder \(conflictedFolder.path)")
