@@ -51,6 +51,7 @@ public struct VersionInterval<V: Version>: Equatable {
     }
 }
 
+@frozen
 public struct VersionRange<V: Version>: Equatable {
     public typealias Limit = VersionIntervalLimit<V>
 
@@ -107,7 +108,9 @@ public struct VersionRange<V: Version>: Equatable {
     }
     #endif
 
-    public func contains(_ version: V) -> Bool {
+    // TODO: replace inline(__always) with borrowing iterator after update to XCode 27
+    @inline(__always) // needed to generate specialized implementation
+    public func contains(_ version: borrowing V) -> Bool {
         for interval in segments {
             switch interval.lower {
             case .unbounded:

@@ -1,3 +1,4 @@
+@frozen
 public struct VersionSet<V: Version>: Equatable {
     public let release: VersionRange<V>
     public let preRelease: VersionRange<V>
@@ -7,6 +8,8 @@ public struct VersionSet<V: Version>: Equatable {
         self.preRelease = preRelease
     }
 
+    // TODO: remove inline(__always) after update to XCode 27
+    @inline(__always) // needed to generate specialized implementation
     public func contains(_ version: V) -> Bool {
         if version.isPreRelease {
             return preRelease.contains(version)

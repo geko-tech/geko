@@ -55,7 +55,7 @@ final actor CocoapodsRepo {
     let source: URL
     let localRepoName: String
     let repoUpdate: Bool
-    
+
     private var cachedMetadata: CocoapodsRepoMetadata?
     private var cacheRequestTask: Task<CocoapodsRepoMetadata, Error>?
 
@@ -142,11 +142,11 @@ extension CocoapodsRepo {
         if let cachedMetadata {
             return cachedMetadata
         }
-        
+
         if let existingTask = cacheRequestTask {
             return try await existingTask.value
         }
-        
+
         let task = Task {
             let repoCacheDir = pathProvider.repoCacheDir(repoName: localRepoName)
             try fileHandler.createFolder(repoCacheDir)
@@ -163,12 +163,12 @@ extension CocoapodsRepo {
 
             cachedMetadata = newMetadata
             cacheRequestTask = nil
-            
+
             return newMetadata
         }
-        
+
         cacheRequestTask = task
-        
+
         return try await task.value
     }
 }

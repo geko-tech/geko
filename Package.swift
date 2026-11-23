@@ -1,12 +1,12 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.8
 
 import PackageDescription
 
 let loggingDependency: Target.Dependency = .product(name: "Logging", package: "swift-log")
 let argumentParserDependency: Target.Dependency = .product(name: "ArgumentParser", package: "swift-argument-parser")
 let yamsDependency: Target.Dependency = .product(name: "Yams", package: "Yams")
-// let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "project-description")
-let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "ProjectDescription")
+let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "project-description")
+// let projectDescriptionDependency: Target.Dependency = .product(name: "ProjectDescription", package: "ProjectDescription")
 let zipFoundationDependency: Target.Dependency = .product(name: "ZIPFoundation", package: "ZIPFoundation")
 let xcsiftCoreDependency: Target.Dependency = .product(name: "XCSiftCore", package: "xcsift")
 
@@ -219,6 +219,9 @@ var targets: [Target] = [
         name: "PubGrub",
         dependencies: [
             .product(name: "Collections", package: "swift-collections")
+        ],
+        swiftSettings: [
+            .enableExperimentalFeature("Lifetimes")
         ]
     ),
     .target(
@@ -849,8 +852,8 @@ let package = Package(
         .package(url: "https://github.com/kylef/PathKit.git", .upToNextMinor(from: "1.0.1")),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.4.3"),
         .package(url: "https://github.com/jpsim/Yams", exact: "5.0.6"),
-        // .package(url: "https://github.com/geko-tech/project-description.git", branch: "release/1.1.0")
-        .package(path: "../ProjectDescription")
+        // .package(url: "https://github.com/geko-tech/project-description.git", branch: "registry")
+        .package(path: "../project-description/")
     ],
     targets: targets
 )

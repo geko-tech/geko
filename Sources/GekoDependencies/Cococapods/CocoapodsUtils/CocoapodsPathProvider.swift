@@ -20,6 +20,7 @@ public protocol CocoapodsPathProviding {
     var cacheSpecsDir: AbsolutePath { get }
     var cacheGitContentsDir: AbsolutePath { get }
     var cacheGitSpecsDir: AbsolutePath { get }
+    var cacheGitReposDir: AbsolutePath { get }
 
     func cacheSpecNameDir(name: String) -> AbsolutePath
     func cacheSpecContentDir(
@@ -51,6 +52,7 @@ public final class CocoapodsPathProvider: CocoapodsPathProviding {
     public let cacheSpecsDir: AbsolutePath
     public let cacheGitContentsDir: AbsolutePath
     public let cacheGitSpecsDir: AbsolutePath
+    public let cacheGitReposDir: AbsolutePath
 
     public let dependenciesDir: AbsolutePath
     public let targetSupportDir: AbsolutePath
@@ -77,6 +79,7 @@ public final class CocoapodsPathProvider: CocoapodsPathProviding {
         cacheSpecsDir = cacheDir.appending(components: "Specs", "Release")
         cacheGitContentsDir = cacheDir.appending(component: "External")
         cacheGitSpecsDir = cacheDir.appending(components: "Specs", "External")
+        cacheGitReposDir = cacheDir.appending(component: "Repos")
 
         dependenciesDir = rootDependenciesDirectory.appending(component: "Cocoapods")
         targetSupportDir = dependenciesDir.appending(component: "TargetSupportFiles")

@@ -114,6 +114,23 @@ public final class GitHandler: GitHandling {
         }
     }
 
+    public func fetch(in path: AbsolutePath?, tags: Bool) throws {
+        var command: [String] = ["git"]
+        if let path {
+            let gitDirectory = path.appending(component: ".git")
+            command += ["--git-dir", gitDirectory.pathString, "--work-tree", path.pathString]
+        }
+        command.append("fetch")
+
+        if tags {
+            command.append("--tags")
+        } else {
+            command.append("--no-tags")
+        }
+
+        try run(command: command)
+    }
+
     public func locallyChangedFiles(in path: AbsolutePath) throws -> [AbsolutePath] {
         guard isGitWorkingTree(path) else { return [] }
 

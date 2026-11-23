@@ -1,21 +1,80 @@
 import Foundation
 import ProjectDescription
-import struct ProjectDescription.AbsolutePath
+import PubGrub
 import GekoCore
 import GekoLoader
 import GekoGraph
 import GekoSupport
 import Yams
 
+private let rootName = "root"
+
 class DependenciesInteractor {
-    // private let cocoapodsInteractor = CocoapodsInteractor()
+    typealias Package = String
+    typealias Version = ProjectDescription.PackageVersion
 
     public func install(
         path: AbsolutePath,
         dependenciesDirectory: AbsolutePath,
         generatorPaths: GeneratorPaths,
         config: Config,
-        dependencies: Dependencies,
+        dependencies: ProjectDescription.Dependencies,
+        shouldUpdate: Bool,
+        repoUpdate: Bool,
+        deployment: Bool
+    ) async throws -> GekoCore.DependenciesGraph {
+        let cocoapodsPathProvider = try CocoapodsPathProvider(
+            dependenciesDirectory: dependenciesDirectory
+        )
+
+        let lockfilePath = cocoapodsPathProvider.lockfilePath
+        var lockfile: CocoapodsLockfile? = nil
+        if !shouldUpdate, FileHandler.shared.exists(lockfilePath) {
+            do {
+                lockfile = try CocoapodsLockfile.load(from: lockfilePath)
+            } catch {
+                logger.warning("Cocoapods.lock file is damaged")
+            }
+        }
+
+        let dependenciesContext = try await createDependenciesContext(
+            for: dependencies,
+            config: config,
+            update: shouldUpdate,
+            cocoapodsLockfile: lockfile,
+            dependenciesDirectory: dependenciesDirectory,
+            cocoapodsCdnCacheDirectory: cocoapodsPathProvider.userRepoCacheDir,
+            cocoapodsGitCacheDirectory: cocoapodsPathProvider.userRepoCacheDir
+        )
+
+        let resolver = PubGrubSolver(dependencyProvider: dependenciesContext)
+
+        let resolvedPackages: [Package: Version]
+        do {
+            resolvedPackages = try await resolver.resolve(package: rootName, version: .init(1, 0, 0))
+        } catch let PubGrubError<Package, Version>.noSolution(derivationTree) {
+            throw CocoapodsDependenciesResolverError.noSolution(
+                DefaultStringReporter.report(derivationTree: derivationTree, colored: Environment.shared.shouldOutputBeColoured)
+            )
+        }
+
+        let packages = try await dependenciesContext.extractGraph(for: resolvedPackages)
+
+        for smth in packages.cocoapodsGraph.specs {
+            print(smth.spec.name, smth.subspecs, smth.version, smth.source)
+        }
+
+//        dump(packages)
+
+        exit(0)
+    }
+
+    public func install_old(
+        path: AbsolutePath,
+        dependenciesDirectory: AbsolutePath,
+        generatorPaths: GeneratorPaths,
+        config: Config,
+        dependencies: ProjectDescription.Dependencies,
         shouldUpdate: Bool,
         repoUpdate: Bool,
         deployment: Bool
@@ -87,9 +146,6 @@ class DependenciesInteractor {
 
         let dependenciesGraph = try await resolver.resolve()
         let newLockfile = CocoapodsLockfile.from(dependenciesGraph: dependenciesGraph.cocoapodsGraph)
-
-        // dump(dependenciesGraph)
-        // exit(0)
 
         logger.info("Installing Cocoapods dependencies", metadata: .subsection)
         let downloader = CocoapodsDependencyDownloader(

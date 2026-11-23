@@ -163,7 +163,7 @@ final class CocoapodsGitDownloader {
 }
 
 extension CocoapodsDependencies.GitRef {
-    fileprivate var asString: String {
+    var asString: String {
         switch self {
         case let .branch(branch):
             return branch

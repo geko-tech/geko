@@ -90,12 +90,9 @@ extension DependenciesResolver {
             case .registry:
                 registryPackageGraph[package] = version
             case nil:
-                fatalError("фатал ерруре")
+                fatalError("Invalid state: package '\(package)' does not have resolved package type (cocoapods or registry. This is a bug.")
             }
         }
-
-//        dump(packageTypes)
-//        exit(0)
 
         var resultGraph: DependencyGraph = .empty
         resultGraph.cocoapodsGraph = try await cocoapodsResolver.resolve(packages: cocoapodsPackageGraph)
@@ -160,7 +157,7 @@ extension DependenciesResolver: PubGrubDependencyProvider {
         case .cocoapods:
             return try await cocoapodsResolver.getDependencies(package: package, version: version)
         case nil:
-            fatalError("WTF")
+            fatalError("Invalid state: package '\(package)' does not have resolved package type (cocoapods or registry. This is a bug.")
         }
     }
 }

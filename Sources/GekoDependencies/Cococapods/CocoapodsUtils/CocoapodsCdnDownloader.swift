@@ -32,7 +32,6 @@ final class CocoapodsCdnDownloader: CocoapodsCdnDownloading {
         if !force, fileHandler.exists(destination) {
             return
         }
-
         let etagFilePath = destination.removingLastComponent()
             .appending(component: destination.components.last! + ".etag")
         let etag: String?
@@ -47,6 +46,7 @@ final class CocoapodsCdnDownloader: CocoapodsCdnDownloading {
         case .notChanged:
             return
         case let .changed(tempFile, responseEtag):
+            print("downloaded \(url)")
             try fileHandler.createFolder(destination.removingLastComponent())
             try fileHandler.delete(destination)
             try fileHandler.move(from: tempFile, to: destination)

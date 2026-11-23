@@ -9,13 +9,13 @@ import GekoRegistry
 import GekoSupport
 
 class RegistryResolver {
-    private let dependencies: Registry
+    private let dependencies: RegistryDependencies
 
     private let jsonDecoder = JSONDecoder()
 
     private let packages: [RegistryPackage]
 
-    init(dependencies: Registry, generatorPaths: GeneratorPaths) throws {
+    init(dependencies: RegistryDependencies, generatorPaths: GeneratorPaths) throws {
         self.dependencies = dependencies
 
         var packages: [RegistryPackage] = []
