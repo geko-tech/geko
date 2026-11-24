@@ -58,30 +58,45 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
             graphTraverser.allInternalTargets().map { ($0.target.name, $0) },
             uniquingKeysWith: { first, _ in first }
         )
-        let rootPath = graphTraverser.workspace.xcWorkspacePath.parentDirectory
-        let context = GeneratedTestPlanDescriptorContext(allTargets: allTargets, rootPath: rootPath, generatedProjects: generatedProjects)
+        let workspaceDirectory = graphTraverser.workspace.xcWorkspacePath.parentDirectory
+        let workspaceContext = GeneratedTestPlanDescriptorContext(
+            allTargets: allTargets,
+            rootPath: workspaceDirectory,
+            generatedProjects: generatedProjects
+        )
 
-        let testPlanDescriptors = try graphTraverser.projects.flatMap { (path, project) in
-            var generatedTestPlans: [GeneratedTestPlan] = []
-
-            for schemes in project.schemes {
-                guard let testPlans = schemes.testAction?.testPlans else { continue }
-                let generatedTestPlansFromScheme: [GeneratedTestPlan] = testPlans.compactMap {
-                    switch $0 {
-                    case .file: nil
-                    case let .generated(testPlan): testPlan
-                    }
-                }
-                generatedTestPlans.append(contentsOf: generatedTestPlansFromScheme)
+        // Xcode resolves `containerPath` in a test plan against the container of the scheme that
+        // references the plan: the project for project schemes and the workspace for workspace schemes.
+        // Use the same base when writing container paths, otherwise plans of schemes located outside
+        // the workspace root (e.g. module schemes) point to nonexistent containers when run from Xcode.
+        let projectTestPlanDescriptors = try graphTraverser.projects
+            .sorted(by: { $0.key < $1.key })
+            .flatMap { _, project in
+                try mapXCTestPlanDescriptors(
+                    schemes: project.schemes,
+                    context: GeneratedTestPlanDescriptorContext(
+                        allTargets: allTargets,
+                        rootPath: project.xcodeProjPath.parentDirectory,
+                        generatedProjects: generatedProjects
+                    )
+                )
             }
 
-            return try mapXCTestPlanDescriptors(
-                generatedTestPlans: generatedTestPlans,
-                context: context
-            )
+        let workspaceTestPlanDescriptors = try mapXCTestPlanDescriptors(
+            schemes: graphTraverser.workspace.schemes,
+            context: workspaceContext
+        )
+
+        // A plan file can be referenced by schemes from different containers, but only one content
+        // can be written to the shared path. Keep the first descriptor in a deterministic order:
+        // workspace schemes first, then project schemes sorted by path. Plans shared with a root-level
+        // scheme keep the workspace-root base they had before container-relative paths were introduced.
+        var writtenPlanPaths = Set<AbsolutePath>()
+        let testPlanDescriptors = (workspaceTestPlanDescriptors + projectTestPlanDescriptors).filter {
+            writtenPlanPaths.insert($0.path).inserted
         }
 
-        let allTestTargets = try mapAllTargetsToTestTargets(context: context)
+        let allTestTargets = try mapAllTargetsToTestTargets(context: workspaceContext)
 
         let generateMetadata = GenerateMetadata(
             workspaceName: graphTraverser.workspace.name,
@@ -96,10 +111,17 @@ final class XCTestPlanDescriptorGenerator: XCTestPlanDescriptorGenerating {
     // MARK: - Test plan descriptors
 
     private func mapXCTestPlanDescriptors(
-        generatedTestPlans: [GeneratedTestPlan],
+        schemes: [Scheme],
         context: GeneratedTestPlanDescriptorContext
     ) throws -> [XCTestPlanDescriptor] {
-        try generatedTestPlans.map { generatedTestPlan in
+        let generatedTestPlans = schemes.flatMap { scheme in
+            (scheme.testAction?.testPlans ?? []).compactMap { testPlan -> GeneratedTestPlan? in
+                guard case let .generated(generatedTestPlan) = testPlan else { return nil }
+                return generatedTestPlan
+            }
+        }
+
+        return try generatedTestPlans.map { generatedTestPlan in
             try descriptor(
                 for: generatedTestPlan,
                 context: context

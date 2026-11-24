@@ -56,7 +56,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         XCTAssertEqual(descriptor.plan?.testTargets.map { $0.target.name }, ["AppTests", "FrameworkTests"])
         XCTAssertEqual(
             descriptor.plan?.testTargets.map(\.target.containerPath),
-            ["container:App.xcodeproj", "container:Framework/Framework.xcodeproj"]
+            ["container:App.xcodeproj", "container:Framework/Build/Framework.xcodeproj"]
         )
         XCTAssertEqual(descriptor.plan?.testTargets.map(\.enabled), [nil, false])
         XCTAssertEqual(descriptor.plan?.testTargets.map(\.parallelizable), [nil, true])
@@ -134,7 +134,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
         XCTAssertEqual(
             descriptor.plan?.defaultOptions?.targetForVariableExpansion?.containerPath,
-            "container:Framework/Framework.xcodeproj"
+            "container:Framework/Build/Framework.xcodeproj"
         )
     }
 
@@ -198,7 +198,7 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         XCTAssertEqual(references.map(\.name), ["AppTests", "FrameworkTests"])
         XCTAssertEqual(
             references.map(\.containerPath),
-            ["container:App.xcodeproj", "container:Framework/Framework.xcodeproj"]
+            ["container:App.xcodeproj", "container:Framework/Build/Framework.xcodeproj"]
         )
     }
 
@@ -228,6 +228,115 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
             return XCTFail("Expected .targets coverage, got \(coverage)")
         }
         XCTAssertEqual(references.map(\.name), ["AppTests"])
+    }
+
+    // MARK: - Container paths
+
+    func test_whenSchemeBelongsToNestedProject_resolvesContainerPathsRelativeToProject() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(
+                    name: "NestedPlan.xctestplan",
+                    defaultOptions: .options(
+                        targetForVariableExpansion: "FrameworkTests",
+                        codeCoverage: .selected(["FrameworkTests"])
+                    ),
+                    testTargets: ["FrameworkTests"]
+                ),
+            ],
+            schemeLocation: .frameworkProject
+        )
+
+        // When
+        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: .init()
+        )
+
+        // Then
+        XCTAssertEqual(descriptors.count, 1)
+        let descriptor = try XCTUnwrap(descriptors.first)
+        XCTAssertEqual(
+            descriptor.plan?.testTargets.map(\.target.containerPath),
+            ["container:Framework.xcodeproj"]
+        )
+        XCTAssertEqual(
+            descriptor.plan?.defaultOptions?.targetForVariableExpansion?.containerPath,
+            "container:Framework.xcodeproj"
+        )
+        let coverage = try XCTUnwrap(descriptor.plan?.defaultOptions?.codeCoverage)
+        guard case let .targets(references) = coverage else {
+            return XCTFail("Expected .targets coverage, got \(coverage)")
+        }
+        XCTAssertEqual(references.map(\.containerPath), ["container:Framework.xcodeproj"])
+    }
+
+    func test_whenSchemeBelongsToWorkspace_resolvesContainerPathsRelativeToWorkspace() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(
+                    name: "WorkspacePlan.xctestplan",
+                    defaultOptions: .options(
+                        targetForVariableExpansion: "AppTests",
+                        codeCoverage: .selected(["FrameworkTests"])
+                    ),
+                    testTargets: ["AppTests", "FrameworkTests"]
+                ),
+            ],
+            schemeLocation: .workspace
+        )
+
+        // When
+        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: .init()
+        )
+
+        // Then
+        XCTAssertEqual(descriptors.count, 1)
+        let descriptor = try XCTUnwrap(descriptors.first)
+        XCTAssertEqual(
+            descriptor.plan?.testTargets.map(\.target.containerPath),
+            ["container:App.xcodeproj", "container:Framework/Build/Framework.xcodeproj"]
+        )
+        XCTAssertEqual(
+            descriptor.plan?.defaultOptions?.targetForVariableExpansion?.containerPath,
+            "container:App.xcodeproj"
+        )
+        let coverage = try XCTUnwrap(descriptor.plan?.defaultOptions?.codeCoverage)
+        guard case let .targets(references) = coverage else {
+            return XCTFail("Expected .targets coverage, got \(coverage)")
+        }
+        XCTAssertEqual(references.map(\.containerPath), ["container:Framework/Build/Framework.xcodeproj"])
+    }
+
+    func test_whenPlanIsSharedBySchemesFromDifferentContainers_writesSingleDescriptorRelativeToRoot() throws {
+        // Given
+        let (graphTraverser, generatedProjects) = try makeSubjectInputs(
+            generatedTestPlans: [
+                .testPlan(name: "SharedPlan.xctestplan", testTargets: ["AppTests"]),
+            ],
+            schemeLocation: .appAndFrameworkProjects
+        )
+
+        // When
+        let (descriptors, _) = try subject.xcTestPlanDescriptorsAndGenerateMetadata(
+            graphTraverser: graphTraverser,
+            generatedProjects: generatedProjects,
+            sideTable: .init()
+        )
+
+        // Then
+        XCTAssertEqual(descriptors.count, 1)
+        let descriptor = try XCTUnwrap(descriptors.first)
+        XCTAssertEqual(
+            descriptor.plan?.testTargets.map(\.target.containerPath),
+            ["container:App.xcodeproj"]
+        )
     }
 
     // MARK: - Path
@@ -394,16 +503,26 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
 
     // MARK: - Helpers
 
+    private enum SchemeLocation {
+        case appProject
+        case frameworkProject
+        case appAndFrameworkProjects
+        case workspace
+    }
+
     private func makeSubjectInputs(
         generatedTestPlans: [GeneratedTestPlan],
         generatedProjects: [AbsolutePath: GeneratedProject]? = nil,
-        focusedProjects: Bool = false
+        focusedProjects: Bool = false,
+        schemeLocation: SchemeLocation = .appProject
     ) throws -> (GraphTraverser, [AbsolutePath: GeneratedProject]) {
         // The `.xcworkspace` and `.xcodeproj` live in the same root project folder.
         let workspacePath = try AbsolutePath(validating: "/somepath/Workspace")
         let appXcodeProjPath = try AbsolutePath(validating: "/somepath/Workspace/App.xcodeproj")
         let frameworkPath = try AbsolutePath(validating: "/somepath/Workspace/Framework")
-        let frameworkXcodeProjPath = try AbsolutePath(validating: "/somepath/Workspace/Framework/Framework.xcodeproj")
+        // The .xcodeproj lives in a subdirectory of the project folder to tell the scheme container
+        // (xcodeProjPath.parentDirectory) apart from the project folder (project.path).
+        let frameworkXcodeProjPath = try AbsolutePath(validating: "/somepath/Workspace/Framework/Build/Framework.xcodeproj")
 
         let app = Target.test(name: "App", product: .app)
         let appTests = Target.test(
@@ -419,23 +538,32 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
         )
 
         let testPlans: [TestPlan] = generatedTestPlans.map { .generated($0) }
-        let appScheme = Scheme.test(
-            name: "AppScheme",
+        let scheme = Scheme.test(
+            name: "TestScheme",
             testAction: .test(testPlans: testPlans)
         )
+        let schemeBelongsTo: (SchemeLocation) -> Bool = { location in
+            switch (schemeLocation, location) {
+            case (.appAndFrameworkProjects, .appProject), (.appAndFrameworkProjects, .frameworkProject):
+                return true
+            default:
+                return schemeLocation == location
+            }
+        }
 
         let appProject = Project.test(
             path: workspacePath,
             xcodeProjPath: appXcodeProjPath,
             name: "App",
             targets: [app, appTests],
-            schemes: [appScheme]
+            schemes: schemeBelongsTo(.appProject) ? [scheme] : []
         )
         let frameworkProject = Project.test(
             path: frameworkPath,
             xcodeProjPath: frameworkXcodeProjPath,
             name: "Framework",
-            targets: [framework, frameworkTests]
+            targets: [framework, frameworkTests],
+            schemes: schemeBelongsTo(.frameworkProject) ? [scheme] : []
         )
 
         let projects = if focusedProjects {
@@ -459,7 +587,8 @@ final class XCTestPlanDescriptorGeneratorTests: XCTestCase {
             workspace: Workspace.test(
                 path: workspacePath,
                 xcWorkspacePath: workspacePath.appending(component: "Workspace.xcworkspace"),
-                name: "Workspace"
+                name: "Workspace",
+                schemes: schemeBelongsTo(.workspace) ? [scheme] : []
             ),
             projects: projects,
             targets: targets
