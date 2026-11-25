@@ -1,3 +1,6 @@
+## Geko 1.4.1
+Geko [patch] Resolve generated test plan containers relative to the scheme container (#139)
+
 ## Geko 1.4.0
 • [patch] fix BuildableFoldersContentHasher (#138)
 Geko [patch] Handle tty for spinners (#137)
