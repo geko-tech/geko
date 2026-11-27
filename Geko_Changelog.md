@@ -1,3 +1,6 @@
+## Geko 1.4.2
+Geko [patch] Added buildable folders to graph (#140)
+
 ## Geko 1.4.1
 Geko [patch] Resolve generated test plan containers relative to the scheme container (#139)
 
