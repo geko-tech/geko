@@ -10,6 +10,9 @@ public struct Target: Codable, Equatable {
 
     /// List of file paths that are the target's sources.
     public let sources: [String]
+    
+    /// List of directories that are the target's buiildable folders
+    public var buildableFolders: [BuildableFolder]
 
     /// List of file paths that are the target's resources.
     public let resources: [String]
@@ -21,12 +24,14 @@ public struct Target: Codable, Equatable {
         name: String,
         product: String,
         sources: [String],
+        buildableFolders: [BuildableFolder],
         resources: [String],
         dependencies: [TargetDependency]
     ) {
         self.name = name
         self.product = product
         self.sources = sources
+        self.buildableFolders = buildableFolders
         self.resources = resources
         self.dependencies = dependencies
     }
