@@ -142,6 +142,7 @@ extension ProjectAutomation.Target {
             name: target.name,
             product: target.product.rawValue,
             sources: target.sources.flatMap { $0.paths.map(\.pathString) },
+            buildableFolders: target.buildableFolders.map { BuildableFolder(path: $0.path.pathString, exceptions: $0.exceptions.map { $0.pathString })},
             resources: target.resources.map(\.path.pathString),
             dependencies: dependencies
         )
